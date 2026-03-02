@@ -21,8 +21,8 @@ export default function NavBar() {
             </div>
             <div className="navbar-right">
                 <div className="navbar-auth">
-                    <RouterLink to="/auth?mode=signup">INSCRIPTION</RouterLink>
-                    <RouterLink to="/auth?mode=login">CONNEXION</RouterLink>
+                    <RouterLink to="/signup">INSCRIPTION</RouterLink>
+                    <RouterLink to="/auth">CONNEXION</RouterLink>
                 </div>
                 <RouterLink to="/cart" className="navbar-cart">
                     <ShoppingCartOutlinedIcon />
