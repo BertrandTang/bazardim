@@ -21,18 +21,22 @@ export default function NavBar() {
             </div>
             <div className="navbar-middle">
                 <RouterLink to="/">ACCUEIL</RouterLink>
+                <RouterLink to="/categories">CATEGORIES</RouterLink>
+                <RouterLink to="/licences">LICENCES</RouterLink>
             </div>
             <div className="navbar-right">
-                <div className="navbar-auth">
-                    <RouterLink to="/signup">INSCRIPTION</RouterLink>
-                    <RouterLink to="/auth">CONNEXION</RouterLink>
+                <div className="navbar-auth-block">
+                    <div className="navbar-auth">
+                        <RouterLink to="/signup">INSCRIPTION</RouterLink>
+                        <RouterLink to="/auth">CONNEXION</RouterLink>
+                    </div>
+                    <RouterLink to="/cart" className="navbar-cart">
+                        <ShoppingCartOutlinedIcon />
+                        {count > 0 && (
+                            <span className="cart-badge">{count}</span>
+                        )}
+                    </RouterLink>
                 </div>
-                <RouterLink to="/cart" className="navbar-cart">
-                    <ShoppingCartOutlinedIcon />
-                    {count > 0 && (
-                        <span className="cart-badge">{count}</span>
-                    )}
-                </RouterLink>
             </div>
         </nav>
     );
