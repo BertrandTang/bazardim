@@ -192,32 +192,10 @@
     cursor: pointer;
     transition: transform .15s ease, box-shadow .2s ease, filter .2s ease, border-radius .18s ease;
     will-change: transform;
-    position: relative;
-    overflow: hidden;
-}
-
-.product-add::before {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 0;
-    height: 0;
-    transform: scale(1);
-    pointer-events: none;
-    border-radius: 30px;
-    opacity: 0;
-    transition:width .05s, height .05s, border-radius .08s;
 }
 
 .product-add:hover {
     transform: scale(1.06);
-    border-radius: 30px;
-}
-
-.product-add:hover::before {
-    width: 220%;
-    height: 220%;
-    opacity: 1;
     border-radius: 30px;
 }
 
@@ -227,24 +205,4 @@
 
 .product-add:focus-visible {
     outline: none;
-}
-
-.product-add {
-    position: relative;
-    overflow: hidden;
-}
-.product-add .ripple {
-    position: absolute;
-    border-radius: 50%;
-    transform: scale(0);
-    background: rgba(216,53,255,0.24);
-    mix-blend-mode: screen;
-    animation: ripple-anim 600ms cubic-bezier(.22,.9,.36,1);
-    pointer-events: none;
-}
-@keyframes ripple-anim {
-    to {
-        transform: scale(1);
-        opacity: 0;
-    }
 }

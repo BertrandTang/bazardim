@@ -55,23 +55,6 @@ export default function ProductCard({ product }) {
         ? rawImage
         : pickFromPool(product.id || title);
 
-    const createRipple = (event) => {
-        const btn = event.currentTarget;
-        const rect = btn.getBoundingClientRect();
-        const ripple = document.createElement('span');
-        const size = Math.max(rect.width, rect.height) * 1.2;
-        const x = event.clientX - rect.left - size / 2;
-        const y = event.clientY - rect.top - size / 2;
-        ripple.className = 'ripple';
-        ripple.style.width = ripple.style.height = `${size}px`;
-        ripple.style.left = `${x}px`;
-        ripple.style.top = `${y}px`;
-        btn.appendChild(ripple);
-        window.setTimeout(() => {
-            ripple.remove();
-        }, 600);
-    };
-
     return (
         <div className="product-card">
             <div className="product-user">
@@ -116,8 +99,6 @@ export default function ProductCard({ product }) {
                 <div className="product-price">{Number(price).toFixed(2)}€</div>
                 <button
                     className="product-add"
-                    onMouseDown={createRipple}
-                    onTouchStart={createRipple}
                     onClick={() => addItem(product)}
                 >
                     AJOUTER
