@@ -1,0 +1,53 @@
+{
+    "profiles": [
+        {
+            "user_id": 101,
+            "username": "CollectionneurDu92",
+            "email": "collectionneurdu92@example.com",
+            "mdp": "password123",
+            "profile_img": "/img/img_1.jpg"
+        },
+        {
+            "user_id": 105,
+            "username": "FigurineParadise",
+            "email": "figurineparadise@example.com",
+            "mdp": "password123",
+            "profile_img": "/img/img_2.jpg"
+        },
+        {
+            "user_id": 102,
+            "username": "LibrairieOtaku",
+            "email": "librairieotaku@example.com",
+            "mdp": "password123",
+            "profile_img": "/img/img_3.jpg"
+        },
+        {
+            "user_id": 103,
+            "username": "MangaFanatics",
+            "email": "mangafanatics@example.com",
+            "mdp": "password123",
+            "profile_img": "/img/img_4.jpg"
+        },
+        {
+            "user_id": 104,
+            "username": "VetementsGeeks",
+            "email": "vetementsgeeks@example.com",
+            "mdp": "password123",
+            "profile_img": "/img/img_5.jpg"
+        },
+        {
+            "user_id": 106,
+            "username": "BoutiqueFantaisie",
+            "email": "boutiquefantaisie@example.com",
+            "mdp": "password123",
+            "profile_img": "/img/img_6.jpg"
+        },
+        {
+            "user_id": 107,
+            "username": "CardsPro",
+            "email": "cardspro@example.com",
+            "mdp": "password123",
+            "profile_img": "/img/img_7.jpg"
+        }
+    ]
+}

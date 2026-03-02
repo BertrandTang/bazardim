@@ -1,0 +1,56 @@
+.category-bar {
+    background: #b9e9ff;
+    border-radius: 50px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+    align-items: center;
+    text-align: center;
+}
+
+.category-tabs {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.category-tabs button {
+    background: none;
+    border: none;
+    font-family: monospace;
+    font-weight: 700;
+    color: #6d35ff;
+    cursor: pointer;
+    font-size: 25px;
+}
+
+.category-tabs button:hover,
+.category-tabs button:focus {
+	color: #FF006A;
+}
+
+
+.category-selects {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.category-selects select {
+    min-width: 200px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+.category-selects label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
