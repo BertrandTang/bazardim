@@ -1,10 +1,12 @@
 .navbar-container {
 	background: #b9e9ff;
-	border-radius: 60px;
-	padding: 10px 30px;
+	border-radius: 32px;
+	padding: 8px 20px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	max-width: 1200px;
+	margin: 16px auto 8px;
 }
 
 .navbar-container a {
@@ -25,7 +27,7 @@
 }
 
 .navbar-left {
-	gap: 24px;
+	gap: 16px;
 	flex: 1;
 }
 
@@ -40,8 +42,8 @@
 }
 
 .navbar-logo {
-	width: 100px;
-	height: 100px;
+	width: 72px;
+	height: 72px;
 	object-fit: contain;
 	transition: transform 0.2s ease;
 }
@@ -57,15 +59,15 @@
 }
 
 .logo-link:hover .navbar-logo {
-	transform: scale(1.5) rotate(-10deg);
+	transform: scale(1.1) rotate(-5deg);
 }
 
 .navbar-search {
 	flex: 1;
-	max-width: 520px;
+	max-width: 480px;
 	background: #fff;
 	border-radius: 999px;
-	padding: 4px 16px;
+	padding: 6px 14px;
 	display: flex;
 	align-items: center;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
@@ -85,7 +87,7 @@
 	flex: 1;
 	border: none;
 	outline: none;
-	font-size: 20px;
+	font-size: 16px;
 	background: transparent;
 }
 
@@ -108,8 +110,8 @@
 	flex-direction: column;
 	font-family: monospace;
 	font-weight: 700;
-    line-height: 30px;
-	font-size: 14px;
+	line-height: 22px;
+	font-size: 13px;
 }
 
 .navbar-auth a {
@@ -123,7 +125,7 @@
 
 .navbar-cart {
 	color: #6d35ff;
-	font-size: 42px;
+	font-size: 32px;
 	display: flex;
 	align-items: center;
 	position: relative;

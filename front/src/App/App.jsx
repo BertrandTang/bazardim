@@ -3,6 +3,7 @@ import Layout from '../components/Layout/Layout.jsx';
 import Home from '../pages/Home/Home.jsx';
 import Auth from '../pages/Auth/Auth.jsx';
 import SignUp from '../pages/SignUp/SignUp.jsx';
+import Cart from '../pages/Cart/Cart.jsx';
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/cart" element={<Cart />} />
         </Routes>
       </Layout>
     </Router>

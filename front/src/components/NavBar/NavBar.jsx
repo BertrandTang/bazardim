@@ -3,8 +3,11 @@ import { Link as RouterLink } from "react-router-dom";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import "./NavBar.css";
+import { useCart } from "../../context/CartContext.jsx";
 
 export default function NavBar() {
+    const { count } = useCart();
+
     return (
         <nav className="navbar-container">
             <div className="navbar-left">
@@ -26,6 +29,9 @@ export default function NavBar() {
                 </div>
                 <RouterLink to="/cart" className="navbar-cart">
                     <ShoppingCartOutlinedIcon />
+                    {count > 0 && (
+                        <span className="cart-badge">{count}</span>
+                    )}
                 </RouterLink>
             </div>
         </nav>
