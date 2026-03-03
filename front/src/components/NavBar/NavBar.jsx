@@ -4,9 +4,11 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import "./NavBar.css";
 import { useCart } from "../../context/CartContext.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function NavBar() {
     const { count } = useCart();
+    const { user, logout } = useAuth();
 
     return (
         <nav className="navbar-container">
@@ -27,9 +29,19 @@ export default function NavBar() {
             <div className="navbar-right">
                 <div className="navbar-auth-block">
                     <div className="navbar-auth">
-                        <RouterLink to="/signup">INSCRIPTION</RouterLink>
-                        <RouterLink to="/auth">CONNEXION</RouterLink>
+                        {!user && (
+                            <>
+                                <RouterLink to="/signup">INSCRIPTION</RouterLink>
+                                <RouterLink to="/auth">CONNEXION</RouterLink>
+                            </>
+                        )}
+                        {user && <RouterLink to="/profile">PROFIL</RouterLink>}
                     </div>
+                    {user && (
+                        <button className="logout-button" onClick={logout}>
+                            Déconnexion
+                        </button>
+                    )}
                     <RouterLink to="/cart" className="navbar-cart">
                         <ShoppingCartOutlinedIcon />
                         {count > 0 && (

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -11,11 +13,20 @@ import {
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/profile';
 
   const handleSubmit = (event) => {
     event.preventDefault();
     // Placeholder: replace with real auth logic later
-    console.log("Login submit", { email, password });
+    const success = login(email, password);
+    if (success) {
+      navigate(from, { replace: true });
+    } else {
+      alert('Utilisateur introuvable ou mot de passe incorrect');
+    }
   };
 
   return (

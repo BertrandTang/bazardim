@@ -124,6 +124,19 @@
 	gap: 16px;
 }
 
+.logout-button {
+	background: none;
+	border: none;
+	color: #6d35ff;
+	font: inherit;
+	cursor: pointer;
+	padding: 0;
+}
+
+.logout-button:hover {
+	color: #FF006A;
+}
+
 .navbar-auth a {
 	color: #6d35ff;
 }

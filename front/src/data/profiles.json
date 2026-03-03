@@ -49,5 +49,13 @@
             "mdp": "password123",
             "profile_img": "/img/img_7.jpg"
         }
+        ,
+        {
+            "user_id": 108,
+            "username": "CardsPro",
+            "email": "admin@example.com",
+            "mdp": "admin123",
+            "profile_img": "/img/img_7.jpg"
+        }
     ]
 }

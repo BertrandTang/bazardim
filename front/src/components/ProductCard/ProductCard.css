@@ -105,6 +105,33 @@
     margin-bottom: 0;
     white-space: normal;
     overflow: visible;
+    color: #333;
+}
+
+/* Boutons Modifier/Supprimer pour owner card */
+.product-edit,
+.product-delete {
+    background: #6d35ff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 6px;
+    transition: background 0.2s;
+}
+
+.product-edit:hover {
+    background: #1976d2;
+}
+
+.product-delete {
+    background: #ff4d6d;
+}
+
+.product-delete:hover {
+    background: #d32f2f;
     text-overflow: unset;
     color: #6D35FF;
 }
@@ -128,15 +155,19 @@
 .product-tag.category {
     background: #AE72F9;
 }
+
 .product-tag.licence {
     background: #6d35ff;
 }
+
 .product-tag.character {
     background: #f59e0b;
 }
+
 .product-tag.type {
     background: #FF006A;
 }
+
 .product-tag.custom {
     background: #6d35ff;
 }
@@ -153,6 +184,7 @@
     -webkit-line-clamp: 8;
     line-clamp: 8;
     flex: 1 1 auto;
+    color: #444;
 }
 
 .product-manufacturer {
@@ -168,9 +200,16 @@
 
 .product-bottom {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     margin-top: auto;
+    max-width: 100%;
+}
+.product-bottom .product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
 }
 
 .product-price {

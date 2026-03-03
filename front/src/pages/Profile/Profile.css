@@ -1,0 +1,11 @@
+.profile-page {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+}
+.profile-sidebar {
+  min-width: 160px;
+}
+.profile-content {
+  flex: 1;
+}
