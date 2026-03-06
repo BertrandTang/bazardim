@@ -25,11 +25,24 @@
 
 .profile-likes-grid .product-card {
   width: 220px;
-  height: 460px;
+  height: 500px;
 }
 
 .profile-likes-grid .product-image {
   height: 140px;
   min-height: 140px;
   max-height: 140px;
+}
+
+.profile-likes-grid .product-desc {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  max-height: calc(1.35em * 3);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.profile-likes-grid .product-tags {
+  max-height: 52px;
+  overflow: hidden;
 }

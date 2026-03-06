@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Avatar, Stack } from '@mui/material';
 import { useAuth } from '../../context/AuthContext.jsx';
 import figuresData from '../../data/figures.json';
@@ -14,6 +15,7 @@ const sections = [
 ];
 
 export default function Profile() {
+    const navigate = useNavigate();
     const { user, updateProfile, logout } = useAuth();
     const { likedIds } = useLikes();
     const [activeSection, setActiveSection] = useState('profile');
@@ -67,7 +69,7 @@ export default function Profile() {
                                 <ProductCardOwner
                                     key={product.id}
                                     product={product}
-                                    onEdit={() => alert('Fonction modifier à implémenter')}
+                                    onEdit={() => navigate(`/product/${product.id ?? product.product_id ?? ''}?edit=1`)}
                                     onDelete={() => alert('Fonction supprimer à implémenter')}
                                 />
                             ))}
