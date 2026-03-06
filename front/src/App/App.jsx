@@ -18,6 +18,10 @@ export default function App() {
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/licences" element={<Home />} />
+              <Route path="/figurines" element={<Home forcedCategory="FIGURINE" />} />
+              <Route path="/figurines-articulees" element={<Home forcedCategory="FIGURINE ARTICULÉE" />} />
+              <Route path="/statue" element={<Home forcedCategory="STATUE" />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/cart" element={<Cart />} />

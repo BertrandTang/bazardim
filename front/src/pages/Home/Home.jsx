@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import figuresData from '../../data/figures.json';
@@ -18,7 +19,8 @@ const imagePool = [
   '/img/img_11.jpg',
 ];
 
-export default function Home() {
+export default function Home({ forcedCategory }) {
+  const [searchParams] = useSearchParams();
   const [categoryIndex, setCategoryIndex] = useState(0);
 
   const products = useMemo(() => {
@@ -41,11 +43,14 @@ export default function Home() {
   );
 
   const selectedCategory = categories[categoryIndex] || categories[0] || '';
+  const activeCategory = forcedCategory || selectedCategory;
+  const activeLicence = searchParams.get('name') || '';
+  const activeSearch = (searchParams.get('q') || '').trim().toLowerCase();
 
   const licenceOptions = useMemo(() => {
-    const list = products.filter((p) => selectedCategory === 'TOUT' || p.category === selectedCategory);
+    const list = products.filter((p) => activeCategory === 'TOUT' || p.category === activeCategory);
     return Array.from(new Set(list.map((p) => p.licence_name))).filter(Boolean);
-  }, [products, selectedCategory]);
+  }, [products, activeCategory]);
 
   const [licence, setLicence] = useState(() => licenceOptions[0] || '');
 
@@ -57,10 +62,10 @@ export default function Home() {
 
   const characterOptions = useMemo(() => {
     const list = products.filter(
-      (p) => (selectedCategory === 'TOUT' || p.category === selectedCategory) && (!licence || p.licence_name === licence)
+      (p) => (activeCategory === 'TOUT' || p.category === activeCategory) && (!licence || p.licence_name === licence)
     );
     return Array.from(new Set(list.map((p) => p.character_name))).filter(Boolean);
-  }, [products, selectedCategory, licence]);
+  }, [products, activeCategory, licence]);
 
   const [character, setCharacter] = useState(() => characterOptions[0] || '');
 
@@ -74,7 +79,20 @@ export default function Home() {
     <Box sx={{ px: 4, py: 6, maxWidth: 1200, mx: 'auto' }}>
       <Grid container spacing={5} justifyContent="center">
         {products
-          .filter((p) => selectedCategory === 'TOUT' || !selectedCategory || p.category === selectedCategory)
+          .filter(
+            (p) => (activeCategory === 'TOUT' || !activeCategory || p.category === activeCategory)
+              && (!activeLicence || p.licence_name === activeLicence)
+              && (!activeSearch || [
+                p.title,
+                p.description,
+                p.category,
+                p.licence_name,
+                p.character_name,
+                p.manufacturer,
+                p.owner_username,
+                ...(Array.isArray(p.tags) ? p.tags : []),
+              ].join(' ').toLowerCase().includes(activeSearch))
+          )
           .map((p) => (
             <Grid key={p.id}>
               <ProductCard product={p} />
