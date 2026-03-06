@@ -9,3 +9,27 @@
 .profile-content {
   flex: 1;
 }
+
+.profile-likes-empty {
+  text-align: center;
+  padding: 48px 0;
+  color: #555;
+}
+
+.profile-likes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  justify-items: center;
+}
+
+.profile-likes-grid .product-card {
+  width: 220px;
+  height: 460px;
+}
+
+.profile-likes-grid .product-image {
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
+}

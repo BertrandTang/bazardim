@@ -2,7 +2,7 @@
     "figures": [
         {
             "id": "FIG001",
-            "category": "FIGURINES",
+            "category": "FIGURINE",
             "licence_name": "Dragon Ball Z",
             "character_name": "Vegeta",
             "title": "Figurine S.H. Figuarts Vegeta Super Saiyan Blue",
@@ -35,7 +35,7 @@
         },
         {
             "id": "FIG002",
-            "category": "FIGURINES",
+            "category": "FIGURINE ARTICULÉE",
             "licence_name": "One Piece",
             "character_name": "Monkey D. Luffy",
             "title": "Figurine S.H. Figuarts Luffy",
@@ -59,7 +59,7 @@
         },
         {
             "id": "FIG003",
-            "category": "FIGURINES",
+            "category": "FIGURINE",
             "licence_name": "Naruto",
             "character_name": "Sasuke Uchiha",
             "title": "Figurine Sasuke - Édition Collector",
@@ -83,7 +83,7 @@
         },
         {
             "id": "FIG004",
-            "category": "FIGURINES",
+            "category": "STATUE",
             "licence_name": "Demon Slayer",
             "character_name": "Inosuke Hashibira",
             "title": "Figurine Inosuke - Pose Dynamique",
@@ -107,7 +107,7 @@
         },
         {
             "id": "FIG005",
-            "category": "FIGURINES",
+            "category": "FIGURINE",
             "licence_name": "My Hero Academia",
             "character_name": "Izuku Midoriya",
             "title": "Figurine Deku - Edition Battle",
@@ -131,7 +131,7 @@
         },
         {
             "id": "FIG006",
-            "category": "FIGURINES",
+            "category": "FIGURINE",
             "licence_name": "Sailor Moon",
             "character_name": "Sailor Mercury",
             "title": "Figurine Sailor Mercury - 1/8",
@@ -155,7 +155,7 @@
         },
         {
             "id": "FIG007",
-            "category": "FIGURINES",
+            "category": "FIGURINE ARTICULÉE",
             "licence_name": "Final Fantasy",
             "character_name": "Cloud Strife",
             "title": "Play Arts Kai Cloud - Version Deluxe",
@@ -179,7 +179,7 @@
         },
         {
             "id": "FIG008",
-            "category": "FIGURINES",
+            "category": "FIGURINE",
             "licence_name": "Pokémon",
             "character_name": "Eevee",
             "title": "Peluche Eevee - Grande Taille",
@@ -203,7 +203,7 @@
         },
         {
             "id": "FIG009",
-            "category": "FIGURINES",
+            "category": "FIGURINE",
             "licence_name": "One Punch Man",
             "character_name": "Saitama",
             "title": "Figurine Saitama - Vinyl Art",
@@ -227,7 +227,7 @@
         },
         {
             "id": "FIG010",
-            "category": "FIGURINES",
+            "category": "STATUE",
             "licence_name": "Bleach",
             "character_name": "Ichigo Kurosaki",
             "title": "Figurine Ichigo - Edition Zangetsu",
@@ -252,7 +252,7 @@
         ,
         {
             "id": "FIG011Ò",
-            "category": "FIGURINES",
+            "category": "FIGURINE",
             "licence_name": "Bleach",
             "character_name": "Ichigo Kurosaki",
             "title": "Figurine Ichigo - Edition Zangetsu",

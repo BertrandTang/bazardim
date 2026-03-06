@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Button, TextField, Typography, Avatar, Stack } from '@mui/material';
 import { useAuth } from '../../context/AuthContext.jsx';
 import figuresData from '../../data/figures.json';
 import ProductCardOwner from '../../components/ProductCard/ProductCardOwner.jsx';
+import ProductCard from '../../components/ProductCard/ProductCard.jsx';
+import { useLikes } from '../../context/LikesContext.jsx';
 import './Profile.css';
 
 const sections = [
@@ -13,6 +15,7 @@ const sections = [
 
 export default function Profile() {
     const { user, updateProfile, logout } = useAuth();
+    const { likedIds } = useLikes();
     const [activeSection, setActiveSection] = useState('profile');
     const [editValues, setEditValues] = useState({
         email: user?.email || '',
@@ -29,6 +32,11 @@ export default function Profile() {
     const handleSave = () => {
         updateProfile(editValues);
     };
+
+    const likedProducts = useMemo(() => {
+        const likedSet = new Set(likedIds.map((id) => String(id)));
+        return (figuresData.figures || []).filter((product) => likedSet.has(String(product.id)));
+    }, [likedIds]);
 
     if (!user) return null; // should never happen because route is protected
 
@@ -67,7 +75,18 @@ export default function Profile() {
                     </Box>
                 )}
                 {activeSection === 'likes' && (
-                    <Typography>Liste de mes likes (à implémenter)</Typography>
+                    <Box>
+                        <Typography variant="h6" gutterBottom>Mes likes</Typography>
+                        {likedProducts.length === 0 ? (
+                            <Box className="profile-likes-empty">Vous n'avez aucun like pour le moment.</Box>
+                        ) : (
+                            <Box className="profile-likes-grid">
+                                {likedProducts.map((product) => (
+                                    <ProductCard key={product.id} product={product} />
+                                ))}
+                            </Box>
+                        )}
+                    </Box>
                 )}
                 {activeSection === 'profile' && (
                     <Box sx={{ maxWidth: 500 }}>

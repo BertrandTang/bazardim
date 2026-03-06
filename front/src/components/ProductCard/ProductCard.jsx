@@ -1,14 +1,16 @@
-import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import './ProductCard.css';
 import { useCart } from '../../context/CartContext.jsx';
+import { useLikes } from '../../context/LikesContext.jsx';
 
 export default function ProductCard({ product }) {
-    const [liked, setLiked] = useState(false);
     const { addItem } = useCart();
+    const { isLiked, toggleLike: toggleLikedProduct } = useLikes();
+    const liked = isLiked(product.id ?? product.product_id);
+
     const toggleLike = (event) => {
         event.stopPropagation();
-        setLiked((value) => !value);
+        toggleLikedProduct(product.id ?? product.product_id);
     };
     const structuredTags = [
         product.category ? { label: product.category, type: 'category' } : null,
