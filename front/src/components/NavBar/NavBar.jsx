@@ -7,6 +7,7 @@ import "./NavBar.css";
 import { useCart } from "../../context/CartContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import figuresData from '../../data/figures.json';
+import { getCreatedProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
 
 export default function NavBar() {
     const { count } = useCart();
@@ -15,6 +16,7 @@ export default function NavBar() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [searchValue, setSearchValue] = useState(searchParams.get('q') || '');
+    const [createdProducts, setCreatedProducts] = useState(() => getCreatedProducts());
 
     const searchablePaths = useMemo(
         () => ['/', '/licences', '/figurines', '/figurines-articulees', '/statue'],
@@ -24,6 +26,12 @@ export default function NavBar() {
     useEffect(() => {
         setSearchValue(searchParams.get('q') || '');
     }, [searchParams]);
+
+    useEffect(() => {
+        return subscribeToProductStorage(() => {
+            setCreatedProducts(getCreatedProducts());
+        });
+    }, []);
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
@@ -38,10 +46,11 @@ export default function NavBar() {
         navigate(query ? `${targetPath}?${query}` : targetPath);
     };
 
-    const licences = useMemo(
-        () => Array.from(new Set((figuresData.figures || []).map((item) => item.licence_name).filter(Boolean))),
-        []
-    );
+    const licences = useMemo(() => {
+        const base = (figuresData.figures || []).map((item) => item.licence_name).filter(Boolean);
+        const created = createdProducts.map((item) => item.licence_name).filter(Boolean);
+        return Array.from(new Set([...base, ...created]));
+    }, [createdProducts]);
 
     return (
         <nav className="navbar-container">
@@ -81,6 +90,7 @@ export default function NavBar() {
                         ))}
                     </div>
                 </div>
+                <RouterLink to="/vendre" className="navbar-sell-btn">VENDRE</RouterLink>
             </div>
             <div className="navbar-right">
                 <div className="navbar-auth-block">

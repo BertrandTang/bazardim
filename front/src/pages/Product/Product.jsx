@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link as RouterLink, useParams, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import productsData from '../../data/figures.json';
 import { useCart } from '../../context/CartContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { addDeletedProductId, getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
 import './Product.css';
 
 function getImageIndexFromId(productId) {
@@ -54,9 +55,11 @@ function mapProduct(product) {
 
 export default function Product() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { user } = useAuth();
     const { addItem } = useCart();
+    const [productsVersion, setProductsVersion] = useState(0);
     const [productOverrides, setProductOverrides] = useState(() => {
         try {
             const raw = localStorage.getItem('productOverrides');
@@ -66,6 +69,7 @@ export default function Product() {
         }
     });
     const [isEditing, setIsEditing] = useState(false);
+    const [showAddedMessage, setShowAddedMessage] = useState(false);
     const [editValues, setEditValues] = useState({
         title: '',
         description: '',
@@ -95,12 +99,22 @@ export default function Product() {
         }
     }, [productOverrides]);
 
+    useEffect(() => {
+        return subscribeToProductStorage(() => {
+            setProductsVersion((prev) => prev + 1);
+        });
+    }, []);
+
     const products = useMemo(
-        () => (productsData.figures || []).map(mapProduct).map((product) => ({
-            ...product,
-            ...(productOverrides[String(product.id)] || {}),
-        })),
-        [productOverrides]
+        () => {
+            return getAllProducts(productsData.figures || [])
+                .map(mapProduct)
+                .map((mappedProduct) => ({
+                    ...mappedProduct,
+                    ...(productOverrides[String(mappedProduct.id)] || {}),
+                }));
+        },
+        [productOverrides, productsVersion]
     );
     const product = products.find((p) => String(p.id) === String(id));
     const shouldStartInEdit = searchParams.get('edit') === '1';
@@ -140,6 +154,14 @@ export default function Product() {
             sizeScale: product.size?.scale || '',
         });
     }, [product?.id]);
+
+    useEffect(() => {
+        if (!showAddedMessage) return;
+        const timeoutId = window.setTimeout(() => {
+            setShowAddedMessage(false);
+        }, 1500);
+        return () => window.clearTimeout(timeoutId);
+    }, [showAddedMessage]);
 
     const handleEditChange = (event) => {
         const { name, value } = event.target;
@@ -189,6 +211,32 @@ export default function Product() {
             },
         }));
         setIsEditing(false);
+    };
+
+    const handleDeleteProduct = () => {
+        if (!product) return;
+        const confirmed = window.confirm('Voulez-vous vraiment supprimer ce post ?');
+        if (!confirmed) return;
+
+        const productId = String(product.id);
+
+        addDeletedProductId(productId);
+
+        setProductOverrides((prev) => {
+            if (!prev[productId]) return prev;
+            const next = { ...prev };
+            delete next[productId];
+            return next;
+        });
+
+        navigate('/profile');
+    };
+
+    const handleAddToCart = () => {
+        if (!product) return;
+        addItem(product);
+        setShowAddedMessage(false);
+        window.requestAnimationFrame(() => setShowAddedMessage(true));
     };
 
     if (!product) {
@@ -410,10 +458,16 @@ export default function Product() {
                                     <Button variant="outlined" onClick={() => setIsEditing(false)}>ANNULER</Button>
                                 </>
                             ) : (
-                                <Button variant="contained" className="product-full-add" onClick={() => setIsEditing(true)}>MODIFIER</Button>
+                                <>
+                                    <Button variant="contained" className="product-full-add" onClick={() => setIsEditing(true)}>MODIFIER</Button>
+                                    <Button variant="outlined" color="error" onClick={handleDeleteProduct}>SUPPRIMER</Button>
+                                </>
                             )
                         ) : (
-                            <Button variant="contained" className="product-full-add" onClick={() => addItem(product)}>AJOUTER</Button>
+                            <div className="product-add-feedback-wrap">
+                                {showAddedMessage ? <span className="product-added-toast">ajoute au panier</span> : null}
+                                <Button variant="contained" className="product-full-add" onClick={handleAddToCart}>AJOUTER</Button>
+                            </div>
                         )}
                     </div>
                 </Box>

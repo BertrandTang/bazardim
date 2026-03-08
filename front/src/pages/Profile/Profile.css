@@ -10,6 +10,14 @@
   flex: 1;
 }
 
+.profile-add-product {
+  margin-bottom: 16px !important;
+  background: linear-gradient(135deg, #6d35ff, #ff006a) !important;
+  border-radius: 0 24px 0 24px !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+
 .profile-likes-empty {
   text-align: center;
   padding: 48px 0;

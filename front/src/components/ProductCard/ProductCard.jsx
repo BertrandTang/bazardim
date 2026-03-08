@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import './ProductCard.css';
 import { useCart } from '../../context/CartContext.jsx';
@@ -7,6 +8,15 @@ export default function ProductCard({ product }) {
     const { addItem } = useCart();
     const { isLiked, toggleLike: toggleLikedProduct } = useLikes();
     const liked = isLiked(product.id ?? product.product_id);
+    const [showAddedMessage, setShowAddedMessage] = useState(false);
+
+    useEffect(() => {
+        if (!showAddedMessage) return;
+        const timeoutId = window.setTimeout(() => {
+            setShowAddedMessage(false);
+        }, 1500);
+        return () => window.clearTimeout(timeoutId);
+    }, [showAddedMessage]);
 
     const toggleLike = (event) => {
         event.stopPropagation();
@@ -56,15 +66,21 @@ export default function ProductCard({ product }) {
     const image = (typeof rawImage === 'string' && rawImage.startsWith('/img/'))
         ? rawImage
         : pickFromPool(product.id || title);
+    const ownerId = product.owner_user_id ?? product.product_user_id ?? product.user_id ?? '';
+    const handleAddToCart = () => {
+        addItem(product);
+        setShowAddedMessage(false);
+        window.requestAnimationFrame(() => setShowAddedMessage(true));
+    };
 
     return (
         <div className="product-card">
             <div className="product-user">
-                    <RouterLink to={`/user/${product.product_user_id ?? product.user_id ?? ''}`} className="avatar-link">
+                    <RouterLink to={`/user/${ownerId}`} className="avatar-link">
                         <div className="avatar">U</div>
                     </RouterLink>
                     <div className="username">
-                        <RouterLink to={`/user/${product.product_user_id ?? product.user_id ?? ''}`}>{username}</RouterLink>
+                        <RouterLink to={`/user/${ownerId}`}>{username}</RouterLink>
                     </div>
                 </div>
             <div className="product-image">
@@ -99,12 +115,15 @@ export default function ProductCard({ product }) {
             <div className="product-manufacturer">{product.manufacturer ? `Fabricant: ${product.manufacturer}` : 'Fabricant: N/C'}</div>
             <div className="product-bottom">
                 <div className="product-price">{Number(price).toFixed(2)}€</div>
-                <button
-                    className="product-add"
-                    onClick={() => addItem(product)}
-                >
-                    AJOUTER
-                </button>
+                <div className="product-add-wrap">
+                    {showAddedMessage ? <span className="product-added-toast">ajoute au panier</span> : null}
+                    <button
+                        className="product-add"
+                        onClick={handleAddToCart}
+                    >
+                        AJOUTER
+                    </button>
+                </div>
             </div>
         </div>
     );

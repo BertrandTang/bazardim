@@ -4,6 +4,7 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import figuresData from '../../data/figures.json';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
+import { getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
 
 const imagePool = [
   '/img/img_1.jpg',
@@ -22,20 +23,28 @@ const imagePool = [
 export default function Home({ forcedCategory }) {
   const [searchParams] = useSearchParams();
   const [categoryIndex, setCategoryIndex] = useState(0);
+  const [productsVersion, setProductsVersion] = useState(0);
+
+  useEffect(() => {
+    return subscribeToProductStorage(() => {
+      setProductsVersion((prev) => prev + 1);
+    });
+  }, []);
 
   const products = useMemo(() => {
-    const list = figuresData.figures || [];
-    return list.map((p, idx) => ({
-      ...p,
-      id: p.id,
-      title: p.title || p.product_title,
-      description: p.description || p.product_description,
-      price: p.price ?? p.product_price,
-      tags: p.tags || p.product_tags,
-      username: p.owner_username || p.product_username,
-      image: imagePool[idx % imagePool.length],
-    }));
-  }, []);
+    const list = getAllProducts(figuresData.figures || []);
+    return list
+      .map((p, idx) => ({
+        ...p,
+        id: p.id ?? p.product_id,
+        title: p.title || p.product_title,
+        description: p.description || p.product_description,
+        price: p.price ?? p.product_price,
+        tags: p.tags || p.product_tags,
+        username: p.owner_username || p.product_username,
+        image: imagePool[idx % imagePool.length],
+      }));
+  }, [productsVersion]);
 
   const categories = useMemo(
     () => ['TOUT', ...Array.from(new Set(products.map((p) => p.category)))],

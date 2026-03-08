@@ -6,15 +6,20 @@ export default function ProductCardOwner({ product, onEdit, onDelete }) {
     const username = product.username || product.product_username || product.owner_username || 'USERNAME';
     const price = product.price ?? product.product_price ?? 0;
     const rawImage = product.img || product.image || product.product_img || null;
-    const image = (typeof rawImage === 'string' && rawImage.startsWith('/img/')) ? rawImage : '/img/img_1.jpg';
+    const image = (typeof rawImage === 'string' && (
+        rawImage.startsWith('/img/')
+        || rawImage.startsWith('http://')
+        || rawImage.startsWith('https://')
+    )) ? rawImage : '/img/img_1.jpg';
+    const ownerId = product.owner_user_id ?? product.product_user_id ?? product.user_id ?? '';
     return (
         <div className="product-card">
             <div className="product-user">
-                <RouterLink to={`/user/${product.owner_user_id ?? product.user_id ?? ''}`} className="avatar-link">
+                <RouterLink to={`/user/${ownerId}`} className="avatar-link">
                     <div className="avatar">U</div>
                 </RouterLink>
                 <div className="username">
-                    <RouterLink to={`/user/${product.owner_user_id ?? product.user_id ?? ''}`}>{username}</RouterLink>
+                    <RouterLink to={`/user/${ownerId}`}>{username}</RouterLink>
                 </div>
             </div>
             <div className="product-image">

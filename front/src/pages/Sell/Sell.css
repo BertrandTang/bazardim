@@ -1,0 +1,54 @@
+.sell-page {
+    padding: 24px;
+}
+
+.sell-form-card {
+    max-width: 920px;
+    margin: 0 auto;
+    background: #b9e9ff;
+    border-radius: 0 40px 0 40px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sell-form-card h1 {
+    margin: 0;
+    color: #333;
+}
+
+.sell-form-card p {
+    margin: 0;
+    color: #444;
+    font-family: monospace;
+}
+
+.sell-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.sell-error {
+    color: #c62828;
+    font-weight: 700;
+}
+
+.sell-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.sell-submit {
+    background: linear-gradient(135deg, #6d35ff, #ff006a) !important;
+    color: #fff !important;
+    border-radius: 0 24px 0 24px !important;
+}
+
+@media (max-width: 900px) {
+    .sell-grid {
+        grid-template-columns: 1fr;
+    }
+}
