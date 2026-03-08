@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Avatar, Stack } from '@mui/material';
+import { Box, Button, TextField, Typography, Avatar, Rating, Stack } from '@mui/material';
 import { useAuth } from '../../context/AuthContext.jsx';
 import figuresData from '../../data/figures.json';
 import ProductCardOwner from '../../components/ProductCard/ProductCardOwner.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
 import { addDeletedProductId, getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
+import { getReviewsForUser, subscribeToProfileReviews } from '../../utils/profileReviewsStorage.js';
 import './Profile.css';
 
 const sections = [
     { id: 'profile', label: 'Profil' },
     { id: 'products', label: 'Mes produits' },
     { id: 'likes', label: 'Mes likes' },
+    { id: 'reviews', label: 'Avis profil' },
 ];
 
 export default function Profile() {
@@ -21,6 +23,7 @@ export default function Profile() {
     const { likedIds } = useLikes();
     const [activeSection, setActiveSection] = useState('profile');
     const [productsVersion, setProductsVersion] = useState(0);
+    const [reviewsVersion, setReviewsVersion] = useState(0);
     const [editValues, setEditValues] = useState({
         email: user?.email || '',
         mdp: user?.mdp || '',
@@ -31,6 +34,12 @@ export default function Profile() {
     useEffect(() => {
         return subscribeToProductStorage(() => {
             setProductsVersion((prev) => prev + 1);
+        });
+    }, []);
+
+    useEffect(() => {
+        return subscribeToProfileReviews(() => {
+            setReviewsVersion((prev) => prev + 1);
         });
     }, []);
 
@@ -64,6 +73,19 @@ export default function Profile() {
         const likedSet = new Set(likedIds.map((id) => String(id)));
         return availableProducts.filter((product) => likedSet.has(String(product.id ?? product.product_id)));
     }, [likedIds, availableProducts]);
+
+    const receivedReviews = useMemo(() => {
+        const reviews = getReviewsForUser(user?.user_id);
+        return reviews
+            .filter((review) => String(review.authorUserId) !== String(user?.user_id))
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }, [user?.user_id, reviewsVersion]);
+
+    const averageRating = useMemo(() => {
+        if (!receivedReviews.length) return 0;
+        const total = receivedReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0);
+        return total / receivedReviews.length;
+    }, [receivedReviews]);
 
     if (!user) return null; // should never happen because route is protected
 
@@ -117,6 +139,31 @@ export default function Profile() {
                             <Box className="profile-likes-grid">
                                 {likedProducts.map((product) => (
                                     <ProductCard key={product.id} product={product} />
+                                ))}
+                            </Box>
+                        )}
+                    </Box>
+                )}
+                {activeSection === 'reviews' && (
+                    <Box className="profile-reviews-section">
+                        <Typography variant="h6" gutterBottom>Avis profil</Typography>
+                        <Box className="profile-reviews-summary">
+                            <Rating value={Number(averageRating.toFixed(1))} precision={0.5} readOnly />
+                            <span>{averageRating ? `${averageRating.toFixed(1)} / 5` : 'Aucune note'}</span>
+                            <small>{receivedReviews.length} avis recus</small>
+                        </Box>
+                        {receivedReviews.length === 0 ? (
+                            <Box className="profile-reviews-empty">Aucun commentaire pour le moment.</Box>
+                        ) : (
+                            <Box className="profile-reviews-list">
+                                {receivedReviews.map((review) => (
+                                    <article key={review.id} className="profile-review-card">
+                                        <div className="profile-review-head">
+                                            <strong>{review.authorUsername}</strong>
+                                            <Rating value={Number(review.rating || 0)} readOnly size="small" />
+                                        </div>
+                                        <p>{review.comment}</p>
+                                    </article>
                                 ))}
                             </Box>
                         )}

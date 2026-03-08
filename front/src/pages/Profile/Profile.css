@@ -54,3 +54,51 @@
   max-height: 52px;
   overflow: hidden;
 }
+
+.profile-reviews-section {
+  background: #fff;
+  border-radius: 0 26px 0 26px;
+  padding: 16px;
+  color: #222;
+}
+
+.profile-reviews-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.profile-reviews-empty {
+  padding: 16px 0;
+  color: #555;
+}
+
+.profile-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-review-card {
+  border: 1px solid #ece6ff;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.profile-review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-review-card p {
+  margin: 8px 0 0;
+  line-height: 1.45;
+  color: #333;
+}
+
+.profile-review-head strong {
+  color: #222;
+}

@@ -3,15 +3,54 @@ import profilesData from '../data/profiles.json';
 
 const AuthContext = createContext(null);
 
+function normalizeAuthUser(rawUser) {
+    if (!rawUser || typeof rawUser !== 'object') return null;
+
+    const draft = {
+        ...rawUser,
+        user_id: rawUser.user_id ?? rawUser.id ?? '',
+        username: rawUser.username ?? rawUser.name ?? '',
+        email: rawUser.email ?? '',
+        profile_img: rawUser.profile_img ?? rawUser.avatar ?? '',
+    };
+
+    const profiles = profilesData.profiles || [];
+
+    const byUserId = draft.user_id
+        ? profiles.find((p) => String(p.user_id) === String(draft.user_id))
+        : null;
+    const byEmail = draft.email
+        ? profiles.find((p) => p.email === draft.email)
+        : null;
+
+    // Fallback when localStorage contains stale or partial auth object.
+    const fromProfiles = byUserId || byEmail || null;
+
+    if (!fromProfiles) {
+        return draft;
+    }
+
+    return {
+        ...fromProfiles,
+        ...draft,
+        user_id: fromProfiles.user_id,
+    };
+}
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
         try {
             const raw = localStorage.getItem('authUser');
-            return raw ? JSON.parse(raw) : null;
+            return raw ? normalizeAuthUser(JSON.parse(raw)) : null;
         } catch {
             return null;
         }
     });
+
+    useEffect(() => {
+        // Normalize current in-memory state once in case Fast Refresh preserved stale values.
+        setUser((prev) => normalizeAuthUser(prev));
+    }, []);
 
     useEffect(() => {
         try {
@@ -25,7 +64,7 @@ export function AuthProvider({ children }) {
             (p) => p.email === email && p.mdp === password
         );
         if (match) {
-            setUser({ ...match });
+            setUser(normalizeAuthUser({ ...match }));
             return true;
         }
         return false;
@@ -36,7 +75,7 @@ export function AuthProvider({ children }) {
     }
 
     function updateProfile(changes) {
-        setUser((prev) => ({ ...prev, ...changes }));
+        setUser((prev) => normalizeAuthUser({ ...prev, ...changes, user_id: prev?.user_id ?? changes?.user_id }));
     }
 
     const value = { user, login, logout, updateProfile };

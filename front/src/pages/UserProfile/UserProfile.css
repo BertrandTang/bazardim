@@ -1,0 +1,106 @@
+.user-profile-page {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1080px;
+    margin: 0 auto;
+}
+
+.user-profile-card {
+    background: #b9e9ff;
+    border-radius: 0 36px 0 36px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 16px;
+    align-items: center;
+}
+
+.user-profile-card h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.user-profile-card p {
+    margin: 4px 0 0;
+    color: #555;
+}
+
+.user-profile-rating-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.user-review-form,
+.user-reviews-list,
+.user-products-section {
+    background: #fff;
+    border-radius: 0 26px 0 26px;
+    padding: 16px;
+    color: #222;
+}
+
+.user-reviews-list p,
+.user-products-section p {
+    color: #444;
+}
+
+.user-review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.user-review-error {
+    color: #c62828;
+    font-weight: 700;
+}
+
+.user-review-card {
+    border: 1px solid #ece6ff;
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin-top: 10px;
+}
+
+.user-review-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-review-head strong {
+    color: #222;
+}
+
+.user-review-card p {
+    margin: 8px 0 0;
+    line-height: 1.45;
+    color: #333;
+}
+
+.user-products-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    justify-items: center;
+}
+
+@media (max-width: 980px) {
+    .user-profile-card {
+        grid-template-columns: 1fr;
+    }
+
+    .user-profile-rating-box {
+        align-items: flex-start;
+    }
+
+    .user-products-grid {
+        grid-template-columns: 1fr;
+    }
+}

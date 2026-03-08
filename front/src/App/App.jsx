@@ -7,6 +7,7 @@ import Cart from '../pages/Cart/Cart.jsx';
 import Profile from '../pages/Profile/Profile.jsx';
 import Product from '../pages/Product/Product.jsx';
 import Sell from '../pages/Sell/Sell.jsx';
+import UserProfile from '../pages/UserProfile/UserProfile.jsx';
 import RequireAuth from '../components/RequireAuth.jsx';
 import { AuthProvider } from '../context/AuthContext.jsx';
 import { LikesProvider } from '../context/LikesContext.jsx';
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/product/:id" element={<Product />} />
+              <Route path="/user/:id" element={<UserProfile />} />
               <Route
                 path="/vendre"
                 element={
