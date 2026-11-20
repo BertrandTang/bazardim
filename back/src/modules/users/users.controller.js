@@ -3,12 +3,7 @@ import { clearAuthCookie } from '../../middlewares/authentication.js';
 import { hashPassword, verifyPassword } from '../../utils/passwords.js';
 import { idSchema } from '../../utils/validation.js';
 import { deleteAccountSchema, updateAccountSchema } from './users.schemas.js';
-import {
-  deleteUserById,
-  findPasswordHashById,
-  findPublicProfileById,
-  updateUserById,
-} from './users.repository.js';
+import { deleteUserById, findPasswordHashById, findPublicProfileById, updateUserById } from './users.repository.js';
 
 /** Lance une erreur 403 si `password` n'est pas le mot de passe actuel de l'utilisateur. */
 async function checkCurrentPassword(userId, password) {

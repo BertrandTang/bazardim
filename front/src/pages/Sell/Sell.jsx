@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductForm from '../../components/ProductForm/ProductForm.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
@@ -27,6 +28,7 @@ export default function Sell() {
 
   return (
     <section className="sell-page">
+      <PageMetadata title="Vendre un produit" noIndex />
       <div className="sell-card">
         <h1>Mettre un produit en vente</h1>
         <p>Complète la fiche le plus précisément possible pour rassurer les acheteurs.</p>

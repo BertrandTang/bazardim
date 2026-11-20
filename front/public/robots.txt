@@ -1,0 +1,11 @@
+# Indique aux robots des moteurs de recherche ce qu'ils peuvent explorer.
+User-agent: *
+Allow: /
+# Pages privées ou sans intérêt pour le référencement
+Disallow: /profile
+Disallow: /vendre
+Disallow: /cart
+Disallow: /auth
+
+# ⚠️ Remplacer par le vrai nom de domaine une fois réservé.
+Sitemap: https://www.bazardim.fr/sitemap.xml

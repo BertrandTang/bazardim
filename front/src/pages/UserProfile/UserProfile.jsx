@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Avatar, Rating, Typography } from '@mui/material';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import ReviewCard from '../../components/ReviewCard/ReviewCard.jsx';
 import ReviewForm from '../../components/ReviewForm/ReviewForm.jsx';
@@ -20,6 +21,7 @@ export default function UserProfile() {
   if (!seller) {
     return (
       <section className="user-profile-page">
+        <PageMetadata title="Profil introuvable" noIndex />
         <Typography variant="h5" component="h1">
           Profil introuvable
         </Typography>
@@ -38,6 +40,10 @@ export default function UserProfile() {
 
   return (
     <section className="user-profile-page">
+      <PageMetadata
+        title={`Profil de ${seller.username}`}
+        description={`Annonces et avis de ${seller.username}, vendeur sur Bazardim.`}
+      />
       {/* L'email n'est volontairement pas affiché : c'est une donnée personnelle (RGPD). */}
       <div className="user-profile-card">
         <Avatar src={seller.profile_img} alt="" sx={{ width: 96, height: 96 }} />

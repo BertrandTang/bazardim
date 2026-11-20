@@ -77,8 +77,9 @@ describe('Avis sur les vendeurs', () => {
 
     const firstReview = (await authorAgent.post('/api/reviews').send({ seller_id: seller.id, rating: 5, comment: 'A' }))
       .body;
-    const secondReview = (await authorAgent.post('/api/reviews').send({ seller_id: seller.id, rating: 5, comment: 'B' }))
-      .body;
+    const secondReview = (
+      await authorAgent.post('/api/reviews').send({ seller_id: seller.id, rating: 5, comment: 'B' })
+    ).body;
 
     await otherAgent.delete(`/api/reviews/${firstReview.id}`).expect(403);
     await authorAgent.delete(`/api/reviews/${firstReview.id}`).expect(204);

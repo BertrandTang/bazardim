@@ -23,10 +23,7 @@ export function CartProvider({ children }) {
 
   // Nombre total d'articles (affiché dans la pastille de la barre de navigation).
   const itemCount = cartLines.reduce((total, cartLine) => total + cartLine.quantity, 0);
-  const totalPrice = cartLines.reduce(
-    (total, cartLine) => total + cartLine.product.price * cartLine.quantity,
-    0,
-  );
+  const totalPrice = cartLines.reduce((total, cartLine) => total + cartLine.product.price * cartLine.quantity, 0);
 
   /** Ajoute un exemplaire du produit (ou augmente sa quantité s'il est déjà dans le panier). */
   function addToCart(productId) {
@@ -46,9 +43,7 @@ export function CartProvider({ children }) {
     setCartItems((previousItems) =>
       previousItems
         .map((cartItem) =>
-          cartItem.productId === productId
-            ? { ...cartItem, quantity: cartItem.quantity + quantityChange }
-            : cartItem,
+          cartItem.productId === productId ? { ...cartItem, quantity: cartItem.quantity + quantityChange } : cartItem,
         )
         .filter((cartItem) => cartItem.quantity > 0),
     );

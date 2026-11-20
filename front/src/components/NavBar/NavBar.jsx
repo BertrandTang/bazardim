@@ -1,10 +1,10 @@
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import SearchIcon from '@mui/icons-material/Search';
-import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
 import { CATEGORIES } from '../../data/categories.js';
+import NavBarDropdown from './NavBarDropdown.jsx';
+import { CartIcon, SearchIcon } from './NavBarIcons.jsx';
 import './NavBar.css';
 
 // Pages qui affichent une liste de produits : la recherche reste sur ces pages,
@@ -50,7 +50,7 @@ export default function NavBar() {
           <img src="/icons/bazardim_logo.ico" alt="Bazardim - retour à l'accueil" className="navbar-logo" />
         </Link>
         <form className="navbar-search" role="search" onSubmit={handleSearchSubmit}>
-          <SearchIcon aria-hidden="true" />
+          <SearchIcon />
           {/* `key` force React à recréer le champ quand la recherche de l'URL change,
               pour qu'il affiche toujours la bonne valeur (ex : après un retour arrière). */}
           <input
@@ -67,27 +67,22 @@ export default function NavBar() {
       <div className="navbar-middle">
         <Link to="/">ACCUEIL</Link>
 
-        <div className="navbar-dropdown">
-          <Link to={CATEGORIES[0].path}>CATEGORIES</Link>
-          <div className="navbar-dropdown-menu">
-            {CATEGORIES.map((category) => (
-              <Link key={category.value} to={category.path}>
-                {category.label}
-              </Link>
-            ))}
-          </div>
-        </div>
+        <NavBarDropdown label="CATEGORIES">
+          {CATEGORIES.map((category) => (
+            <Link key={category.value} to={category.path}>
+              {category.label}
+            </Link>
+          ))}
+        </NavBarDropdown>
 
-        <div className="navbar-dropdown">
-          <Link to="/licences">LICENCES</Link>
-          <div className="navbar-dropdown-menu">
-            {licences.map((licence) => (
-              <Link key={licence} to={`/licences?licence=${encodeURIComponent(licence)}`}>
-                {licence}
-              </Link>
-            ))}
-          </div>
-        </div>
+        <NavBarDropdown label="LICENCES">
+          <Link to="/licences">Toutes les licences</Link>
+          {licences.map((licence) => (
+            <Link key={licence} to={`/licences?licence=${encodeURIComponent(licence)}`}>
+              {licence}
+            </Link>
+          ))}
+        </NavBarDropdown>
 
         <Link to="/vendre" className="navbar-sell-button">
           VENDRE
@@ -111,7 +106,7 @@ export default function NavBar() {
           )}
         </div>
         <Link to="/cart" className="navbar-cart" aria-label={`Panier (${itemCount} articles)`}>
-          <ShoppingCartOutlinedIcon />
+          <CartIcon />
           {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
         </Link>
       </div>

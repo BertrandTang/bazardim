@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████░░░░░░░░░░░░░░░░` 22 % (22 / 102 tâches)**
+**Progression globale : `████████░░░░░░░░░░░░` 40 % (42 / 104 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
-| Bloc 2 — Front-end | `███░░░░░░░░░░░░░░░░░` 13 % | 5 / 38 |
-| Bloc 3 — Back-end | `█████████░░░░░░░░░░░` 43 % | 16 / 37 |
+| Bloc 2 — Front-end | `████████████░░░░░░░░` 60 % | 24 / 40 |
+| Bloc 3 — Back-end | `█████████░░░░░░░░░░░` 46 % | 17 / 37 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -23,17 +23,17 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | --- | --- |
 | Front-end (React) | ✅ Fonctionnel : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, avis vendeurs, inscription / connexion. Données simulées dans le localStorage. |
 | Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, avis, favoris. ❌ Pas encore branchée au front, pas de paiement. |
-| Tests | ✅ Back : 42 tests, 96 % de couverture. ❌ Front : aucun test. |
-| CI / industrialisation | ✅ GitHub Actions (`.github/workflows/ci.yml`) : lint + build du front, lint + audit + tests du back. |
+| Tests | ✅ Back : 42 tests, 97 % de couverture. ✅ Front : 56 tests, 92 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. Dependabot configuré. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
 ### Les 5 priorités
 
 1. **Brancher le front sur l'API** : remplacer les fonctions `⚠️ TEMPORAIRE` des contextes par des appels `fetch`.
-2. **Tests front** avec **≥ 50 % de couverture** (C18) : critère chiffré, éliminatoire.
-3. **Paiement Stripe** + commandes + stratégie de monétisation (C23).
-4. **Consommer une API tierce** depuis le front (C17 / E12) : rien actuellement.
-5. **Conformité RGPD** : bannière cookies, politique de confidentialité, mentions légales, demande d'accès aux données, double opt-in (C11).
+2. **Paiement Stripe** + commandes + stratégie de monétisation (C23).
+3. **Conformité RGPD** : bannière cookies, politique de confidentialité, mentions légales, demande d'accès aux données, double opt-in (C11).
+4. **Audits Lighthouse** (accessibilité, SEO, performance) à lancer et à mettre dans le dossier — commande dans la section C13.
+5. **Dossier écrit du bloc 1** : rien n'est encore coché.
 
 ---
 
@@ -64,12 +64,14 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 
 ### C13 / C15 — Interface, UX et accessibilité
 
-- [ ] Faire un audit d'accessibilité (Lighthouse, extension **axe DevTools** ou **WAVE**) et viser 0 erreur bloquante ; mettre le rapport dans le dossier.
-- [ ] Contraste : le violet `#6d35ff` sur le bleu `#b9e9ff` est à ≈ 4,5:1, **juste à la limite** du niveau AA ; les textes de 11 px des cartes produit sont trop petits. Foncer légèrement le violet ou agrandir ces textes.
-- [ ] Menus déroulants CATEGORIES / LICENCES : ils s'ouvrent au survol, ce qui marche mal sur mobile (tactile). Prévoir un menu « burger » ou un clic pour ouvrir.
-- [ ] Ajouter une **page 404** (route `path="*"` dans `App.jsx`).
-- [ ] Ajouter un `<h1>` sur la page d'accueil (aujourd'hui seule la liste de produits est affichée).
-- [ ] Tester la navigation complète au clavier (Tab / Entrée / Échap) et avec un lecteur d'écran (VoiceOver sur Mac : Cmd + F5).
+- [ ] Faire un audit d'accessibilité (Lighthouse, extension **axe DevTools** ou **WAVE**) et viser 0 erreur bloquante ; mettre le rapport dans le dossier. Commande prête (build lancé avec `npm run build && npm run preview` dans `front/`) :
+  `npx lighthouse http://localhost:4173 --view --only-categories=performance,accessibility,best-practices,seo`
+- [x] Contrastes conformes WCAG AA (≥ 4,5:1) : violet `#5b2be0`, rose `#d6005a`, étiquettes et boutons de suppression foncés ; textes de 11 px passés à 12-13 px.
+- [x] Menus CATEGORIES / LICENCES utilisables à la souris, au doigt et au clavier (Entrée, Échap, `aria-expanded`) : `components/NavBar/NavBarDropdown.jsx`.
+- [x] Page **404** (route `path="*"`).
+- [x] Un `<h1>` sur chaque page (accueil : adapté à la catégorie / licence) + lien « Aller au contenu » pour le clavier.
+- [x] Navigation au clavier testée automatiquement (menus, lien d'évitement, formulaires).
+- [ ] Tester avec un lecteur d'écran (VoiceOver sur Mac : Cmd + F5) et noter les résultats dans le dossier.
 - [ ] Vérifier que **tous les cas d'utilisation** du dossier de conception sont implémentés (commande, historique d'achats, messagerie entre utilisateurs ? tri par prix ? pagination ?).
 
 ### C14 — Charte graphique
@@ -80,18 +82,19 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 
 - [x] Analyse statique : ESLint (`npm run lint`).
 - [ ] Ajouter **SonarCloud** (gratuit pour les dépôts publics) ou SonarQube pour un rapport de qualité à montrer au jury.
-- [ ] Ajouter **Prettier** pour un formatage automatique et uniforme du code.
+- [x] **Prettier** (front et back) : `npm run format`, vérifié par la CI.
 - [ ] Sécurité (à configurer au déploiement) : HTTPS / certificat SSL, en-têtes HTTP de sécurité (CSP, `X-Content-Type-Options`, `Strict-Transport-Security`...), CORS côté API. Vérifier avec securityheaders.com et Mozilla Observatory.
-- [ ] `npm audit` sans vulnérabilité ; outil de mise à jour des dépendances (**Dependabot** sur GitHub).
+- [x] `npm audit` sans vulnérabilité (vérifié par la CI) ; **Dependabot** configuré (`.github/dependabot.yml`).
 - [ ] Supprimer le stockage des mots de passe en clair dans le localStorage (disparaîtra avec le vrai back-end : le front ne doit garder qu'un jeton ou un cookie `httpOnly`).
-- [ ] Éco-conception : le JavaScript fait 513 Ko → découper par page avec `React.lazy()` + `<Suspense>`. Mesurer avec **EcoIndex** / GreenIT-Analysis et mettre le score dans le dossier.
+- [x] Éco-conception : pages chargées à la demande (`React.lazy`), bibliothèques en fichiers séparés mis en cache, Material UI retiré de la page d'accueil : JavaScript initial de 163 Ko → 97 Ko compressés (−40 %).
+- [ ] Mesurer avec **EcoIndex** / GreenIT-Analysis et mettre le score dans le dossier.
 - [x] Images de démonstration redimensionnées (41 Mo → 2,3 Mo). À faire aussi : convertir en **WebP**, et redimensionner les images envoyées par les vendeurs (côté back).
 - [ ] Tester sur Chrome, Firefox, Safari et sur mobile (compatibilité navigateurs).
 
 ### C17 / E12 — Consommer une API tierce ⚠️ rien actuellement
 
 - [ ] Consommer **votre propre API** (back-end) avec `fetch` + authentification (JWT ou cookie de session).
-- [ ] Consommer **une API tierce**. Idées adaptées au projet :
+- [x] Consommer **une API tierce** : autocomplétion de l'adresse de livraison dans le panier avec l'API de géocodage de la Géoplateforme (IGN), `services/addressApi.js` + `components/AddressAutocomplete/`. Gestion du délai de frappe, de l'annulation des requêtes, du chargement et des erreurs. Autres idées :
   - **API Adresse** (api-adresse.data.gouv.fr, gratuite, sans clé) : autocomplétion de l'adresse de livraison au moment de la commande ;
   - API de recherche par **code EAN** pour pré-remplir la fiche produit à la mise en vente ;
   - **Stripe** (paiement) compte aussi comme service tiers.
@@ -99,27 +102,27 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 
 ### C18 / E13 — Tests front ⚠️ couverture ≥ 50 % obligatoire
 
-- [ ] Installer **Vitest** + **React Testing Library** + `@vitest/coverage-v8`, ajouter le script `npm test`.
-- [ ] Rédiger un **plan de tests** (tableau : fonctionnalité / scénario / résultat attendu) cohérent avec les cas d'utilisation.
-- [ ] Tests unitaires faciles pour commencer : `utils/productHelpers.js`, les contextes (`CartContext` : ajout, quantité, suppression ; `AuthContext` : connexion, inscription), `ProductForm` (validation).
-- [ ] Tests de composants : `ProductCard`, `NavBar` (recherche), pages `Auth` et `SignUp`.
+- [x] **Vitest** + **React Testing Library** + couverture (`npm test`, `npm run test:coverage`) : 56 tests, 92 % des lignes, seuil bloquant à 80 %.
+- [x] **Plan de tests** front et back : [docs/plan-de-tests.md](docs/plan-de-tests.md) (à relire et à compléter avec tes cas d'utilisation).
+- [x] Tests unitaires : utilitaires, hook `useLocalStorageState`, contextes, service d'adresses.
+- [x] Tests de composants et de pages : cartes, formulaires, barre de navigation, toutes les pages.
 - [ ] Optionnel mais apprécié : tests de bout en bout avec **Playwright** (parcours achat, mise en vente).
 - [ ] Capture du rapport de couverture (≥ 50 %) dans le dossier.
 
 ### C19 / E14 — Industrialisation front
 
 - [x] **GitHub Actions** : lint + build à chaque push (`.github/workflows/ci.yml`).
-- [ ] Ajouter `npm test` du front dans la CI une fois les tests écrits.
+- [x] Tests du front (avec couverture) et vérification du formatage dans la CI.
 - [x] Gestion des dépendances : `package.json` + `package-lock.json` (outils de build rangés dans `devDependencies`).
-- [ ] Optimisation du build : découpage du code (`React.lazy`), compression, analyse de la taille du bundle (`rollup-plugin-visualizer`).
+- [x] Optimisation du build : découpage par page, fichiers de bibliothèques séparés, carte du bundle avec `npm run build:analyze` (`dist/stats.html`).
 
 ### C20 — SEO ⚠️ ≥ 70 % des critères techniques
 
 - [x] `lang="fr"`, `<title>` et `<meta name="description">` dans `index.html`.
-- [ ] Titre et description **différents pour chaque page** (React 19 permet d'écrire `<title>` et `<meta>` directement dans un composant).
-- [ ] `robots.txt` et `sitemap.xml` dans `front/public/`.
-- [ ] Données structurées **schema.org `Product`** (JSON-LD) sur la fiche produit.
-- [ ] Balises Open Graph (partage sur les réseaux sociaux).
+- [x] Titre, description et `og:title` **propres à chaque page** (`components/PageMetadata`), `noindex` sur les pages privées.
+- [x] `robots.txt` et `sitemap.xml` dans `front/public/` (⚠️ remplacer `www.bazardim.fr` par le vrai domaine ; les pages produits devront être ajoutées au sitemap par le back).
+- [x] Données structurées **schema.org `Product`** (JSON-LD) sur la fiche produit : prix, état, vendeur, EAN.
+- [x] Balises Open Graph (titre, description, image par page).
 - [ ] Limite d'une SPA : le contenu est généré en JavaScript. L'expliquer au jury et proposer une solution (pré-rendu, ou migration vers un framework SSR comme Next.js / React Router en mode framework).
 - [ ] Outils de mesure d'audience **respectueux du RGPD** : **Matomo** ou **Plausible** (pas de bannière nécessaire avec Matomo en mode exempté). Intégration fonctionnelle à montrer.
 - [ ] Score **Lighthouse SEO** dans le dossier.
@@ -185,7 +188,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 
 - [x] CI GitHub Actions : lint, `npm audit`, tests avec couverture (base PostgreSQL fournie par la CI).
 - [ ] Image **Docker** de production (multi-stage) ; scan de sécurité de l'image (Trivy).
-- [ ] **Dependabot** pour les mises à jour de dépendances.
+- [x] **Dependabot** pour les mises à jour de dépendances. **Prettier** vérifié par la CI.
 
 ### RGPD dans l'application (C11, à implémenter)
 

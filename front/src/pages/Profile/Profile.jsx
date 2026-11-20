@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Avatar, Button, Rating, Stack, TextField, Typography } from '@mui/material';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import ReviewCard from '../../components/ReviewCard/ReviewCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -29,6 +30,7 @@ export default function Profile() {
 
   return (
     <div className="profile-page">
+      <PageMetadata title={`Mon profil - ${activeSection.label}`} noIndex />
       <nav className="profile-sidebar" aria-label="Sections du profil">
         <Stack spacing={1}>
           {SECTIONS.map((section) => (

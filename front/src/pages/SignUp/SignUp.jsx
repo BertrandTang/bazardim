@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const MINIMUM_PASSWORD_LENGTH = 8;
@@ -60,6 +61,10 @@ export default function SignUp() {
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', py: 6, px: 2 }}>
+      <PageMetadata
+        title="Inscription"
+        description="Créez votre compte Bazardim gratuitement pour vendre et acheter des figurines de collection."
+      />
       <Paper elevation={3} sx={{ width: '100%', maxWidth: 480, p: 4, borderRadius: 4 }}>
         <Typography variant="h5" component="h1" gutterBottom>
           Inscription

@@ -3,13 +3,7 @@ import { isOwnerOrAdmin } from '../../middlewares/authentication.js';
 import { idSchema } from '../../utils/validation.js';
 import { findUserById } from '../users/users.repository.js';
 import { createReviewSchema, reviewFiltersSchema, updateReviewSchema } from './reviews.schemas.js';
-import {
-  deleteReviewById,
-  findReviewById,
-  findReviews,
-  insertReview,
-  updateReviewById,
-} from './reviews.repository.js';
+import { deleteReviewById, findReviewById, findReviews, insertReview, updateReviewById } from './reviews.repository.js';
 
 /** Retrouve l'avis de l'URL (404 s'il n'existe pas). */
 async function findReviewOrFail(request) {

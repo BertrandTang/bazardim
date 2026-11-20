@@ -1,0 +1,23 @@
+# Dependabot ouvre automatiquement des pull requests pour mettre à jour les dépendances
+# (corrections de sécurité comprises). La CI vérifie chaque mise à jour avant la fusion.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /front
+    schedule:
+      interval: weekly
+    groups:
+      # Une seule pull request par semaine pour les mises à jour mineures, plutôt qu'une par paquet.
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /back
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

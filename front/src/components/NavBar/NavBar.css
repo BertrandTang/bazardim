@@ -103,27 +103,43 @@
   position: relative;
   display: flex;
   align-items: center;
+  /* Zone de survol un peu plus haute que le bouton, pour atteindre le menu sans le fermer */
+  padding-block: 8px;
 }
 
-/* Le menu est caché par défaut et s'affiche au survol ou quand un de ses liens a le focus clavier */
+/* Bouton qui ouvre le menu : même apparence que les liens de la barre */
+.navbar-dropdown-button {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-primary);
+}
+
+.navbar-dropdown-button:hover,
+.navbar-dropdown-button[aria-expanded='true'] {
+  color: var(--color-accent);
+}
+
+/* Le menu est affiché ou caché par React (attribut hidden, voir NavBarDropdown.jsx) */
 .navbar-dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  /* Collé sous le bouton (pas de trou) pour que le survol ne se perde pas entre les deux */
+  top: 100%;
   left: 0;
   z-index: 20;
   min-width: 240px;
-  display: none;
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 8px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
-
-.navbar-dropdown:hover .navbar-dropdown-menu,
-.navbar-dropdown:focus-within .navbar-dropdown-menu {
-  display: flex;
 }
 
 .navbar-dropdown-menu a {
@@ -192,9 +208,9 @@
   right: -4px;
   padding: 2px 6px;
   border-radius: 999px;
-  background: #ff4d6d;
+  background: var(--color-danger);
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
 }
 
@@ -237,12 +253,19 @@
 }
 
 @media (max-width: 480px) {
+  .navbar-middle a,
+  .navbar-dropdown-button {
+    font-size: 14px;
+  }
+
   .navbar-logo {
     width: 60px;
     height: 60px;
   }
+}
 
-  .navbar-middle a {
-    font-size: 14px;
-  }
+/* Icônes SVG : elles prennent la couleur du texte autour (currentColor) */
+.navbar-icon {
+  fill: currentColor;
+  flex-shrink: 0;
 }

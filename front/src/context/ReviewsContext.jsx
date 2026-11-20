@@ -48,7 +48,9 @@ export function ReviewsProvider({ children }) {
   /** Publie un avis de l'utilisateur connecté sur le profil `targetUserId`. */
   function addReview(targetUserId, rating, comment) {
     const newReview = {
-      id: `REV${Date.now()}`,
+      // randomUUID garantit un identifiant unique (Date.now() donnerait le même id à deux avis
+      // publiés dans la même milliseconde).
+      id: crypto.randomUUID(),
       targetUserId: String(targetUserId),
       authorUserId: String(currentUser.user_id),
       authorUsername: currentUser.username,

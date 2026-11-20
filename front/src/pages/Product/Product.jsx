@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import AddToCartButton from '../../components/AddToCartButton/AddToCartButton.jsx';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductForm from '../../components/ProductForm/ProductForm.jsx';
 import SellerLink from '../../components/SellerLink/SellerLink.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -11,12 +12,35 @@ import './Product.css';
 
 /** Transforme la taille { height, width, scale } en texte lisible : "18 cm • 25 cm • 1/8". */
 function formatSize(size) {
-  const parts = [
-    size?.height && `${size.height} cm`,
-    size?.width && `${size.width} cm`,
-    size?.scale,
-  ].filter(Boolean);
+  const parts = [size?.height && `${size.height} cm`, size?.width && `${size.width} cm`, size?.scale].filter(Boolean);
   return parts.join(' • ');
+}
+
+/**
+ * Données structurées (format JSON-LD, vocabulaire schema.org) décrivant le produit.
+ * Google les lit pour afficher le prix et l'état directement dans ses résultats de recherche.
+ * https://developers.google.com/search/docs/appearance/structured-data/product
+ */
+function buildStructuredData(product) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.description,
+    image: new URL(getProductImage(product), window.location.origin).href,
+    sku: String(product.id),
+    ...(product.EAN_number && { gtin13: product.EAN_number }),
+    ...(product.manufacturer && { brand: { '@type': 'Brand', name: product.manufacturer } }),
+    offers: {
+      '@type': 'Offer',
+      price: Number(product.price).toFixed(2),
+      priceCurrency: 'EUR',
+      availability: 'https://schema.org/InStock',
+      itemCondition:
+        product.state_of_wear === 'Neuf' ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
+      seller: { '@type': 'Person', name: product.owner_username },
+    },
+  };
 }
 
 /** Page de détail d'un produit (adresse : /product/:id). Le vendeur peut y modifier ou supprimer son annonce. */
@@ -37,6 +61,7 @@ export default function Product() {
   if (!product) {
     return (
       <section className="product-page">
+        <PageMetadata title="Produit introuvable" noIndex />
         <h1>Produit introuvable</h1>
       </section>
     );
@@ -71,6 +96,16 @@ export default function Product() {
 
   return (
     <section className="product-page">
+      <PageMetadata
+        title={product.title}
+        description={`${product.description.slice(0, 140)} - ${formatPrice(product.price)} sur Bazardim.`}
+        image={getProductImage(product)}
+      />
+      {/* JSON.stringify produit le texte ; on remplace "<" pour qu'un titre contenant
+          "</script>" ne puisse jamais fermer la balise (protection XSS). */}
+      <script type="application/ld+json">
+        {JSON.stringify(buildStructuredData(product)).replaceAll('<', '\\u003c')}
+      </script>
       <article className="product-detail">
         <h1 className="product-detail-title">{product.title}</h1>
 

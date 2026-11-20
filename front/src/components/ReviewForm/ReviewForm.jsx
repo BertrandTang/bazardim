@@ -35,11 +35,7 @@ export default function ReviewForm({ initialRating = 5, initialComment = '', sub
   return (
     <form className="review-form" onSubmit={handleSubmit} noValidate>
       {/* Le composant Rating renvoie null si on reclique sur la note déjà choisie : on garde alors 0. */}
-      <Rating
-        name="rating"
-        value={rating}
-        onChange={(event, newRating) => setRating(newRating ?? 0)}
-      />
+      <Rating name="rating" value={rating} onChange={(event, newRating) => setRating(newRating ?? 0)} />
       <TextField
         label="Votre commentaire"
         multiline

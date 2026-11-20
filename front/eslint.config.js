@@ -6,7 +6,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 
 // Configuration de l'analyse statique du code (lancée avec `npm run lint`).
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [js.configs.recommended, reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
@@ -23,8 +23,9 @@ export default defineConfig([
     },
   },
   {
-    // Les fichiers de contexte exportent volontairement un composant (Provider) ET un hook (useXxx).
-    files: ['src/context/**/*.jsx'],
+    // Les fichiers de contexte exportent volontairement un composant (Provider) ET un hook (useXxx) ;
+    // les utilitaires de test exportent des composants et des fonctions.
+    files: ['src/context/**/*.jsx', 'src/test/**/*.jsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

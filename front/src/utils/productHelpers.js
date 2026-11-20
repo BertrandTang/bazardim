@@ -13,8 +13,7 @@ const DEMO_IMAGE_COUNT = 11;
  */
 export function getProductImage(product) {
   const image = product.img ?? '';
-  const isUsableImage =
-    image.startsWith('/') || image.startsWith('https://') || image.startsWith('http://');
+  const isUsableImage = image.startsWith('/') || image.startsWith('https://') || image.startsWith('http://');
 
   if (isUsableImage) {
     return image;

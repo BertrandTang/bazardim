@@ -1,6 +1,8 @@
 import { useSearchParams } from 'react-router-dom';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
+import { CATEGORIES } from '../../data/categories.js';
 import './Home.css';
 
 /** Regroupe en un seul texte (en minuscules) tous les champs d'un produit sur lesquels on peut chercher. */
@@ -30,7 +32,8 @@ export default function Home({ category }) {
   const [searchParams] = useSearchParams();
 
   const licenceFilter = searchParams.get('licence') ?? '';
-  const searchText = (searchParams.get('q') ?? '').trim().toLowerCase();
+  const rawSearchText = (searchParams.get('q') ?? '').trim();
+  const searchText = rawSearchText.toLowerCase();
 
   // Pas besoin de useState : la liste filtrée est recalculée à chaque affichage
   // à partir des produits et de l'URL.
@@ -41,8 +44,29 @@ export default function Home({ category }) {
     return matchesCategory && matchesLicence && matchesSearch;
   });
 
+  // Titre principal de la page (<h1>), important pour le référencement et les lecteurs d'écran.
+  const categoryLabel = CATEGORIES.find((categoryItem) => categoryItem.value === category)?.label;
+  let pageTitle = '';
+  if (categoryLabel) {
+    pageTitle = `${categoryLabel} d’occasion`;
+  } else if (licenceFilter) {
+    pageTitle = `Figurines ${licenceFilter}`;
+  }
+  const heading = pageTitle || 'Figurines et statues de collection d’occasion';
+
   return (
     <section className="home-page">
+      <PageMetadata
+        title={pageTitle}
+        description={`${heading} vendues par des collectionneurs sur Bazardim. ${products.length} annonces à découvrir.`}
+      />
+      <h1 className="home-title">{heading}</h1>
+      {rawSearchText && (
+        <p className="home-search-summary" role="status">
+          {filteredProducts.length} résultat(s) pour « {rawSearchText} »
+        </p>
+      )}
+
       {filteredProducts.length === 0 ? (
         <p className="home-empty">Aucun produit ne correspond à votre recherche.</p>
       ) : (

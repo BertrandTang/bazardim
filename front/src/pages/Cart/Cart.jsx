@@ -1,14 +1,20 @@
+import AddressAutocomplete from '../../components/AddressAutocomplete/AddressAutocomplete.jsx';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import { useCart } from '../../context/CartContext.jsx';
+import useLocalStorageState from '../../hooks/useLocalStorageState.js';
 import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
 import './Cart.css';
 
 /** Page panier : liste des articles, modification des quantités et total de la commande. */
 export default function Cart() {
   const { cartLines, totalPrice, changeQuantity, removeFromCart, clearCart } = useCart();
+  // Adresse de livraison choisie, gardée d'une visite à l'autre (null tant qu'aucune n'est choisie).
+  const [shippingAddress, setShippingAddress] = useLocalStorageState('shippingAddress', null);
 
   if (cartLines.length === 0) {
     return (
       <section className="cart-page">
+        <PageMetadata title="Panier" noIndex />
         <h1>Panier</h1>
         <p className="cart-empty">Votre panier est vide.</p>
       </section>
@@ -17,6 +23,7 @@ export default function Cart() {
 
   return (
     <section className="cart-page">
+      <PageMetadata title="Panier" noIndex />
       <div className="cart-header">
         <h1>Panier</h1>
         <button type="button" className="cart-clear-button" onClick={clearCart}>
@@ -67,6 +74,11 @@ export default function Cart() {
           </li>
         ))}
       </ul>
+
+      <section className="cart-shipping" aria-labelledby="cart-shipping-title">
+        <h2 id="cart-shipping-title">Livraison</h2>
+        <AddressAutocomplete value={shippingAddress} onChange={setShippingAddress} />
+      </section>
 
       <div className="cart-summary">
         <span className="cart-summary-label">Total commande</span>

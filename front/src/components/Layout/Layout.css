@@ -10,3 +10,14 @@
   flex: 1;
   width: 100%;
 }
+
+/* Le contenu reçoit le focus via le lien "Aller au contenu" : pas besoin de contour visible. */
+.layout-main:focus {
+  outline: none;
+}
+
+.layout-loading {
+  padding: 48px 16px;
+  text-align: center;
+  color: #555;
+}

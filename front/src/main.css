@@ -1,10 +1,11 @@
 /* ================================================================== */
 /* Charte graphique : couleurs réutilisées dans tous les fichiers CSS  */
-/* (on écrit var(--color-primary) au lieu de recopier #6d35ff)         */
+/* (on écrit var(--color-primary) au lieu de recopier #5b2be0)         */
 /* ================================================================== */
 :root {
-  --color-primary: #6d35ff; /* violet : liens, textes de marque */
-  --color-accent: #ff006a; /* rose : survol, prix */
+  --color-primary: #5b2be0; /* violet : liens, textes de marque (contraste 5,6:1 sur le bleu clair) */
+  --color-accent: #d6005a; /* rose : survol, prix (contraste 5,2:1 sur blanc) */
+  --color-danger: #e11d48; /* rouge : actions de suppression */
   --color-surface: #b9e9ff; /* bleu clair : fond des cartes, barre de navigation */
   --color-text: #213547;
   --color-error: #c62828;
@@ -41,6 +42,38 @@ button {
   cursor: pointer;
 }
 
+/* L'attribut HTML `hidden` doit toujours cacher l'élément, même si une classe lui donne display: flex. */
+[hidden] {
+  display: none !important;
+}
+
+/* Texte lu par les lecteurs d'écran mais invisible à l'écran. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Lien "Aller au contenu" : invisible tant qu'on n'y arrive pas avec la touche Tab. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 100;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.skip-link:focus {
+  top: 16px;
+  color: #fff;
+}
+
 /* Accessibilité : contour bien visible sur l'élément sélectionné au clavier (touche Tab).
    :focus-visible ne s'applique pas lors d'un clic à la souris. */
 :focus-visible {
@@ -69,11 +102,11 @@ button {
 }
 
 .product-tag.category {
-  background: #ae72f9;
+  background: #9333ea;
 }
 
 .product-tag.character {
-  background: #f59e0b;
+  background: #b45309;
 }
 
 /* Pastille de prix */

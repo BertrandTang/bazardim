@@ -77,21 +77,21 @@
 .product-description {
   flex: 1 1 auto;
   margin: 0;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.35;
   font-family: monospace;
   color: #444;
-  /* Coupe le texte après 8 lignes avec "..." */
+  /* Coupe le texte après 6 lignes avec "..." */
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 8;
-  line-clamp: 8;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
 }
 
 .product-manufacturer {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   font-family: monospace;
   color: var(--color-primary);
   white-space: nowrap;
@@ -132,7 +132,7 @@
 }
 
 .product-delete-button {
-  background: #ff4d6d;
+  background: var(--color-danger);
 }
 
 .product-delete-button:hover {

@@ -21,14 +21,14 @@ npm run db:reset
 npm run dev        # http://localhost:3000/api/health
 ```
 
-| Commande | Rôle |
-| --- | --- |
-| `npm run dev` | API en développement (rechargement automatique) |
-| `npm start` | API en production (variables d'environnement à fournir) |
-| `npm run db:reset` | ⚠️ efface la base, recrée les tables (`database/schema.sql`) et insère les données de démo |
-| `npm test` | tests automatiques (sur la base `bazardim_test`, jamais sur celle de dev) |
-| `npm run test:coverage` | tests + rapport de couverture (`coverage/index.html`), échoue sous 80 % |
-| `npm run lint` | analyse statique (ESLint) |
+| Commande                | Rôle                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| `npm run dev`           | API en développement (rechargement automatique)                                            |
+| `npm start`             | API en production (variables d'environnement à fournir)                                    |
+| `npm run db:reset`      | ⚠️ efface la base, recrée les tables (`database/schema.sql`) et insère les données de démo |
+| `npm test`              | tests automatiques (sur la base `bazardim_test`, jamais sur celle de dev)                  |
+| `npm run test:coverage` | tests + rapport de couverture (`coverage/index.html`), échoue sous 80 %                    |
+| `npm run lint`          | analyse statique (ESLint)                                                                  |
 
 Comptes de démo : `collectionneurdu92@example.com` / `password123`, administrateur : `admin@example.com` / `admin123`.
 
@@ -74,29 +74,29 @@ Le trajet d'une requête : **route** → `requireAuth` (si protégée) → **con
 Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+ `details` par champ pour une erreur de validation 400).
 🔒 = connexion requise (cookie envoyé avec `credentials: 'include'` côté front).
 
-| Méthode | Route | Description |
-| --- | --- | --- |
-| GET | `/api/health` | État de l'API et de la base |
-| POST | `/api/auth/register` | Inscription `{ username, email, password }` → 201 + cookie |
-| POST | `/api/auth/login` | Connexion `{ email, password }` → cookie |
-| POST | `/api/auth/logout` | Déconnexion → 204 |
-| GET 🔒 | `/api/auth/me` | Utilisateur connecté |
-| GET | `/api/users/:id` | Profil public (pseudo, image, note moyenne, nombre d'avis — pas d'email) |
-| PATCH 🔒 | `/api/users/me` | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe) |
-| DELETE 🔒 | `/api/users/me` | Supprimer son compte `{ current_password }` (RGPD) |
-| GET | `/api/products` | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset` |
-| GET | `/api/products/:id` | Détail d'un produit |
-| POST 🔒 | `/api/products` | Créer une annonce |
-| PUT 🔒 | `/api/products/:id` | Modifier son annonce (propriétaire ou admin) |
-| DELETE 🔒 | `/api/products/:id` | Supprimer son annonce (propriétaire ou admin) |
-| GET | `/api/licences` | Licences utilisées par au moins une annonce |
-| GET | `/api/reviews?seller_id=` ou `?author_id=` | Avis reçus / écrits |
-| POST 🔒 | `/api/reviews` | `{ seller_id, rating (1-5), comment }` |
-| PUT 🔒 | `/api/reviews/:id` | Modifier son avis `{ rating, comment }` |
-| DELETE 🔒 | `/api/reviews/:id` | Supprimer son avis (auteur ou admin) |
-| GET 🔒 | `/api/likes` | Produits mis en favoris |
-| PUT 🔒 | `/api/likes/:productId` | Ajouter aux favoris (sans effet si déjà présent) |
-| DELETE 🔒 | `/api/likes/:productId` | Retirer des favoris |
+| Méthode   | Route                                      | Description                                                                              |
+| --------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| GET       | `/api/health`                              | État de l'API et de la base                                                              |
+| POST      | `/api/auth/register`                       | Inscription `{ username, email, password }` → 201 + cookie                               |
+| POST      | `/api/auth/login`                          | Connexion `{ email, password }` → cookie                                                 |
+| POST      | `/api/auth/logout`                         | Déconnexion → 204                                                                        |
+| GET 🔒    | `/api/auth/me`                             | Utilisateur connecté                                                                     |
+| GET       | `/api/users/:id`                           | Profil public (pseudo, image, note moyenne, nombre d'avis — pas d'email)                 |
+| PATCH 🔒  | `/api/users/me`                            | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)  |
+| DELETE 🔒 | `/api/users/me`                            | Supprimer son compte `{ current_password }` (RGPD)                                       |
+| GET       | `/api/products`                            | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset` |
+| GET       | `/api/products/:id`                        | Détail d'un produit                                                                      |
+| POST 🔒   | `/api/products`                            | Créer une annonce                                                                        |
+| PUT 🔒    | `/api/products/:id`                        | Modifier son annonce (propriétaire ou admin)                                             |
+| DELETE 🔒 | `/api/products/:id`                        | Supprimer son annonce (propriétaire ou admin)                                            |
+| GET       | `/api/licences`                            | Licences utilisées par au moins une annonce                                              |
+| GET       | `/api/reviews?seller_id=` ou `?author_id=` | Avis reçus / écrits                                                                      |
+| POST 🔒   | `/api/reviews`                             | `{ seller_id, rating (1-5), comment }`                                                   |
+| PUT 🔒    | `/api/reviews/:id`                         | Modifier son avis `{ rating, comment }`                                                  |
+| DELETE 🔒 | `/api/reviews/:id`                         | Supprimer son avis (auteur ou admin)                                                     |
+| GET 🔒    | `/api/likes`                               | Produits mis en favoris                                                                  |
+| PUT 🔒    | `/api/likes/:productId`                    | Ajouter aux favoris (sans effet si déjà présent)                                         |
+| DELETE 🔒 | `/api/likes/:productId`                    | Retirer des favoris                                                                      |
 
 Exemple de produit envoyé à `POST /api/products` :
 

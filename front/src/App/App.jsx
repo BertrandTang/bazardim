@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Layout from '../components/Layout/Layout.jsx';
 import RequireAuth from '../components/RequireAuth.jsx';
@@ -7,14 +8,19 @@ import { LikesProvider } from '../context/LikesContext.jsx';
 import { ProductsProvider } from '../context/ProductsContext.jsx';
 import { ReviewsProvider } from '../context/ReviewsContext.jsx';
 import { CATEGORIES } from '../data/categories.js';
-import Auth from '../pages/Auth/Auth.jsx';
-import Cart from '../pages/Cart/Cart.jsx';
 import Home from '../pages/Home/Home.jsx';
-import Product from '../pages/Product/Product.jsx';
-import Profile from '../pages/Profile/Profile.jsx';
-import Sell from '../pages/Sell/Sell.jsx';
-import SignUp from '../pages/SignUp/SignUp.jsx';
-import UserProfile from '../pages/UserProfile/UserProfile.jsx';
+
+// Chargement à la demande ("code splitting") : le code de ces pages n'est téléchargé
+// que lorsque l'utilisateur les ouvre. La page d'accueil, elle, est chargée tout de suite.
+// Pendant le téléchargement, <Suspense> (dans Layout.jsx) affiche "Chargement…".
+const Auth = lazy(() => import('../pages/Auth/Auth.jsx'));
+const Cart = lazy(() => import('../pages/Cart/Cart.jsx'));
+const NotFound = lazy(() => import('../pages/NotFound/NotFound.jsx'));
+const Product = lazy(() => import('../pages/Product/Product.jsx'));
+const Profile = lazy(() => import('../pages/Profile/Profile.jsx'));
+const Sell = lazy(() => import('../pages/Sell/Sell.jsx'));
+const SignUp = lazy(() => import('../pages/SignUp/SignUp.jsx'));
+const UserProfile = lazy(() => import('../pages/UserProfile/UserProfile.jsx'));
 
 export default function App() {
   return (
@@ -33,11 +39,7 @@ export default function App() {
                     <Route path="/licences" element={<Home />} />
                     {/* Une page par catégorie, générée à partir de la liste CATEGORIES */}
                     {CATEGORIES.map((category) => (
-                      <Route
-                        key={category.value}
-                        path={category.path}
-                        element={<Home category={category.value} />}
-                      />
+                      <Route key={category.value} path={category.path} element={<Home category={category.value} />} />
                     ))}
                     <Route path="/product/:id" element={<Product />} />
                     <Route path="/user/:id" element={<UserProfile />} />
@@ -62,6 +64,9 @@ export default function App() {
                         </RequireAuth>
                       }
                     />
+
+                    {/* "*" correspond à toutes les adresses qui n'ont pas de route : page 404 */}
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Layout>
               </BrowserRouter>
