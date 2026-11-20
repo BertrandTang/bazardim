@@ -1,89 +1,80 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext } from 'react';
 import profilesData from '../data/profiles.json';
+import useLocalStorageState from '../hooks/useLocalStorageState.js';
 
+// ⚠️ TEMPORAIRE : en attendant le back-end, les comptes sont stockés dans le navigateur
+// (localStorage) et les mots de passe sont en clair. Il faudra remplacer ces fonctions
+// par des appels à l'API (ex : POST /auth/login, POST /auth/register).
+
+// Un "contexte" permet de partager des données avec TOUS les composants de l'application
+// sans devoir les passer de parent en enfant via les props.
 const AuthContext = createContext(null);
 
-function normalizeAuthUser(rawUser) {
-    if (!rawUser || typeof rawUser !== 'object') return null;
-
-    const draft = {
-        ...rawUser,
-        user_id: rawUser.user_id ?? rawUser.id ?? '',
-        username: rawUser.username ?? rawUser.name ?? '',
-        email: rawUser.email ?? '',
-        profile_img: rawUser.profile_img ?? rawUser.avatar ?? '',
-    };
-
-    const profiles = profilesData.profiles || [];
-
-    const byUserId = draft.user_id
-        ? profiles.find((p) => String(p.user_id) === String(draft.user_id))
-        : null;
-    const byEmail = draft.email
-        ? profiles.find((p) => p.email === draft.email)
-        : null;
-
-    // Fallback when localStorage contains stale or partial auth object.
-    const fromProfiles = byUserId || byEmail || null;
-
-    if (!fromProfiles) {
-        return draft;
-    }
-
-    return {
-        ...fromProfiles,
-        ...draft,
-        user_id: fromProfiles.user_id,
-    };
-}
-
+/**
+ * Fournit l'utilisateur connecté et les fonctions de connexion à toute l'application.
+ * Tous les composants placés à l'intérieur de <AuthProvider> peuvent appeler useAuth().
+ */
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(() => {
-        try {
-            const raw = localStorage.getItem('authUser');
-            return raw ? normalizeAuthUser(JSON.parse(raw)) : null;
-        } catch {
-            return null;
-        }
-    });
+  // Liste de tous les comptes : ceux du fichier JSON + ceux créés via l'inscription.
+  const [users, setUsers] = useLocalStorageState('users', profilesData.profiles);
 
-    useEffect(() => {
-        // Normalize current in-memory state once in case Fast Refresh preserved stale values.
-        setUser((prev) => normalizeAuthUser(prev));
-    }, []);
+  // Identifiant de l'utilisateur connecté, ou null si personne n'est connecté.
+  const [currentUserId, setCurrentUserId] = useLocalStorageState('currentUserId', null);
 
-    useEffect(() => {
-        try {
-            if (user) localStorage.setItem('authUser', JSON.stringify(user));
-            else localStorage.removeItem('authUser');
-        } catch {}
-    }, [user]);
+  // Pas besoin de useState ici : c'est une valeur recalculée à chaque affichage
+  // à partir des deux états ci-dessus.
+  const currentUser = users.find((user) => user.user_id === currentUserId) ?? null;
 
-    function login(email, password) {
-        const match = profilesData.profiles.find(
-            (p) => p.email === email && p.mdp === password
-        );
-        if (match) {
-            setUser(normalizeAuthUser({ ...match }));
-            return true;
-        }
-        return false;
+  /** Retrouve un utilisateur à partir de son identifiant (nombre ou texte venant de l'URL). */
+  function findUserById(userId) {
+    return users.find((user) => String(user.user_id) === String(userId)) ?? null;
+  }
+
+  /** Connecte l'utilisateur. Retourne true si l'email et le mot de passe sont corrects. */
+  function login(email, password) {
+    const matchingUser = users.find((user) => user.email === email && user.password === password);
+    if (!matchingUser) {
+      return false;
+    }
+    setCurrentUserId(matchingUser.user_id);
+    return true;
+  }
+
+  function logout() {
+    setCurrentUserId(null);
+  }
+
+  /** Crée un compte puis connecte l'utilisateur. Retourne false si l'email est déjà utilisé. */
+  function register({ username, email, password }) {
+    const emailAlreadyUsed = users.some((user) => user.email === email);
+    if (emailAlreadyUsed) {
+      return false;
     }
 
-    function logout() {
-        setUser(null);
-    }
+    const newUser = { user_id: Date.now(), username, email, password, profile_img: '' };
+    // On passe une fonction à setUsers : React nous donne la liste actuelle
+    // et on retourne la nouvelle liste (on ne modifie jamais l'ancienne directement).
+    setUsers((previousUsers) => [...previousUsers, newUser]);
+    setCurrentUserId(newUser.user_id);
+    return true;
+  }
 
-    function updateProfile(changes) {
-        setUser((prev) => normalizeAuthUser({ ...prev, ...changes, user_id: prev?.user_id ?? changes?.user_id }));
-    }
+  /** Met à jour les informations du compte connecté (pseudo, email, image...). */
+  function updateCurrentUser(changes) {
+    setUsers((previousUsers) =>
+      previousUsers.map((user) => (user.user_id === currentUserId ? { ...user, ...changes } : user)),
+    );
+  }
 
-    const value = { user, login, logout, updateProfile };
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const contextValue = { currentUser, findUserById, login, logout, register, updateCurrentUser };
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
+/** Hook à appeler dans un composant pour accéder à l'utilisateur connecté et aux fonctions d'authentification. */
 export function useAuth() {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
-    return ctx;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth doit être utilisé à l’intérieur de <AuthProvider>');
+  }
+  return context;
 }

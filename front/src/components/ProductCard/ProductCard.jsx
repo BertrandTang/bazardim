@@ -1,130 +1,85 @@
-import { useEffect, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import './ProductCard.css';
-import { useCart } from '../../context/CartContext.jsx';
+import { Link } from 'react-router-dom';
 import { useLikes } from '../../context/LikesContext.jsx';
+import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
+import AddToCartButton from '../AddToCartButton/AddToCartButton.jsx';
+import SellerLink from '../SellerLink/SellerLink.jsx';
+import './ProductCard.css';
 
-export default function ProductCard({ product }) {
-    const { addItem } = useCart();
-    const { isLiked, toggleLike: toggleLikedProduct } = useLikes();
-    const liked = isLiked(product.id ?? product.product_id);
-    const [showAddedMessage, setShowAddedMessage] = useState(false);
+/**
+ * Carte de présentation d'un produit, utilisée dans les listes de produits.
+ *
+ * Deux versions :
+ * - par défaut : bouton favori + bouton "AJOUTER" au panier ;
+ * - si `onEdit` et `onDelete` sont fournis (page "Mes produits") : boutons Modifier / Supprimer.
+ */
+export default function ProductCard({ product, onEdit, onDelete }) {
+  const { isLiked, toggleLike } = useLikes();
 
-    useEffect(() => {
-        if (!showAddedMessage) return;
-        const timeoutId = window.setTimeout(() => {
-            setShowAddedMessage(false);
-        }, 1500);
-        return () => window.clearTimeout(timeoutId);
-    }, [showAddedMessage]);
+  const isOwnerView = Boolean(onEdit && onDelete);
+  const liked = isLiked(product.id);
+  const likeLabel = liked ? 'Retirer des favoris' : 'Ajouter aux favoris';
+  const productUrl = `/product/${product.id}`;
 
-    const toggleLike = (event) => {
-        event.stopPropagation();
-        toggleLikedProduct(product.id ?? product.product_id);
-    };
-    const structuredTags = [
-        product.category ? { label: product.category, type: 'category' } : null,
-        product.licence_name ? { label: product.licence_name, type: 'licence' } : null,
-        product.character_name ? { label: product.character_name, type: 'character' } : null,
-        product.product_type ? { label: product.product_type, type: 'type' } : null,
-        product.tags ? { label: product.tags.join(', '), type: 'tags' } : null,
-        product.product_tags ? { label: product.product_tags.join(', '), type: 'tags' } : null,
-    ].filter(Boolean);
-    const seen = new Set();
-    const tags = structuredTags.filter(t => {
-        const key = String(t.label || '').toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
-    const title = product.title || product.product_title || 'TITRE';
-    const username = product.username || product.product_username || product.owner_username || 'USERNAME';
-    const price = product.price ?? product.product_price ?? 0;
-    const rawImage = product.img || product.image || product.product_img || null;
+  // Étiquettes colorées affichées sous le titre (on ignore celles qui sont vides).
+  const labels = [
+    { text: product.category, type: 'category' },
+    { text: product.licence_name, type: 'licence' },
+    { text: product.character_name, type: 'character' },
+    { text: product.tags?.join(', '), type: 'custom' },
+  ].filter((label) => label.text);
 
-    const imagePool = [
-        '/img/img_1.jpg',
-        '/img/img_2.jpg',
-        '/img/img_3.jpg',
-        '/img/img_4.jpg',
-        '/img/img_5.jpg',
-        '/img/img_6.jpg',
-        '/img/img_7.jpg',
-        '/img/img_8.jpg',
-        '/img/img_9.jpg',
-        '/img/img_10.jpg',
-        '/img/img_11.jpg',
-    ];
+  return (
+    <article className="product-card">
+      <SellerLink userId={product.owner_user_id} username={product.owner_username} />
 
-    const pickFromPool = (key) => {
-        const k = String(key ?? '0');
-        let hash = 0;
-        for (let i = 0; i < k.length; i++) hash = (hash + k.charCodeAt(i)) >>> 0;
-        return imagePool[hash % imagePool.length];
-    };
+      <div className="product-image">
+        <Link to={productUrl}>
+          <img src={getProductImage(product)} alt={product.title} loading="lazy" />
+        </Link>
+        {!isOwnerView && (
+          <button
+            type="button"
+            className={liked ? 'like-button active' : 'like-button'}
+            aria-label={likeLabel}
+            aria-pressed={liked}
+            title={likeLabel}
+            onClick={() => toggleLike(product.id)}
+          >
+            {liked ? '♥' : '♡'}
+          </button>
+        )}
+      </div>
 
-    const image = (typeof rawImage === 'string' && rawImage.startsWith('/img/'))
-        ? rawImage
-        : pickFromPool(product.id || title);
-    const ownerId = product.owner_user_id ?? product.product_user_id ?? product.user_id ?? '';
-    const handleAddToCart = () => {
-        addItem(product);
-        setShowAddedMessage(false);
-        window.requestAnimationFrame(() => setShowAddedMessage(true));
-    };
+      <h2 className="product-title">
+        <Link to={productUrl}>{product.title}</Link>
+      </h2>
 
-    return (
-        <div className="product-card">
-            <div className="product-user">
-                    <RouterLink to={`/user/${ownerId}`} className="avatar-link">
-                        <div className="avatar">U</div>
-                    </RouterLink>
-                    <div className="username">
-                        <RouterLink to={`/user/${ownerId}`}>{username}</RouterLink>
-                    </div>
-                </div>
-            <div className="product-image">
-                <RouterLink to={`/product/${product.id ?? product.product_id ?? ''}`}>
-                    <img
-                        src={image}
-                        alt={title}
-                    />
-                </RouterLink>
-                <button
-                    type="button"
-                    className={`fav-btn${liked ? ' active' : ''}`}
-                    aria-label={liked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                    aria-pressed={liked}
-                    onClick={toggleLike}
-                    title={liked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                >
-                    {liked ? '♥' : '♡'}
-                </button>
-            </div>
-            <div className="product-title">
-                <RouterLink to={`/product/${product.id ?? product.product_id ?? ''}`}>{title}</RouterLink>
-            </div>
-            <div className="product-tags">
-                {tags.map((tag) => (
-                    <span key={`${tag.type}:${tag.label}`} className={`product-tag ${tag.type}`}>
-                        {tag.label}
-                    </span>
-                ))}
-            </div>
-            <div className="product-desc">{product.description || product.product_description}</div>
-            <div className="product-manufacturer">{product.manufacturer ? `Fabricant: ${product.manufacturer}` : 'Fabricant: N/C'}</div>
-            <div className="product-bottom">
-                <div className="product-price">{Number(price).toFixed(2)}€</div>
-                <div className="product-add-wrap">
-                    {showAddedMessage ? <span className="product-added-toast">ajoute au panier</span> : null}
-                    <button
-                        className="product-add"
-                        onClick={handleAddToCart}
-                    >
-                        AJOUTER
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+      <div className="product-tags">
+        {labels.map((label) => (
+          <span key={label.type} className={`product-tag ${label.type}`}>
+            {label.text}
+          </span>
+        ))}
+      </div>
+
+      <p className="product-description">{product.description}</p>
+      <p className="product-manufacturer">Fabricant : {product.manufacturer || 'N/C'}</p>
+
+      <div className="product-bottom">
+        <span className="product-price">{formatPrice(product.price)}</span>
+        {isOwnerView ? (
+          <div className="product-owner-actions">
+            <button type="button" className="product-edit-button" onClick={() => onEdit(product)}>
+              Modifier
+            </button>
+            <button type="button" className="product-delete-button" onClick={() => onDelete(product)}>
+              Supprimer
+            </button>
+          </div>
+        ) : (
+          <AddToCartButton productId={product.id} />
+        )}
+      </div>
+    </article>
+  );
 }

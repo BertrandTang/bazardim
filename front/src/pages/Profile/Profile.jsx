@@ -1,262 +1,227 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Avatar, Rating, Stack } from '@mui/material';
-import { useAuth } from '../../context/AuthContext.jsx';
-import figuresData from '../../data/figures.json';
-import ProductCardOwner from '../../components/ProductCard/ProductCardOwner.jsx';
+import { Alert, Avatar, Button, Rating, Stack, TextField, Typography } from '@mui/material';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
+import ReviewCard from '../../components/ReviewCard/ReviewCard.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
-import { addDeletedProductId, getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
-import ProfileReviewCard from '../../components/ProfileReviewCard/ProfileReviewCard.jsx';
-import profilesData from '../../data/profiles.json';
-import { getReviewsByAuthor, getReviewsForUser, subscribeToProfileReviews } from '../../utils/profileReviewsStorage.js';
+import { useProducts } from '../../context/ProductsContext.jsx';
+import { useReviews } from '../../context/ReviewsContext.jsx';
 import './Profile.css';
 
-const sections = [
-    { id: 'profile', label: 'Profil' },
-    { id: 'products', label: 'Mes produits' },
-    { id: 'likes', label: 'Mes likes' },
-    { id: 'reviews', label: 'Avis profil' },
+// Onglets du menu latéral. `component` est le composant affiché quand l'onglet est actif
+// (ils sont définis plus bas dans ce fichier).
+const SECTIONS = [
+  { id: 'settings', label: 'Profil', component: SettingsSection },
+  { id: 'products', label: 'Mes produits', component: MyProductsSection },
+  { id: 'likes', label: 'Mes likes', component: MyLikesSection },
+  { id: 'reviews', label: 'Avis', component: MyReviewsSection },
 ];
 
+/** Page "Mon profil" (réservée aux utilisateurs connectés, voir RequireAuth). */
 export default function Profile() {
-    const navigate = useNavigate();
-    const { user, updateProfile, logout } = useAuth();
-    const { likedIds } = useLikes();
-    const [activeSection, setActiveSection] = useState('profile');
-    const [productsVersion, setProductsVersion] = useState(0);
-    const [reviewsVersion, setReviewsVersion] = useState(0);
-    const [editValues, setEditValues] = useState({
-        email: user?.email || '',
-        mdp: user?.mdp || '',
-        username: user?.username || '',
-        profile_img: user?.profile_img || '',
-    });
+  const { logout } = useAuth();
+  const [activeSectionId, setActiveSectionId] = useState('settings');
 
-    useEffect(() => {
-        return subscribeToProductStorage(() => {
-            setProductsVersion((prev) => prev + 1);
-        });
-    }, []);
+  const activeSection = SECTIONS.find((section) => section.id === activeSectionId);
+  // Une variable dont le nom commence par une majuscule peut être utilisée comme une balise JSX.
+  const ActiveSectionComponent = activeSection.component;
 
-    useEffect(() => {
-        return subscribeToProfileReviews(() => {
-            setReviewsVersion((prev) => prev + 1);
-        });
-    }, []);
+  return (
+    <div className="profile-page">
+      <nav className="profile-sidebar" aria-label="Sections du profil">
+        <Stack spacing={1}>
+          {SECTIONS.map((section) => (
+            <Button
+              key={section.id}
+              variant={section.id === activeSectionId ? 'contained' : 'text'}
+              aria-current={section.id === activeSectionId ? 'page' : undefined}
+              onClick={() => setActiveSectionId(section.id)}
+            >
+              {section.label}
+            </Button>
+          ))}
+          <Button color="error" onClick={logout}>
+            Déconnexion
+          </Button>
+        </Stack>
+      </nav>
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setEditValues((prev) => ({ ...prev, [name]: value }));
+      <section className="profile-content">
+        <Typography variant="h6" component="h1" gutterBottom>
+          {activeSection.label}
+        </Typography>
+        <ActiveSectionComponent />
+      </section>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Onglet "Profil" : modification des informations du compte           */
+/* ------------------------------------------------------------------ */
+function SettingsSection() {
+  const { currentUser, updateCurrentUser } = useAuth();
+  const [formValues, setFormValues] = useState({
+    username: currentUser.username,
+    email: currentUser.email,
+    profile_img: currentUser.profile_img,
+    newPassword: '',
+  });
+  const [isSaved, setIsSaved] = useState(false);
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setFormValues((previousValues) => ({ ...previousValues, [name]: value }));
+    setIsSaved(false);
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    const changes = {
+      username: formValues.username.trim(),
+      email: formValues.email.trim().toLowerCase(),
+      profile_img: formValues.profile_img.trim(),
     };
+    // On ne change le mot de passe que si un nouveau a été saisi.
+    if (formValues.newPassword) {
+      changes.password = formValues.newPassword;
+    }
+    updateCurrentUser(changes);
+    setFormValues((previousValues) => ({ ...previousValues, newPassword: '' }));
+    setIsSaved(true);
+  }
 
-    const handleSave = () => {
-        updateProfile(editValues);
-    };
+  return (
+    <Stack component="form" spacing={2} sx={{ maxWidth: 500 }} onSubmit={handleSubmit}>
+      <Avatar src={formValues.profile_img} alt="" sx={{ width: 80, height: 80 }} />
+      <TextField label="Pseudo" name="username" value={formValues.username} onChange={handleChange} />
+      <TextField label="Email" name="email" type="email" value={formValues.email} onChange={handleChange} />
+      <TextField
+        label="Nouveau mot de passe"
+        name="newPassword"
+        type="password"
+        autoComplete="new-password"
+        helperText="Laisser vide pour conserver le mot de passe actuel"
+        value={formValues.newPassword}
+        onChange={handleChange}
+      />
+      <TextField
+        label="Image de profil (URL)"
+        name="profile_img"
+        value={formValues.profile_img}
+        onChange={handleChange}
+      />
+      {isSaved && <Alert severity="success">Profil mis à jour.</Alert>}
+      <Button type="submit" variant="contained">
+        Enregistrer
+      </Button>
+    </Stack>
+  );
+}
 
-    const handleDeleteProduct = (product) => {
-        const productId = String(product?.id ?? product?.product_id ?? '');
-        if (!productId) return;
-        const confirmed = window.confirm('Voulez-vous vraiment supprimer ce post ?');
-        if (!confirmed) return;
-        addDeletedProductId(productId);
-    };
+/* ------------------------------------------------------------------ */
+/* Onglet "Mes produits" : annonces publiées par l'utilisateur          */
+/* ------------------------------------------------------------------ */
+function MyProductsSection() {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const { products, deleteProduct } = useProducts();
 
-    const availableProducts = useMemo(
-        () => getAllProducts(figuresData.figures || []),
-        [productsVersion]
-    );
+  const myProducts = products.filter((product) => product.owner_user_id === currentUser.user_id);
 
-    const ownedProducts = useMemo(() => {
-        return availableProducts.filter((product) => String(product.owner_user_id ?? product.user_id) === String(user?.user_id));
-    }, [availableProducts, user?.user_id]);
+  function handleDelete(product) {
+    if (window.confirm(`Supprimer l'annonce « ${product.title} » ?`)) {
+      deleteProduct(product.id);
+    }
+  }
 
-    const likedProducts = useMemo(() => {
-        const likedSet = new Set(likedIds.map((id) => String(id)));
-        return availableProducts.filter((product) => likedSet.has(String(product.id ?? product.product_id)));
-    }, [likedIds, availableProducts]);
+  return (
+    <>
+      <Button className="button-gradient profile-add-product" variant="contained" onClick={() => navigate('/vendre')}>
+        Ajouter un produit en vente
+      </Button>
+      {myProducts.length === 0 ? (
+        <p className="profile-empty">Vous n’avez encore aucune annonce.</p>
+      ) : (
+        <div className="profile-grid">
+          {myProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={() => navigate(`/product/${product.id}?edit=1`)}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
 
-    const resolvedCurrentUserId = useMemo(() => {
-        if (!user?.user_id) return '';
-        return String(user.user_id);
-    }, [user?.user_id]);
+/* ------------------------------------------------------------------ */
+/* Onglet "Mes likes" : produits mis en favoris                         */
+/* ------------------------------------------------------------------ */
+function MyLikesSection() {
+  const { products } = useProducts();
+  const { likedProductIds } = useLikes();
 
-    const receivedReviews = useMemo(() => {
-        const reviews = getReviewsForUser(user?.user_id);
-        return reviews
-            .filter((review) => String(review.authorUserId) !== String(user?.user_id))
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }, [user?.user_id, reviewsVersion]);
+  const likedProducts = products.filter((product) => likedProductIds.includes(product.id));
 
-    const writtenReviews = useMemo(() => {
-        return getReviewsByAuthor(user?.user_id)
-            .slice()
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }, [user?.user_id, reviewsVersion]);
+  if (likedProducts.length === 0) {
+    return <p className="profile-empty">Vous n’avez aucun like pour le moment.</p>;
+  }
 
-    const profileByUserId = useMemo(() => {
-        const map = new Map();
-        (profilesData.profiles || []).forEach((profile) => {
-            map.set(String(profile.user_id), profile);
-        });
-        return map;
-    }, []);
+  return (
+    <div className="profile-grid">
+      {likedProducts.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
+}
 
-    const averageRating = useMemo(() => {
-        if (!receivedReviews.length) return 0;
-        const total = receivedReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0);
-        return total / receivedReviews.length;
-    }, [receivedReviews]);
+/* ------------------------------------------------------------------ */
+/* Onglet "Avis" : avis reçus et avis écrits par l'utilisateur          */
+/* ------------------------------------------------------------------ */
+function MyReviewsSection() {
+  const { currentUser, findUserById } = useAuth();
+  const { getReviewsAbout, getReviewsWrittenBy, getAverageRating } = useReviews();
 
-    if (!user) return null; // should never happen because route is protected
+  const receivedReviews = getReviewsAbout(currentUser.user_id);
+  const writtenReviews = getReviewsWrittenBy(currentUser.user_id);
+  const averageRating = getAverageRating(currentUser.user_id);
 
-    return (
-        <Box className="profile-page">
-            <Box className="profile-sidebar">
-                <Stack spacing={1}>
-                    {sections.map((s) => (
-                        <Button
-                            key={s.id}
-                            variant={activeSection === s.id ? 'contained' : 'text'}
-                            onClick={() => setActiveSection(s.id)}
-                        >
-                            {s.label}
-                        </Button>
-                    ))}
-                    <Button color="error" onClick={logout}>
-                        Déconnexion
-                    </Button>
-                </Stack>
-            </Box>
-            <Box className="profile-content">
-                {activeSection === 'products' && (
-                    <Box>
-                        <Typography variant="h6" gutterBottom>Mes produits</Typography>
-                        <Button
-                            className="profile-add-product"
-                            variant="contained"
-                            onClick={() => navigate('/vendre')}
-                        >
-                            Ajouter un produit en vente
-                        </Button>
-                        <Stack spacing={2}>
-                            {ownedProducts.map(product => (
-                                <ProductCardOwner
-                                    key={product.id}
-                                    product={product}
-                                    onEdit={() => navigate(`/product/${product.id ?? product.product_id ?? ''}?edit=1`)}
-                                    onDelete={() => handleDeleteProduct(product)}
-                                />
-                            ))}
-                        </Stack>
-                    </Box>
-                )}
-                {activeSection === 'likes' && (
-                    <Box>
-                        <Typography variant="h6" gutterBottom>Mes likes</Typography>
-                        {likedProducts.length === 0 ? (
-                            <Box className="profile-likes-empty">Vous n'avez aucun like pour le moment.</Box>
-                        ) : (
-                            <Box className="profile-likes-grid">
-                                {likedProducts.map((product) => (
-                                    <ProductCard key={product.id} product={product} />
-                                ))}
-                            </Box>
-                        )}
-                    </Box>
-                )}
-                {activeSection === 'reviews' && (
-                    <Box className="profile-reviews-section">
-                        <Typography variant="h6" gutterBottom>Avis profil</Typography>
-                        <Box className="profile-reviews-summary">
-                            <Rating value={Number(averageRating.toFixed(1))} precision={0.5} readOnly />
-                            <span>{averageRating ? `${averageRating.toFixed(1)} / 5` : 'Aucune note'}</span>
-                            <small>{receivedReviews.length} avis recus</small>
-                        </Box>
-                        {receivedReviews.length === 0 ? (
-                            <Box className="profile-reviews-empty">Aucun commentaire pour le moment.</Box>
-                        ) : (
-                            <Box className="profile-reviews-list">
-                                {receivedReviews.map((review) => (
-                                    <ProfileReviewCard
-                                        key={review.id}
-                                        review={review}
-                                        currentUserId={resolvedCurrentUserId}
-                                    />
-                                ))}
-                            </Box>
-                        )}
+  return (
+    <div className="profile-reviews">
+      <div className="profile-reviews-summary">
+        <Rating value={averageRating} precision={0.5} readOnly />
+        <span>{averageRating ? `${averageRating.toFixed(1)} / 5` : 'Aucune note'}</span>
+        <small>{receivedReviews.length} avis reçus</small>
+      </div>
 
-                        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-                            Mes avis laisses
-                        </Typography>
-                        {writtenReviews.length === 0 ? (
-                            <Box className="profile-reviews-empty">Vous n'avez pas encore laisse d'avis.</Box>
-                        ) : (
-                            <Box className="profile-reviews-list">
-                                {writtenReviews.map((review) => {
-                                    const targetProfile = profileByUserId.get(String(review.targetUserId));
-                                    return (
-                                        <ProfileReviewCard
-                                            key={review.id}
-                                            review={review}
-                                            currentUserId={resolvedCurrentUserId}
-                                            targetUserId={review.targetUserId}
-                                            targetLabel={targetProfile?.username || 'Vendeur'}
-                                        />
-                                    );
-                                })}
-                            </Box>
-                        )}
-                    </Box>
-                )}
-                {activeSection === 'profile' && (
-                    <Box sx={{ maxWidth: 500 }}>
-                        <Typography variant="h6" gutterBottom>
-                            Profil
-                        </Typography>
-                        <Stack spacing={2}>
-                            <Avatar
-                                src={editValues.profile_img}
-                                sx={{ width: 80, height: 80 }}
-                            />
-                            <TextField
-                                label="Username"
-                                name="username"
-                                fullWidth
-                                value={editValues.username}
-                                onChange={handleChange}
-                            />
-                            <TextField
-                                label="Email"
-                                name="email"
-                                type="email"
-                                fullWidth
-                                value={editValues.email}
-                                onChange={handleChange}
-                            />
-                            <TextField
-                                label="Mot de passe"
-                                name="mdp"
-                                type="password"
-                                fullWidth
-                                value={editValues.mdp}
-                                onChange={handleChange}
-                            />
-                            <TextField
-                                label="Image URL"
-                                name="profile_img"
-                                fullWidth
-                                value={editValues.profile_img}
-                                onChange={handleChange}
-                            />
-                            <Button variant="contained" onClick={handleSave}>
-                                Enregistrer
-                            </Button>
-                        </Stack>
-                    </Box>
-                )}
-            </Box>
-        </Box>
-    );
+      {receivedReviews.length === 0 ? (
+        <p className="profile-empty">Aucun avis reçu pour le moment.</p>
+      ) : (
+        <div className="profile-reviews-list">
+          {receivedReviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          ))}
+        </div>
+      )}
+
+      <Typography variant="h6" component="h2" sx={{ mt: 3 }} gutterBottom>
+        Mes avis laissés
+      </Typography>
+      {writtenReviews.length === 0 ? (
+        <p className="profile-empty">Vous n’avez pas encore laissé d’avis.</p>
+      ) : (
+        <div className="profile-reviews-list">
+          {writtenReviews.map((review) => (
+            <ReviewCard key={review.id} review={review} targetUser={findUserById(review.targetUserId)} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

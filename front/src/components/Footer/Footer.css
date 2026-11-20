@@ -1,7 +1,7 @@
 .footer {
     padding: 10px 30px;
     text-align: center;
-    background: #b9e9ff;
+    background: var(--color-surface);
     border-radius: 40px;
     margin: 18px auto 24px;
     font-size: 14px;

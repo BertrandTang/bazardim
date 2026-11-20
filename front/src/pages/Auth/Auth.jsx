@@ -1,53 +1,36 @@
-import { useState } from "react";
-import { useAuth } from "../../context/AuthContext.jsx";
-import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Paper,
-  TextField,
-  Typography,
-  Stack,
-} from "@mui/material";
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import { useAuth } from '../../context/AuthContext.jsx';
 
+/** Page de connexion. */
 export default function Auth() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/profile';
 
-  const handleSubmit = (event) => {
+  // Un champ "contrôlé" : React garde la valeur dans un état, et le champ affiche cet état.
+  // À chaque frappe, onChange met à jour l'état, ce qui réaffiche le champ avec la nouvelle valeur.
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Si l'utilisateur a été redirigé ici par RequireAuth, on le renvoie ensuite vers la page demandée.
+  const redirectPath = location.state?.from?.pathname ?? '/profile';
+
+  function handleSubmit(event) {
     event.preventDefault();
-    // Placeholder: replace with real auth logic later
-    const success = login(email, password);
-    if (success) {
-      navigate(from, { replace: true });
+    const isLoggedIn = login(email.trim().toLowerCase(), password);
+    if (isLoggedIn) {
+      navigate(redirectPath, { replace: true });
     } else {
-      alert('Utilisateur introuvable ou mot de passe incorrect');
+      setErrorMessage('Email ou mot de passe incorrect.');
     }
-  };
+  }
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        py: 6,
-        px: 2,
-      }}
-    >
-      <Paper
-        elevation={3}
-        sx={{
-          width: "100%",
-          maxWidth: 420,
-          p: 4,
-          borderRadius: 4,
-        }}
-      >
+    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6, px: 2 }}>
+      <Paper elevation={3} sx={{ width: '100%', maxWidth: 420, p: 4, borderRadius: 4 }}>
         <Typography variant="h5" component="h1" gutterBottom>
           Connexion
         </Typography>
@@ -60,26 +43,31 @@ export default function Auth() {
             <TextField
               label="Email"
               type="email"
-              fullWidth
+              autoComplete="email"
               required
+              fullWidth
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
             />
             <TextField
               label="Mot de passe"
               type="password"
-              fullWidth
+              autoComplete="current-password"
               required
+              fullWidth
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
             />
+            {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
             <Button type="submit" variant="contained" size="large" fullWidth>
               Se connecter
             </Button>
+            <Typography variant="body2" align="center">
+              Pas encore de compte ? <Link to="/signup">Inscris-toi</Link>
+            </Typography>
           </Stack>
         </Box>
       </Paper>
     </Box>
   );
 }
-

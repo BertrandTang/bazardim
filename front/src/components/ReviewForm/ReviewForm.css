@@ -1,0 +1,10 @@
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.review-form-actions {
+  display: flex;
+  gap: 8px;
+}

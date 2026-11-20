@@ -1,0 +1,17 @@
+.home-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+
+.home-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+}
+
+.home-empty {
+  text-align: center;
+  color: #555;
+}
