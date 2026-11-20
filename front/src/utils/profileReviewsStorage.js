@@ -29,6 +29,43 @@ export function addProfileReview(review) {
     saveProfileReviews([...current, review]);
 }
 
+export function updateProfileReview(reviewId, changes, authorUserId) {
+    const current = getProfileReviews();
+    const index = current.findIndex((review) => review.id === reviewId);
+    if (index === -1) return false;
+
+    const existing = current[index];
+    if (String(existing.authorUserId) !== String(authorUserId)) return false;
+
+    const nextReview = { ...existing, updatedAt: new Date().toISOString() };
+    if (changes.rating !== undefined) {
+        nextReview.rating = Number(changes.rating) || 0;
+    }
+    if (changes.comment !== undefined) {
+        nextReview.comment = String(changes.comment).trim();
+    }
+
+    const next = [...current];
+    next[index] = nextReview;
+    saveProfileReviews(next);
+    return true;
+}
+
+export function deleteProfileReview(reviewId, authorUserId) {
+    const current = getProfileReviews();
+    const existing = current.find((review) => review.id === reviewId);
+    if (!existing || String(existing.authorUserId) !== String(authorUserId)) return false;
+    saveProfileReviews(current.filter((review) => review.id !== reviewId));
+    return true;
+}
+
+export function getReviewsByAuthor(authorUserId) {
+    const normalizedAuthorId = String(authorUserId ?? '');
+    return getProfileReviews().filter(
+        (review) => String(review.authorUserId) === normalizedAuthorId
+    );
+}
+
 export function subscribeToProfileReviews(onChange) {
     const handleStorage = () => onChange();
     const handleLocalUpdate = () => onChange();

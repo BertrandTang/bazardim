@@ -43,6 +43,12 @@
     color: #222;
 }
 
+.user-reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .user-reviews-list p,
 .user-products-section p {
     color: #444;

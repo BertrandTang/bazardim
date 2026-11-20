@@ -1,0 +1,67 @@
+.profile-review-card {
+    border: 1px solid #ece6ff;
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+
+.profile-review-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-review-head strong {
+    color: #222;
+}
+
+.profile-review-card p {
+    margin: 8px 0 0;
+    line-height: 1.45;
+    color: #333;
+}
+
+.profile-review-card--owned {
+    border-color: #d8c8ff;
+}
+
+.profile-review-author {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.profile-review-target {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.profile-review-target a {
+    color: #6d35ff;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.profile-review-target a:hover {
+    text-decoration: underline;
+}
+
+.profile-review-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.profile-review-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.profile-review-error {
+    color: #c62828;
+    font-weight: 700;
+    font-size: 0.9rem;
+}

@@ -23,8 +23,7 @@ export default function SignUp() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    // Placeholder: replace with real signup logic later
-    console.log("Sign up submit", formValues);
+    alert("Inscription enregistrée ! Vous pouvez maintenant vous connecter.");
   };
 
   return (

@@ -10,13 +10,15 @@ import Sell from '../pages/Sell/Sell.jsx';
 import UserProfile from '../pages/UserProfile/UserProfile.jsx';
 import RequireAuth from '../components/RequireAuth.jsx';
 import { AuthProvider } from '../context/AuthContext.jsx';
+import { CartProvider } from '../context/CartContext.jsx';
 import { LikesProvider } from '../context/LikesContext.jsx';
 
 export default function App() {
   return (
     <AuthProvider>
-      <LikesProvider>
-        <Router>
+      <CartProvider>
+        <LikesProvider>
+          <Router>
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -49,6 +51,7 @@ export default function App() {
           </Layout>
         </Router>
       </LikesProvider>
-    </AuthProvider>
+    </CartProvider>
+  </AuthProvider>
   );
 }

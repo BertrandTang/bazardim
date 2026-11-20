@@ -7,7 +7,9 @@ import ProductCardOwner from '../../components/ProductCard/ProductCardOwner.jsx'
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
 import { addDeletedProductId, getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
-import { getReviewsForUser, subscribeToProfileReviews } from '../../utils/profileReviewsStorage.js';
+import ProfileReviewCard from '../../components/ProfileReviewCard/ProfileReviewCard.jsx';
+import profilesData from '../../data/profiles.json';
+import { getReviewsByAuthor, getReviewsForUser, subscribeToProfileReviews } from '../../utils/profileReviewsStorage.js';
 import './Profile.css';
 
 const sections = [
@@ -74,12 +76,31 @@ export default function Profile() {
         return availableProducts.filter((product) => likedSet.has(String(product.id ?? product.product_id)));
     }, [likedIds, availableProducts]);
 
+    const resolvedCurrentUserId = useMemo(() => {
+        if (!user?.user_id) return '';
+        return String(user.user_id);
+    }, [user?.user_id]);
+
     const receivedReviews = useMemo(() => {
         const reviews = getReviewsForUser(user?.user_id);
         return reviews
             .filter((review) => String(review.authorUserId) !== String(user?.user_id))
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }, [user?.user_id, reviewsVersion]);
+
+    const writtenReviews = useMemo(() => {
+        return getReviewsByAuthor(user?.user_id)
+            .slice()
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }, [user?.user_id, reviewsVersion]);
+
+    const profileByUserId = useMemo(() => {
+        const map = new Map();
+        (profilesData.profiles || []).forEach((profile) => {
+            map.set(String(profile.user_id), profile);
+        });
+        return map;
+    }, []);
 
     const averageRating = useMemo(() => {
         if (!receivedReviews.length) return 0;
@@ -157,14 +178,34 @@ export default function Profile() {
                         ) : (
                             <Box className="profile-reviews-list">
                                 {receivedReviews.map((review) => (
-                                    <article key={review.id} className="profile-review-card">
-                                        <div className="profile-review-head">
-                                            <strong>{review.authorUsername}</strong>
-                                            <Rating value={Number(review.rating || 0)} readOnly size="small" />
-                                        </div>
-                                        <p>{review.comment}</p>
-                                    </article>
+                                    <ProfileReviewCard
+                                        key={review.id}
+                                        review={review}
+                                        currentUserId={resolvedCurrentUserId}
+                                    />
                                 ))}
+                            </Box>
+                        )}
+
+                        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                            Mes avis laisses
+                        </Typography>
+                        {writtenReviews.length === 0 ? (
+                            <Box className="profile-reviews-empty">Vous n'avez pas encore laisse d'avis.</Box>
+                        ) : (
+                            <Box className="profile-reviews-list">
+                                {writtenReviews.map((review) => {
+                                    const targetProfile = profileByUserId.get(String(review.targetUserId));
+                                    return (
+                                        <ProfileReviewCard
+                                            key={review.id}
+                                            review={review}
+                                            currentUserId={resolvedCurrentUserId}
+                                            targetUserId={review.targetUserId}
+                                            targetLabel={targetProfile?.username || 'Vendeur'}
+                                        />
+                                    );
+                                })}
                             </Box>
                         )}
                     </Box>

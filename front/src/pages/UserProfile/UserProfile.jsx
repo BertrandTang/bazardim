@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import profilesData from '../../data/profiles.json';
 import figuresData from '../../data/figures.json';
 import { getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
+import ProfileReviewCard from '../../components/ProfileReviewCard/ProfileReviewCard.jsx';
 import { addProfileReview, getReviewsForUser, subscribeToProfileReviews } from '../../utils/profileReviewsStorage.js';
 import './UserProfile.css';
 
@@ -171,13 +172,11 @@ export default function UserProfile() {
                         .slice()
                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                         .map((review) => (
-                            <article key={review.id} className="user-review-card">
-                                <div className="user-review-head">
-                                    <strong>{review.authorUsername}</strong>
-                                    <Rating value={Number(review.rating || 0)} readOnly size="small" />
-                                </div>
-                                <p>{review.comment}</p>
-                            </article>
+                            <ProfileReviewCard
+                                key={review.id}
+                                review={review}
+                                currentUserId={resolvedCurrentUserId}
+                            />
                         ))
                 )}
             </Box>
