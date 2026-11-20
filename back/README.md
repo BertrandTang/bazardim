@@ -6,9 +6,11 @@ API de la marketplace Bazardim : Node.js 22+, Express 5, PostgreSQL 17.
 
 ```bash
 # 1. Démarrer PostgreSQL (depuis la racine du projet, Docker Desktop doit être lancé)
+cp .env.example .env     # une seule fois : choisir POSTGRES_PASSWORD
 docker compose up -d
 
-# 2. Configurer (une seule fois) : copier le modèle puis remplir JWT_SECRET
+# 2. Configurer l'API (une seule fois, dans back/) : copier le modèle puis remplir
+#    DATABASE_URL, TEST_DATABASE_URL (avec le même mot de passe) et JWT_SECRET
 cp .env.example .env
 
 # 3. Installer, créer les tables et insérer les données de démo
