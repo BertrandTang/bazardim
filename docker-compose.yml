@@ -1,0 +1,31 @@
+# Base de données PostgreSQL pour le développement et les tests.
+#
+#   docker compose up -d     -> démarre la base en arrière-plan
+#   docker compose down      -> l'arrête (les données sont conservées dans le volume)
+#   docker compose down -v   -> l'arrête ET supprime les données
+#
+# ⚠️ Les identifiants ci-dessous ne servent qu'en local. En production, ils doivent être
+# différents, secrets, et fournis par des variables d'environnement.
+services:
+  database:
+    image: postgres:17-alpine
+    container_name: bazardim_database
+    environment:
+      POSTGRES_USER: bazardim
+      POSTGRES_PASSWORD: bazardim
+      POSTGRES_DB: bazardim
+    ports:
+      - '5432:5432'
+    volumes:
+      # Les données survivent à l'arrêt du conteneur grâce à ce volume.
+      - database_data:/var/lib/postgresql/data
+      # Scripts exécutés une seule fois, à la création de la base (ici : base de test).
+      - ./back/database/docker-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bazardim']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  database_data:

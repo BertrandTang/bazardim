@@ -7,16 +7,16 @@ Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 | Partie | État |
 | --- | --- |
 | Front-end (React) | ✅ Fonctionnel : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, avis vendeurs, inscription / connexion. Données simulées dans le localStorage. |
-| Back-end | ❌ **Dossier `back/` vide** : pas d'API, pas de base de données, pas d'authentification réelle. |
-| Tests | ❌ Aucun test (front et back). |
-| CI / industrialisation | ⚠️ ESLint configuré (`npm run lint` : 0 erreur). Pas de CI, pas de tests automatisés. |
+| Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, avis, favoris. ❌ Pas encore branchée au front, pas de paiement. |
+| Tests | ✅ Back : 42 tests, 96 % de couverture. ❌ Front : aucun test. |
+| CI / industrialisation | ✅ GitHub Actions (`.github/workflows/ci.yml`) : lint + build du front, lint + audit + tests du back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
 ### Les 5 priorités
 
-1. **Construire le back-end** (API REST + base de données + authentification) : c'est tout le bloc 3, rien n'existe.
-2. **Écrire les tests** front et back avec **≥ 50 % de couverture** (C18, C25) : critère chiffré, éliminatoire.
-3. **Paiement Stripe** + stratégie de monétisation (C23).
+1. **Brancher le front sur l'API** : remplacer les fonctions `⚠️ TEMPORAIRE` des contextes par des appels `fetch`.
+2. **Tests front** avec **≥ 50 % de couverture** (C18) : critère chiffré, éliminatoire.
+3. **Paiement Stripe** + commandes + stratégie de monétisation (C23).
 4. **Consommer une API tierce** depuis le front (C17 / E12) : rien actuellement.
 5. **Conformité RGPD** : bannière cookies, politique de confidentialité, mentions légales, demande d'accès aux données, double opt-in (C11).
 
@@ -93,7 +93,8 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 
 ### C19 / E14 — Industrialisation front
 
-- [ ] **GitHub Actions** : à chaque push / pull request → `npm ci`, `npm run lint`, `npm test`, `npm run build`.
+- [x] **GitHub Actions** : lint + build à chaque push (`.github/workflows/ci.yml`).
+- [ ] Ajouter `npm test` du front dans la CI une fois les tests écrits.
 - [x] Gestion des dépendances : `package.json` + `package-lock.json` (outils de build rangés dans `devDependencies`).
 - [ ] Optimisation du build : découpage du code (`React.lazy`), compression, analyse de la taille du bundle (`rollup-plugin-visualizer`).
 
@@ -110,57 +111,66 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 
 ---
 
-## Bloc 3 — Back-end (dossier + soutenance 10 min) ⚠️ tout est à faire
+## Bloc 3 — Back-end (dossier + soutenance 10 min)
 
-Stack suggérée pour rester en JavaScript : **Node.js + Express** (ou NestJS) + **PostgreSQL** + **Prisma** (ORM). À justifier dans la note E3.
+Stack retenue : **Node.js + Express 5 + PostgreSQL (Docker) + SQL écrit à la main (`pg`)**.
+Détails et liste des routes : [back/README.md](back/README.md). À justifier dans la note E3.
 
 ### C21 / E15 — Couche de persistance et sécurité en profondeur
 
-- [ ] Créer la base PostgreSQL (dans Docker) et le schéma à partir du MLD (migrations Prisma).
-- [ ] Script de « seed » qui importe `figures.json` et `profiles.json`.
-- [ ] Mots de passe **hachés** avec **bcrypt** ou **argon2**.
-- [ ] Filtrage / validation des entrées (**zod** ou **Joi**) et des sorties (ne jamais renvoyer le mot de passe).
-- [ ] Authentification forte : JWT en cookie `httpOnly` + `secure` + `sameSite`, ou sessions ; optionnel : double authentification (2FA).
-- [ ] Contrôle d'accès : seul le propriétaire modifie / supprime son annonce ou son avis (aujourd'hui vérifié seulement côté front).
-- [ ] Journalisation (**pino** ou **winston**) et monitoring.
-- [ ] Validation de la configuration au démarrage (variables d'environnement dans `.env`, jamais commitées ; fournir un `.env.example`).
-- [ ] Optionnel : cache (**Redis**) sur la liste des produits.
+- [x] Base PostgreSQL dans Docker (`docker-compose.yml`) + base de test séparée.
+- [x] Schéma normalisé (`back/database/schema.sql`) : tables `users`, `products`, `licences`, `tags`, `product_tags`, `reviews`, `likes`, contraintes `CHECK` / `UNIQUE` / clés étrangères, index, vue `product_details`.
+- [x] Données de démo (`npm run db:reset`) importées depuis les anciens JSON, en passant par la même validation que l'API.
+- [x] Mots de passe hachés avec **bcrypt** ; jamais renvoyés par l'API.
+- [x] Validation de toutes les entrées avec **zod** ; requêtes SQL paramétrées (anti-injection).
+- [x] Authentification : JWT dans un cookie `httpOnly` + `SameSite=Lax` (+ `secure` en production).
+- [x] Contrôle d'accès : propriétaire ou admin pour modifier / supprimer (annonces, avis).
+- [x] Journalisation **pino** (sans cookies), route `/api/health` pour la supervision.
+- [x] Configuration validée au démarrage (`src/config.js`), `.env` ignoré par Git, `.env.example` fourni.
+- [ ] Stratégie de **sauvegarde / restauration** de la base (`pg_dump` planifié) à décrire et tester (C9, C32).
+- [ ] Optionnel : authentification forte (2FA), cache **Redis**, recherche plein texte PostgreSQL (`tsvector`) si le catalogue grossit.
 
 ### C22 / E16 — Développement de l'API
 
-- [ ] Routes REST couvrant tous les cas d'utilisation, par exemple :
-  - `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`
-  - `GET /products` (filtres : catégorie, licence, recherche, pagination), `GET /products/:id`, `POST`, `PUT`, `DELETE /products/:id`
-  - `GET/PUT /users/:id`, `GET/POST/PUT/DELETE /users/:id/reviews`
-  - `GET/POST/DELETE /likes`, `POST /orders`, `GET /orders`
-- [ ] Upload d'images d'annonces (**multer** + redimensionnement avec **sharp**).
-- [ ] Organisation du code : `routes/` → `controllers/` → `services/` → accès aux données.
-- [ ] Brancher le front : remplacer les fonctions marquées `⚠️ TEMPORAIRE` dans `front/src/context/` par des appels `fetch` vers l'API.
+- [x] Routes REST : auth, comptes, produits (filtres + pagination), licences, avis, favoris.
+- [x] Organisation : `routes` → `controller` → `schemas` / `repository`, un dossier par module.
+- [ ] **Brancher le front** : remplacer les fonctions `⚠️ TEMPORAIRE` de `front/src/context/` par des appels `fetch(..., { credentials: 'include' })`. Points à adapter côté front :
+  - noms de champs de l'API : `owner_id` (au lieu de `owner_user_id`), `image_url` (au lieu de `img`), `has_box` (au lieu de `box`), `ean_code` (au lieu de `EAN_number`), `height_cm` / `width_cm` / `scale` (au lieu de l'objet `size`), `profile_image_url` ;
+  - identifiants numériques (1, 2...) au lieu de "FIG001" ;
+  - la note d'un avis va de 1 à 5 (0 refusé) ;
+  - modification d'email / mot de passe : ajouter un champ « mot de passe actuel » dans le profil ;
+  - favoris d'un visiteur non connecté : les garder dans le localStorage, ou demander la connexion ;
+  - panier : peut rester dans le localStorage jusqu'à la création des commandes.
+  - configurer un proxy Vite (`server.proxy` : `/api` → `http://localhost:3000`) pour appeler l'API sans souci de CORS en développement.
+- [ ] Upload d'images d'annonces (**multer** + redimensionnement **sharp**) au lieu d'une URL saisie à la main.
+- [ ] Ajouter un `Dockerfile` pour l'API (et l'ajouter à `docker-compose.yml`).
 
 ### C23 / E17 — Paiement et monétisation
 
-- [ ] Intégrer **Stripe Checkout** en mode test (paiement depuis le panier, bouton « Commander » actuellement désactivé).
-- [ ] Webhook Stripe pour confirmer le paiement côté serveur (ne jamais faire confiance au front pour le montant : recalculer le total côté back).
+- [ ] Tables `orders` / `order_items` + routes `POST /api/orders`, `GET /api/orders`.
+- [ ] Intégrer **Stripe Checkout** en mode test (bouton « Commander » du panier, actuellement désactivé).
+- [ ] Webhook Stripe pour confirmer le paiement côté serveur (recalculer le total côté back : ne jamais faire confiance au montant envoyé par le front).
 - [ ] Marketplace entre particuliers → étudier **Stripe Connect** (reversement aux vendeurs).
 - [ ] Rédiger la stratégie de monétisation : commission sur chaque vente (ex : 5 %), mise en avant payante d'annonces, abonnement vendeur pro...
 - [ ] CGV / conditions générales d'utilisation (contraintes légales de la vente en ligne).
 
 ### C24 / E18 — API sécurisée pour des services tiers
 
-- [ ] Authentification + autorisation (rôles `user` / `admin`), **helmet**, **CORS** restreint au domaine du front, **rate limiting** (`express-rate-limit`).
-- [ ] Toutes les entrées validées ; données sensibles chiffrées (HTTPS en transit, mots de passe hachés).
-- [ ] Documentation **OpenAPI / Swagger** (`swagger-ui-express`) — aussi demandée en C27.
+- [x] Authentification + autorisation (rôles `user` / `admin`), **helmet**, **CORS** limité au front, **limitation des tentatives** de connexion (`express-rate-limit`).
+- [x] Toutes les entrées validées ; mots de passe hachés.
+- [ ] HTTPS en production (données chiffrées en transit).
+- [ ] Documentation **OpenAPI / Swagger** (`swagger-ui-express`) — aussi demandée en C27. Une liste des routes existe déjà dans `back/README.md`.
 
-### C25 / E19 — Tests back ⚠️ couverture ≥ 50 %
+### C25 / E19 — Tests back
 
-- [ ] Plan de tests cohérent avec les spécifications.
-- [ ] Tests unitaires (services) + tests d'intégration des routes avec **Vitest/Jest + supertest** sur une base de test.
-- [ ] Rapport de couverture ≥ 50 % dans le dossier.
+- [x] 42 tests d'intégration (Vitest + supertest) sur une vraie base PostgreSQL de test, **96 % de couverture** (seuil bloquant à 80 %).
+- [ ] Rédiger le **plan de tests** (tableau scénario / résultat attendu) à partir des fichiers `back/tests/*.test.js` et le mettre dans le dossier avec la capture du rapport de couverture.
 
 ### C26 / E20 — Industrialisation back
 
-- [ ] CI GitHub Actions : lint, tests, build, `npm audit`.
-- [ ] Image **Docker** de production (multi-stage) ; scan de sécurité de l'image (Trivy) et des dépendances.
+- [x] CI GitHub Actions : lint, `npm audit`, tests avec couverture (base PostgreSQL fournie par la CI).
+- [ ] Image **Docker** de production (multi-stage) ; scan de sécurité de l'image (Trivy).
+- [ ] **Dependabot** pour les mises à jour de dépendances.
 
 ### RGPD dans l'application (C11, à implémenter)
 
@@ -192,8 +202,7 @@ L'épreuve porte sur une application **fournie le jour J**, pas sur Bazardim. Ma
 - [ ] Fusionner la branche `cleanup` (ce nettoyage) dans `main`, puis supprimer les branches déjà fusionnées (`mylikestab`, `productdelete`, `productview`, `searchmechanism`). La branche `comments` est contenue dans `cleanup`.
 - [ ] Messages de commit explicites, par exemple au format **Conventional Commits** : `feat: ajout du paiement Stripe`, `fix: ...`. Éviter « update » ou « whatever ».
 - [ ] Travailler par branche + Pull Request, même seul (ça se montre bien au jury).
-- [ ] Ajouter un `README.md` à la racine : présentation du projet, architecture front/back, lancement avec `docker compose up`.
-- [ ] Ajouter un `.gitignore` à la racine (`.env`, `node_modules`, `.DS_Store`...).
+- [x] `README.md` et `.gitignore` à la racine.
 
 ---
 
