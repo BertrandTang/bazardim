@@ -2,6 +2,21 @@
 
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
+<!-- progression:debut -->
+**Progression globale : `████░░░░░░░░░░░░░░░░` 22 % (22 / 102 tâches)**
+
+| Partie | Progression | Tâches |
+| --- | --- | --- |
+| Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
+| Bloc 2 — Front-end | `███░░░░░░░░░░░░░░░░░` 13 % | 5 / 38 |
+| Bloc 3 — Back-end | `█████████░░░░░░░░░░░` 43 % | 16 / 37 |
+| Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
+| Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
+
+_Calcul automatique : chaque case compte pour une tâche, quelle que soit sa taille._
+_Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
+<!-- progression:fin -->
+
 ## État des lieux (20/11/2026)
 
 | Partie | État |
