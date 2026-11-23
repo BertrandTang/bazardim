@@ -14,6 +14,8 @@ export default defineConfig({
       '/api': 'http://localhost:3000',
       // Images envoyées par les utilisateurs, enregistrées par l'API (dossier back/uploads/).
       '/uploads': 'http://localhost:3000',
+      // Plan du site, généré par l'API à partir des annonces en vente.
+      '/sitemap.xml': 'http://localhost:3000',
     },
   },
   // Configuration des tests (Vitest réutilise la configuration de Vite).

@@ -7,5 +7,6 @@ Disallow: /vendre
 Disallow: /cart
 Disallow: /auth
 
+# Plan du site généré par l'API (liste à jour des annonces en vente).
 # ⚠️ Remplacer par le vrai nom de domaine une fois réservé.
 Sitemap: https://www.bazardim.fr/sitemap.xml
