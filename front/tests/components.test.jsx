@@ -156,9 +156,9 @@ describe('NavBar', () => {
     const { user } = await renderWithProviders(<NavBar />);
     // Sans message non lu : pas de pastille.
     expect(screen.getByRole('link', { name: 'Messages' })).toHaveAttribute('href', '/messages');
-    expect(screen.getByRole('link', { name: 'PROFIL' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Profil' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Déconnexion' }));
-    expect(screen.getByRole('link', { name: 'CONNEXION' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Connexion' })).toBeInTheDocument();
   });
 });
 

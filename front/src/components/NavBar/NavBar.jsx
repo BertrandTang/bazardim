@@ -103,24 +103,24 @@ export default function NavBar() {
         <div className="navbar-auth">
           {currentUser ? (
             <>
-              {/* aria-label : un lecteur d'écran lit "Messages (2 non lus)" au lieu de "MESSAGES 2". */}
+              {/* aria-label : un lecteur d'écran lit "Messages (2 non lus)" au lieu de "Messages 2". */}
               <Link
                 to="/messages"
                 className="navbar-messages"
                 aria-label={unreadCount > 0 ? `Messages (${unreadCount} non lus)` : 'Messages'}
               >
-                MESSAGES
+                Messages
                 {unreadCount > 0 && <span className="messages-badge">{unreadCount}</span>}
               </Link>
-              <Link to="/profile">PROFIL</Link>
+              <Link to="/profile">Profil</Link>
               <button type="button" className="logout-button" onClick={logout}>
                 Déconnexion
               </button>
             </>
           ) : (
             <>
-              <Link to="/signup">INSCRIPTION</Link>
-              <Link to="/auth">CONNEXION</Link>
+              <Link to="/signup">Inscription</Link>
+              <Link to="/auth">Connexion</Link>
             </>
           )}
         </div>

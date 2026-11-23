@@ -6,7 +6,7 @@ const MessagesContext = createContext(null);
 
 /**
  * Fournit le nombre de messages non lus de l'utilisateur connecté,
- * affiché dans une pastille à côté du lien MESSAGES de la barre de navigation.
+ * affiché dans une pastille à côté du lien « Messages » de la barre de navigation.
  *
  * Il n'y a pas de mise à jour "en direct" : le nombre est redemandé à l'API à chaque
  * changement de page (voir NavBar) et quand on lit un message (voir la page Messages).
