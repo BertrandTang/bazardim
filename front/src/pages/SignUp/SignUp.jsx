@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
+import PasswordField from '../../components/PasswordField/PasswordField.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const MINIMUM_PASSWORD_LENGTH = 8;
@@ -96,10 +97,9 @@ export default function SignUp() {
               value={formValues.email}
               onChange={handleChange}
             />
-            <TextField
+            <PasswordField
               label="Mot de passe"
               name="password"
-              type="password"
               autoComplete="new-password"
               helperText={`${MINIMUM_PASSWORD_LENGTH} caractères minimum`}
               required
@@ -107,10 +107,9 @@ export default function SignUp() {
               value={formValues.password}
               onChange={handleChange}
             />
-            <TextField
+            <PasswordField
               label="Confirme ton mot de passe"
               name="confirmPassword"
-              type="password"
               autoComplete="new-password"
               required
               fullWidth

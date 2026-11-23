@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PRODUCTS } from './fixtures.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
 import NavBar from '../src/components/NavBar/NavBar.jsx';
+import PasswordField from '../src/components/PasswordField/PasswordField.jsx';
 import ProductCard from '../src/components/ProductCard/ProductCard.jsx';
 import ProductForm from '../src/components/ProductForm/ProductForm.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
@@ -162,5 +163,19 @@ describe('RequireAuth', () => {
       </RequireAuth>,
     );
     expect(screen.getByText('Page privée')).toBeInTheDocument();
+  });
+});
+
+describe('PasswordField', () => {
+  it('affiche puis masque le mot de passe avec le bouton œil', async () => {
+    const { user } = await renderWithProviders(<PasswordField label="Mot de passe" />);
+    const passwordInput = screen.getByLabelText('Mot de passe');
+    expect(passwordInput).toHaveAttribute('type', 'password');
+
+    await user.click(screen.getByRole('button', { name: 'Afficher le mot de passe' }));
+    expect(passwordInput).toHaveAttribute('type', 'text');
+
+    await user.click(screen.getByRole('button', { name: 'Masquer le mot de passe' }));
+    expect(passwordInput).toHaveAttribute('type', 'password');
   });
 });
