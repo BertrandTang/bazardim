@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anonymous, createLoggedInUser, useEmptyDatabase } from './helpers.js';
+import { TEST_PASSWORD, anonymous, createLoggedInUser, useEmptyDatabase } from './helpers.js';
 
 useEmptyDatabase();
 
@@ -7,7 +7,7 @@ describe('POST /api/auth/register', () => {
   it('crée le compte, renvoie l’utilisateur sans mot de passe et dépose un cookie httpOnly', async () => {
     const response = await anonymous()
       .post('/api/auth/register')
-      .send({ username: 'Collec92', email: '  Collec@Example.COM ', password: 'password123' })
+      .send({ username: 'Collec92', email: '  Collec@Example.COM ', password: TEST_PASSWORD })
       .expect(201);
 
     expect(response.body).toMatchObject({ username: 'Collec92', email: 'collec@example.com', role: 'user' });
@@ -19,7 +19,7 @@ describe('POST /api/auth/register', () => {
     await createLoggedInUser({ email: 'doublon@example.com' });
     const response = await anonymous()
       .post('/api/auth/register')
-      .send({ username: 'autre', email: 'doublon@example.com', password: 'password123' })
+      .send({ username: 'autre', email: 'doublon@example.com', password: TEST_PASSWORD })
       .expect(409);
     expect(response.body.error).toBe('Un compte existe déjà avec cet email.');
   });
@@ -28,7 +28,7 @@ describe('POST /api/auth/register', () => {
     await createLoggedInUser({ username: 'pseudo' });
     const response = await anonymous()
       .post('/api/auth/register')
-      .send({ username: 'pseudo', email: 'autre@example.com', password: 'password123' })
+      .send({ username: 'pseudo', email: 'autre@example.com', password: TEST_PASSWORD })
       .expect(409);
     expect(response.body.error).toBe('Ce pseudo est déjà utilisé.');
   });

@@ -5,7 +5,7 @@
 // mais elles lisent et modifient des données gardées en mémoire (copiées de fixtures.js).
 // Les règles importantes de la vraie API sont reproduites (connexion, droits du propriétaire...).
 // La vraie API est testée de son côté, dans back/tests/.
-import { PRODUCTS, USERS } from './fixtures.js';
+import { PRODUCTS, TEST_PASSWORD, USERS } from './fixtures.js';
 
 export class ApiError extends Error {
   constructor(status, message) {
@@ -21,7 +21,8 @@ let database;
 export function resetFakeApi() {
   // structuredClone fait une copie complète : les tests ne modifient jamais fixtures.js.
   database = {
-    users: structuredClone(USERS),
+    // Chaque compte reçoit le mot de passe de test.
+    users: USERS.map((user) => ({ ...user, password: TEST_PASSWORD })),
     products: structuredClone(PRODUCTS),
     likes: [], // { userId, productId }
     messages: [],

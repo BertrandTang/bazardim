@@ -6,6 +6,19 @@ import figuresData from './seed-data/figures.json' with { type: 'json' };
 import profilesData from './seed-data/profiles.json' with { type: 'json' };
 
 /**
+ * Mot de passe commun à tous les comptes de démonstration, lu dans back/.env.
+ * Il n'est jamais écrit dans le code : un compte administrateur avec un mot de passe
+ * connu de tous serait une faille si ces données étaient chargées sur un vrai serveur.
+ */
+function getDemoPassword() {
+  const demoPassword = process.env.SEED_DEMO_PASSWORD;
+  if (!demoPassword || demoPassword.length < 8) {
+    throw new Error('Définissez SEED_DEMO_PASSWORD (8 caractères minimum) dans back/.env : voir .env.example.');
+  }
+  return demoPassword;
+}
+
+/**
  * Remplit la base avec les données de démonstration (seed-data/*.json).
  * On réutilise les fonctions de l'API (validation + insertion) : les données de démo
  * respectent donc exactement les mêmes règles que celles saisies par les utilisateurs.
@@ -14,12 +27,14 @@ export async function seedDatabase() {
   // Les fichiers JSON ont leurs propres identifiants (101, 102...) : on retient
   // à quel nouvel identifiant de la base chacun correspond.
   const userIdByOldId = new Map();
+  // Le hachage bcrypt est volontairement lent : on ne le calcule qu'une fois pour tous les comptes.
+  const demoPasswordHash = await hashPassword(getDemoPassword());
 
   for (const profile of profilesData.profiles) {
     const user = await insertUser({
       username: profile.username,
       email: profile.email,
-      passwordHash: await hashPassword(profile.password),
+      passwordHash: demoPasswordHash,
       role: profile.email === 'admin@example.com' ? 'admin' : 'user',
       profileImageUrl: profile.profile_img,
     });

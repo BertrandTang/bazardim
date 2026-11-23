@@ -19,7 +19,7 @@ cp .env.example .env                       # puis choisir POSTGRES_PASSWORD
 docker compose up -d                       # base de données PostgreSQL
 
 cd back
-cp .env.example .env                       # puis remplir DATABASE_URL, TEST_DATABASE_URL et JWT_SECRET
+cp .env.example .env                       # puis remplir DATABASE_URL, TEST_DATABASE_URL, JWT_SECRET et SEED_DEMO_PASSWORD
 npm install && npm run db:reset && npm run dev   # API sur http://localhost:3000
 
 cd ../front
@@ -29,8 +29,9 @@ npm install && npm run dev                 # site sur http://localhost:5173
 L'API et le front doivent tourner **en même temps** (deux terminaux) : en développement,
 le front transmet à l'API toutes les requêtes `/api/...` (voir `front/vite.config.js`).
 
-Comptes de démonstration : `collectionneurdu92@example.com` / `password123`,
-administrateur : `admin@example.com` / `admin123`. Pour repartir des données d'origine : `npm run db:reset` dans `back/`.
+Comptes de démonstration : `collectionneurdu92@example.com`, administrateur : `admin@example.com`.
+Leur mot de passe est celui que vous avez choisi dans `back/.env` (`SEED_DEMO_PASSWORD`).
+Pour repartir des données d'origine : `npm run db:reset` dans `back/`.
 
 ## Secrets
 

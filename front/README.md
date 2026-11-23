@@ -16,7 +16,7 @@ npm run build          # build de production dans dist/
 npm run preview        # sert le build de production en local
 ```
 
-Comptes de démonstration : `collectionneurdu92@example.com` / `password123`, `admin@example.com` / `admin123`.
+Comptes de démonstration : `collectionneurdu92@example.com`, `admin@example.com` (mot de passe : `SEED_DEMO_PASSWORD` dans `back/.env`).
 
 Toutes les données (comptes, annonces, favoris, messages) viennent de l'API (dossier `back/`).
 Seuls le panier et l'adresse de livraison restent dans le **localStorage** du navigateur,

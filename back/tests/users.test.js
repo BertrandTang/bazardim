@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anonymous, buildProduct, createLoggedInUser, useEmptyDatabase } from './helpers.js';
+import { TEST_PASSWORD, anonymous, buildProduct, createLoggedInUser, useEmptyDatabase } from './helpers.js';
 
 useEmptyDatabase();
 
@@ -56,7 +56,7 @@ describe('DELETE /api/users/me', () => {
     const product = (await agent.post('/api/products').send(buildProduct())).body;
 
     await agent.delete('/api/users/me').send({ current_password: 'mauvais' }).expect(403);
-    await agent.delete('/api/users/me').send({ current_password: 'password123' }).expect(204);
+    await agent.delete('/api/users/me').send({ current_password: TEST_PASSWORD }).expect(204);
 
     await anonymous().get(`/api/users/${user.id}`).expect(404);
     await anonymous().get(`/api/products/${product.id}`).expect(404);

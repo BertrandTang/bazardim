@@ -2,16 +2,18 @@
 // Ce sont les données de démonstration de back/database/seed-data, avec des identifiants 1, 2, 3...
 //
 // Repères utilisés dans les tests :
-// - utilisateur 1 : CollectionneurDu92 (collectionneurdu92@example.com / password123), vend le produit 1 (Vegeta) ;
+// - utilisateur 1 : CollectionneurDu92 (collectionneurdu92@example.com), vend le produit 1 (Vegeta) ;
 // - utilisateur 2 : FigurineParadise, vend le produit 2 (Luffy) ;
-// - utilisateur 8 : Admin (admin@example.com / admin123).
+// - utilisateur 8 : Admin (admin@example.com).
+
+/** Mot de passe de tous les comptes de la fausse API (faux mot de passe, propre aux tests). */
+export const TEST_PASSWORD = 'mot-de-passe-de-test';
 
 export const USERS = [
   {
     id: 1,
     username: 'CollectionneurDu92',
     email: 'collectionneurdu92@example.com',
-    password: 'password123',
     profile_image_url: '/img/img_1.jpg',
     role: 'user',
   },
@@ -19,7 +21,6 @@ export const USERS = [
     id: 2,
     username: 'FigurineParadise',
     email: 'figurineparadise@example.com',
-    password: 'password123',
     profile_image_url: '/img/img_2.jpg',
     role: 'user',
   },
@@ -27,7 +28,6 @@ export const USERS = [
     id: 3,
     username: 'LibrairieOtaku',
     email: 'librairieotaku@example.com',
-    password: 'password123',
     profile_image_url: '/img/img_3.jpg',
     role: 'user',
   },
@@ -35,7 +35,6 @@ export const USERS = [
     id: 4,
     username: 'MangaFanatics',
     email: 'mangafanatics@example.com',
-    password: 'password123',
     profile_image_url: '/img/img_4.jpg',
     role: 'user',
   },
@@ -43,7 +42,6 @@ export const USERS = [
     id: 5,
     username: 'VetementsGeeks',
     email: 'vetementsgeeks@example.com',
-    password: 'password123',
     profile_image_url: '/img/img_5.jpg',
     role: 'user',
   },
@@ -51,7 +49,6 @@ export const USERS = [
     id: 6,
     username: 'BoutiqueFantaisie',
     email: 'boutiquefantaisie@example.com',
-    password: 'password123',
     profile_image_url: '/img/img_6.jpg',
     role: 'user',
   },
@@ -59,7 +56,6 @@ export const USERS = [
     id: 7,
     username: 'CardsPro',
     email: 'cardspro@example.com',
-    password: 'password123',
     profile_image_url: '/img/img_7.jpg',
     role: 'user',
   },
@@ -67,7 +63,6 @@ export const USERS = [
     id: 8,
     username: 'Admin',
     email: 'admin@example.com',
-    password: 'admin123',
     profile_image_url: '/img/img_7.jpg',
     role: 'admin',
   },

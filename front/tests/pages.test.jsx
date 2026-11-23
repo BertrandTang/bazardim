@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { addFakeMessage, likeProduct } from './fakeApi.js';
-import { PRODUCTS } from './fixtures.js';
+import { PRODUCTS, TEST_PASSWORD } from './fixtures.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
 import Auth from '../src/pages/Auth/Auth.jsx';
 import Cart from '../src/pages/Cart/Cart.jsx';
@@ -57,7 +57,7 @@ describe('Auth (connexion)', () => {
   it('connecte puis redirige vers le profil', async () => {
     const { user } = await renderWithProviders(<Auth />, { route: '/auth', path: '/auth' });
     await user.type(screen.getByLabelText(/Email/), 'Collectionneurdu92@example.com ');
-    await user.type(screen.getByLabelText(/Mot de passe/), 'password123');
+    await user.type(screen.getByLabelText(/Mot de passe/), TEST_PASSWORD);
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
     expect(screen.getByTestId('current-location')).toHaveTextContent('/profile');
   });

@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PRODUCTS } from './fixtures.js';
+import { PRODUCTS, TEST_PASSWORD } from './fixtures.js';
 import { AllProviders, loginAs, waitForDataToLoad } from './renderWithProviders.jsx';
 import { useAuth } from '../src/context/AuthContext.jsx';
 import { useCart } from '../src/context/CartContext.jsx';
@@ -30,7 +30,7 @@ describe('AuthContext', () => {
     );
     expect(result.current.auth.currentUser).toBeNull();
 
-    await act(() => result.current.auth.login('collectionneurdu92@example.com', 'password123'));
+    await act(() => result.current.auth.login('collectionneurdu92@example.com', TEST_PASSWORD));
     expect(result.current.auth.currentUser.username).toBe('CollectionneurDu92');
 
     await act(() => result.current.auth.logout());
@@ -140,7 +140,7 @@ describe('LikesContext', () => {
     expect(result.current.likes.isLiked(1)).toBe(true);
 
     // Un autre utilisateur se connecte : il ne voit pas les favoris du premier.
-    await act(() => result.current.auth.login('admin@example.com', 'admin123'));
+    await act(() => result.current.auth.login('admin@example.com', TEST_PASSWORD));
     await waitForDataToLoad();
     expect(result.current.likes.isLiked(1)).toBe(false);
 
@@ -149,7 +149,7 @@ describe('LikesContext', () => {
     expect(result.current.likes.likedProductIds).toEqual([]);
 
     // Le premier utilisateur retrouve ses favoris en se reconnectant.
-    await act(() => result.current.auth.login('collectionneurdu92@example.com', 'password123'));
+    await act(() => result.current.auth.login('collectionneurdu92@example.com', TEST_PASSWORD));
     await waitForDataToLoad();
     expect(result.current.likes.likedProductIds).toEqual([1]);
   });

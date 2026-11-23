@@ -8,7 +8,7 @@ qui échoue si un test échoue ou si la couverture du code passe sous 50 % (le m
 | --- | --- | --- |
 | Outils | Vitest + React Testing Library (navigateur simulé : jsdom) | Vitest + supertest, sur une vraie base PostgreSQL de test |
 | Lancer | `cd front && npm run test:coverage` | `cd back && npm run test:coverage` |
-| Nombre de tests | 67 | 42 |
+| Nombre de tests | 67 | 43 |
 | Couverture des lignes | 89 % | 95 % |
 | Emplacement | `front/tests/*.test.js(x)` | `back/tests/*.test.js` |
 
@@ -88,6 +88,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Messagerie | Écrire au vendeur d'une annonce | 201, visible dans ses reçus et dans les envoyés de l'expéditeur | `messages.test.js` |
 | Messagerie | Message vide, à soi-même, à un inconnu, produit inexistant | 400 / 400 / 404 / 404 | `messages.test.js` |
 | Messagerie | Marquer comme lu un message qui ne nous est pas destiné | 403 | `messages.test.js` |
+| Messagerie (confidentialité) | Un autre utilisateur, même administrateur, consulte ses messages | Il ne voit pas les messages des autres (403 s'il tente d'agir dessus) | `messages.test.js` |
 | Messagerie | Annonce supprimée | Le message est conservé (`product_id` vide) | `messages.test.js` |
 | Compte | Changer de mot de passe ou d'email sans le mot de passe actuel | 403 | `users.test.js` |
 | Compte | Envoyer `role: admin` | 400 (champ refusé) | `users.test.js` |

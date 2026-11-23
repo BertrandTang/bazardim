@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anonymous, buildProduct, createLoggedInUser, useEmptyDatabase } from './helpers.js';
+import { anonymous, buildProduct, createLoggedInUser, makeAdmin, useEmptyDatabase } from './helpers.js';
 
 useEmptyDatabase();
 
@@ -58,6 +58,27 @@ describe('Messagerie', () => {
       .post('/api/messages')
       .send({ recipient_id: seller.user.id, product_id: 9999, content: 'Quoi ?' })
       .expect(404);
+  });
+
+  it('un message n’est visible que par son expéditeur et son destinataire, même pas par un administrateur', async () => {
+    const { seller, buyer, product } = await createSellerAndBuyer();
+    const message = (
+      await buyer.agent
+        .post('/api/messages')
+        .send({ recipient_id: seller.user.id, product_id: product.id, content: 'Privé' })
+    ).body;
+
+    const outsider = await createLoggedInUser();
+    const admin = await createLoggedInUser();
+    await makeAdmin(admin.user.id);
+
+    for (const otherUser of [outsider, admin]) {
+      const received = await otherUser.agent.get('/api/messages/received').expect(200);
+      const sent = await otherUser.agent.get('/api/messages/sent').expect(200);
+      expect([...received.body, ...sent.body]).toEqual([]);
+      // Il ne peut pas non plus agir sur le message.
+      await otherUser.agent.patch(`/api/messages/${message.id}/read`).expect(403);
+    }
   });
 
   it('refuse un visiteur non connecté (401)', async () => {

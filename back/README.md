@@ -10,7 +10,7 @@ cp .env.example .env     # une seule fois : choisir POSTGRES_PASSWORD
 docker compose up -d
 
 # 2. Configurer l'API (une seule fois, dans back/) : copier le modèle puis remplir
-#    DATABASE_URL, TEST_DATABASE_URL (avec le même mot de passe) et JWT_SECRET
+#    DATABASE_URL, TEST_DATABASE_URL (avec le même mot de passe), JWT_SECRET et SEED_DEMO_PASSWORD
 cp .env.example .env
 
 # 3. Installer, créer les tables et insérer les données de démo
@@ -30,7 +30,7 @@ npm run dev        # http://localhost:3000/api/health
 | `npm run test:coverage` | tests + rapport de couverture (`coverage/index.html`), échoue sous 50 %                    |
 | `npm run lint`          | analyse statique (ESLint)                                                                  |
 
-Comptes de démo : `collectionneurdu92@example.com` / `password123`, administrateur : `admin@example.com` / `admin123`.
+Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@example.com`. Mot de passe : la valeur de `SEED_DEMO_PASSWORD` dans `back/.env` (jamais écrite dans le dépôt).
 
 ## Choix techniques
 

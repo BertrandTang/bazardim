@@ -17,6 +17,9 @@ export function useEmptyDatabase() {
   });
 }
 
+/** Mot de passe des comptes créés pendant les tests (faux mot de passe, propre aux tests). */
+export const TEST_PASSWORD = 'mot-de-passe-de-test';
+
 let createdUserCount = 0;
 
 /**
@@ -31,7 +34,7 @@ export async function createLoggedInUser(overrides = {}) {
     .send({
       username: `user${createdUserCount}`,
       email: `user${createdUserCount}@example.com`,
-      password: 'password123',
+      password: TEST_PASSWORD,
       ...overrides,
     })
     .expect(201);
