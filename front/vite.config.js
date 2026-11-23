@@ -7,6 +7,12 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
+    // En développement, le front (port 5173) et l'API (port 3000) tournent séparément.
+    // Le "proxy" transmet à l'API toutes les requêtes qui commencent par /api :
+    // pour le navigateur, tout vient de la même adresse (pas de souci de CORS ni de cookie).
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
   },
   // Configuration des tests (Vitest réutilise la configuration de Vite).
   test: {

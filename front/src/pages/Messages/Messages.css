@@ -1,0 +1,78 @@
+.messages-page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.messages-page h1 {
+  margin: 0;
+}
+
+.messages-empty {
+  color: #444;
+}
+
+.messages-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-item {
+  background: #fff;
+  color: #222;
+  border-radius: 0 26px 0 26px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 6px solid transparent;
+}
+
+/* Message reçu pas encore lu : bordure de couleur pour le repérer. */
+.message-item.unread {
+  border-left-color: var(--color-primary);
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.message-header time {
+  font-weight: 400;
+  color: #555;
+}
+
+.message-new-badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 12px;
+}
+
+.message-product,
+.message-content {
+  margin: 0;
+}
+
+/* Conserve les retours à la ligne tapés par l'utilisateur. */
+.message-content {
+  white-space: pre-line;
+}
+
+.message-actions {
+  display: flex;
+  gap: 8px;
+}

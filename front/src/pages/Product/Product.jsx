@@ -1,18 +1,24 @@
 import { useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import AddToCartButton from '../../components/AddToCartButton/AddToCartButton.jsx';
+import MessageForm from '../../components/MessageForm/MessageForm.jsx';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductForm from '../../components/ProductForm/ProductForm.jsx';
 import SellerLink from '../../components/SellerLink/SellerLink.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
+import { sendMessage } from '../../services/api.js';
 import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
 import './Product.css';
 
-/** Transforme la taille { height, width, scale } en texte lisible : "18 cm • 25 cm • 1/8". */
-function formatSize(size) {
-  const parts = [size?.height && `${size.height} cm`, size?.width && `${size.width} cm`, size?.scale].filter(Boolean);
+/** Transforme la taille du produit en texte lisible : "18 cm • 25 cm • 1/8". */
+function formatSize(product) {
+  const parts = [
+    product.height_cm && `${product.height_cm} cm`,
+    product.width_cm && `${product.width_cm} cm`,
+    product.scale,
+  ].filter(Boolean);
   return parts.join(' • ');
 }
 
@@ -29,7 +35,7 @@ function buildStructuredData(product) {
     description: product.description,
     image: new URL(getProductImage(product), window.location.origin).href,
     sku: String(product.id),
-    ...(product.EAN_number && { gtin13: product.EAN_number }),
+    ...(product.ean_code && { gtin13: product.ean_code }),
     ...(product.manufacturer && { brand: { '@type': 'Brand', name: product.manufacturer } }),
     offers: {
       '@type': 'Offer',
@@ -43,20 +49,28 @@ function buildStructuredData(product) {
   };
 }
 
-/** Page de détail d'un produit (adresse : /product/:id). Le vendeur peut y modifier ou supprimer son annonce. */
+/**
+ * Page de détail d'un produit (adresse : /product/:id).
+ * Le vendeur peut y modifier ou supprimer son annonce ; les autres utilisateurs peuvent le contacter.
+ */
 export default function Product() {
-  // useParams lit la partie variable de l'URL : pour /product/FIG001, id vaut "FIG001".
+  // useParams lit la partie variable de l'URL : pour /product/12, id vaut "12".
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { findProductById, updateProduct, deleteProduct } = useProducts();
+  const { findProductById, isLoading, updateProduct, deleteProduct } = useProducts();
 
   // Le bouton "Modifier" de la page profil ouvre /product/:id?edit=1 :
   // dans ce cas on démarre directement en mode édition.
   const [isEditing, setIsEditing] = useState(searchParams.get('edit') === '1');
+  const [deleteError, setDeleteError] = useState('');
 
   const product = findProductById(id);
+
+  if (isLoading) {
+    return <p className="layout-loading">Chargement…</p>;
+  }
 
   if (!product) {
     return (
@@ -67,18 +81,29 @@ export default function Product() {
     );
   }
 
-  const isOwner = currentUser !== null && currentUser.user_id === product.owner_user_id;
+  const isOwner = currentUser !== null && currentUser.id === product.owner_id;
 
-  function handleSave(productFields) {
-    updateProduct(product.id, productFields);
+  // En cas d'erreur de l'API, ProductForm affiche le message (voir son handleSubmit).
+  async function handleSave(productFields) {
+    await updateProduct(product.id, productFields);
     setIsEditing(false);
   }
 
-  function handleDelete() {
-    if (window.confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
-      deleteProduct(product.id);
-      navigate('/profile');
+  async function handleDelete() {
+    if (!window.confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
+      return;
     }
+    try {
+      await deleteProduct(product.id);
+      navigate('/profile');
+    } catch (error) {
+      setDeleteError(error.message);
+    }
+  }
+
+  /** Envoie un message au vendeur à propos de cette annonce. */
+  async function handleContactSeller(content) {
+    await sendMessage({ recipient_id: product.owner_id, product_id: product.id, content });
   }
 
   // Caractéristiques affichées sous la description ("N/C" = non communiqué).
@@ -88,10 +113,10 @@ export default function Product() {
     { label: 'Version', value: product.version },
     { label: 'Matière', value: product.material },
     { label: 'État figurine', value: product.state_of_wear },
-    { label: 'Boîte', value: product.box ? 'Oui' : 'Non' },
+    { label: 'Boîte', value: product.has_box ? 'Oui' : 'Non' },
     { label: 'État boîte', value: product.state_of_box },
-    { label: 'EAN', value: product.EAN_number },
-    { label: 'Taille', value: formatSize(product.size) },
+    { label: 'EAN', value: product.ean_code },
+    { label: 'Taille', value: formatSize(product) },
   ];
 
   return (
@@ -113,7 +138,7 @@ export default function Product() {
           <img src={getProductImage(product)} alt={product.title} />
         </div>
 
-        <SellerLink userId={product.owner_user_id} username={product.owner_username} />
+        <SellerLink userId={product.owner_id} username={product.owner_username} />
 
         <div className="product-tags">
           {product.category && <span className="product-tag category">{product.category}</span>}
@@ -161,7 +186,30 @@ export default function Product() {
                 <AddToCartButton productId={product.id} />
               )}
             </div>
+            {deleteError && (
+              <p className="form-error" role="alert">
+                {deleteError}
+              </p>
+            )}
           </>
+        )}
+
+        {/* Contacter le vendeur : uniquement pour les autres utilisateurs que le vendeur. */}
+        {!isOwner && (
+          <section className="product-contact" aria-labelledby="product-contact-title">
+            <h2 id="product-contact-title">Contacter le vendeur</h2>
+            {currentUser ? (
+              <MessageForm
+                label={`Votre message à ${product.owner_username}`}
+                submitLabel="Envoyer"
+                onSend={handleContactSeller}
+              />
+            ) : (
+              <p>
+                <Link to="/auth">Connectez-vous</Link> pour poser une question au vendeur.
+              </p>
+            )}
+          </section>
         )}
       </article>
     </section>

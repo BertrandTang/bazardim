@@ -8,6 +8,7 @@ import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { requestLogger } from './middlewares/requestLogger.js';
 import authRoutes from './routes/auth.routes.js';
 import likesRoutes from './routes/likes.routes.js';
+import messagesRoutes from './routes/messages.routes.js';
 import productsRoutes from './routes/products.routes.js';
 import usersRoutes from './routes/users.routes.js';
 
@@ -47,6 +48,7 @@ app.get('/api/health', async (request, response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/likes', likesRoutes);
+app.use('/api/messages', messagesRoutes);
 app.use('/api', productsRoutes);
 
 // ----- Gestion des erreurs (toujours en dernier) -----

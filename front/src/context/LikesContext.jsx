@@ -1,35 +1,55 @@
-import { createContext, useContext } from 'react';
-import useLocalStorageState from '../hooks/useLocalStorageState.js';
+import { createContext, useContext, useEffect, useState } from 'react';
+import * as api from '../services/api.js';
 import { useAuth } from './AuthContext.jsx';
 
 const LikesContext = createContext(null);
 
 /**
  * Fournit les produits "likés" (favoris) de l'utilisateur connecté.
- * Chaque utilisateur a sa propre liste ; un visiteur non connecté utilise la liste "guest".
+ * Les favoris sont enregistrés par l'API : il faut donc être connecté pour en ajouter.
  */
 export function LikesProvider({ children }) {
   const { currentUser } = useAuth();
+  const currentUserId = currentUser?.id ?? null;
 
-  // Objet de la forme : { "101": ["FIG001", "FIG004"], "guest": ["FIG002"] }
-  const [likedProductIdsByUser, setLikedProductIdsByUser] = useLocalStorageState('likesByUser', {});
+  // On retient à quel utilisateur appartient la liste : { userId: 3, productIds: [1, 4] }.
+  // Ainsi, après une déconnexion ou un changement de compte, on n'affiche jamais
+  // les favoris de la personne précédente.
+  const [likes, setLikes] = useState({ userId: null, productIds: [] });
 
-  const userKey = currentUser ? String(currentUser.user_id) : 'guest';
-  const likedProductIds = likedProductIdsByUser[userKey] ?? [];
+  // Recharge les favoris à chaque fois que l'utilisateur connecté change
+  // (c'est le rôle du tableau [currentUserId] : relancer l'effet quand cette valeur change).
+  useEffect(() => {
+    if (currentUserId === null) {
+      return;
+    }
+    api
+      .fetchLikedProducts()
+      .then((likedProducts) =>
+        setLikes({ userId: currentUserId, productIds: likedProducts.map((product) => product.id) }),
+      )
+      .catch(() => setLikes({ userId: currentUserId, productIds: [] }));
+  }, [currentUserId]);
+
+  // Valeur calculée : une liste vide si la liste chargée appartient à quelqu'un d'autre.
+  const likedProductIds = likes.userId === currentUserId ? likes.productIds : [];
 
   function isLiked(productId) {
     return likedProductIds.includes(productId);
   }
 
   /** Ajoute le produit aux favoris s'il n'y est pas, sinon le retire. */
-  function toggleLike(productId) {
-    setLikedProductIdsByUser((previousLikes) => {
-      const userLikes = previousLikes[userKey] ?? [];
-      const nextUserLikes = userLikes.includes(productId)
-        ? userLikes.filter((likedProductId) => likedProductId !== productId)
-        : [...userLikes, productId];
-      return { ...previousLikes, [userKey]: nextUserLikes };
-    });
+  async function toggleLike(productId) {
+    if (isLiked(productId)) {
+      await api.unlikeProduct(productId);
+      setLikes((previousLikes) => ({
+        ...previousLikes,
+        productIds: previousLikes.productIds.filter((likedProductId) => likedProductId !== productId),
+      }));
+    } else {
+      await api.likeProduct(productId);
+      setLikes((previousLikes) => ({ ...previousLikes, productIds: [...previousLikes.productIds, productId] }));
+    }
   }
 
   const contextValue = { likedProductIds, isLiked, toggleLike };

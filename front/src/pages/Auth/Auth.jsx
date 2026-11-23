@@ -19,13 +19,15 @@ export default function Auth() {
   // Si l'utilisateur a été redirigé ici par RequireAuth, on le renvoie ensuite vers la page demandée.
   const redirectPath = location.state?.from?.pathname ?? '/profile';
 
-  function handleSubmit(event) {
+  // "async" : on attend la réponse de l'API avant de continuer (mot-clé await).
+  async function handleSubmit(event) {
     event.preventDefault();
-    const isLoggedIn = login(email.trim().toLowerCase(), password);
-    if (isLoggedIn) {
+    try {
+      await login(email.trim().toLowerCase(), password);
       navigate(redirectPath, { replace: true });
-    } else {
-      setErrorMessage('Email ou mot de passe incorrect.');
+    } catch (error) {
+      // Message renvoyé par l'API, ex : "Email ou mot de passe incorrect."
+      setErrorMessage(error.message);
     }
   }
 

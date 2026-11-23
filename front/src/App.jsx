@@ -14,6 +14,7 @@ import Home from './pages/Home/Home.jsx';
 // Pendant le téléchargement, <Suspense> (dans Layout.jsx) affiche "Chargement…".
 const Auth = lazy(() => import('./pages/Auth/Auth.jsx'));
 const Cart = lazy(() => import('./pages/Cart/Cart.jsx'));
+const Messages = lazy(() => import('./pages/Messages/Messages.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound/NotFound.jsx'));
 const Product = lazy(() => import('./pages/Product/Product.jsx'));
 const Profile = lazy(() => import('./pages/Profile/Profile.jsx'));
@@ -59,6 +60,14 @@ export default function App() {
                     element={
                       <RequireAuth>
                         <Profile />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/messages"
+                    element={
+                      <RequireAuth>
+                        <Messages />
                       </RequireAuth>
                     }
                   />

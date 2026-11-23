@@ -1,47 +1,69 @@
-import { createContext, useContext } from 'react';
-import figuresData from '../data/figures.json';
-import useLocalStorageState from '../hooks/useLocalStorageState.js';
-
-// ⚠️ TEMPORAIRE : en attendant le back-end, la liste des produits est initialisée
-// avec figures.json puis sauvegardée dans le localStorage. Il faudra remplacer
-// ces fonctions par des appels à l'API (GET/POST/PUT/DELETE /products).
+import { createContext, useContext, useEffect, useState } from 'react';
+import * as api from '../services/api.js';
 
 const ProductsContext = createContext(null);
 
 /**
- * Fournit la liste des produits et les fonctions pour la modifier (ajout, modification, suppression).
+ * Fournit la liste des produits (chargée depuis l'API) et les fonctions pour la modifier.
+ *
+ * Après chaque création / modification / suppression, on met à jour la liste locale
+ * avec la réponse de l'API : toutes les pages affichent ainsi la bonne version sans recharger.
  */
 export function ProductsProvider({ children }) {
-  const [products, setProducts] = useLocalStorageState('products', figuresData.figures);
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  // Message à afficher si la liste n'a pas pu être chargée (API arrêtée...).
+  const [loadingError, setLoadingError] = useState('');
+
+  // Chargement des produits une seule fois, au démarrage de l'application.
+  useEffect(() => {
+    api
+      .fetchProducts()
+      .then((loadedProducts) => setProducts(loadedProducts))
+      .catch((error) => setLoadingError(error.message))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   // Liste des licences sans doublons ("One Piece", "Naruto"...).
   // `new Set()` supprime automatiquement les doublons, puis on le retransforme en tableau.
   const licences = [...new Set(products.map((product) => product.licence_name).filter(Boolean))];
 
-  /** Retrouve un produit à partir de son identifiant. Retourne null s'il n'existe pas. */
+  /** Retrouve un produit à partir de son identifiant (nombre, ou texte venant de l'URL). */
   function findProductById(productId) {
-    return products.find((product) => product.id === productId) ?? null;
+    return products.find((product) => String(product.id) === String(productId)) ?? null;
   }
 
-  function addProduct(newProduct) {
-    setProducts((previousProducts) => [...previousProducts, newProduct]);
+  /** Crée l'annonce via l'API et retourne le produit créé (avec son identifiant). */
+  async function addProduct(productFields) {
+    const createdProduct = await api.createProduct(productFields);
+    // On passe une fonction à setProducts : React nous donne la liste actuelle
+    // et on retourne la nouvelle liste (on ne modifie jamais l'ancienne directement).
+    setProducts((previousProducts) => [createdProduct, ...previousProducts]);
+    return createdProduct;
   }
 
-  /** Remplace les champs listés dans `changes` sur le produit concerné. */
-  function updateProduct(productId, changes) {
-    const updatedAt = new Date().toISOString();
+  async function updateProduct(productId, productFields) {
+    const updatedProduct = await api.updateProduct(productId, productFields);
     setProducts((previousProducts) =>
-      previousProducts.map((product) =>
-        product.id === productId ? { ...product, ...changes, updated_at: updatedAt } : product,
-      ),
+      previousProducts.map((product) => (product.id === productId ? updatedProduct : product)),
     );
   }
 
-  function deleteProduct(productId) {
+  async function deleteProduct(productId) {
+    await api.deleteProduct(productId);
     setProducts((previousProducts) => previousProducts.filter((product) => product.id !== productId));
   }
 
-  const contextValue = { products, licences, findProductById, addProduct, updateProduct, deleteProduct };
+  const contextValue = {
+    products,
+    isLoading,
+    loadingError,
+    licences,
+    findProductById,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+  };
   return <ProductsContext.Provider value={contextValue}>{children}</ProductsContext.Provider>;
 }
 

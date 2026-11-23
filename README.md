@@ -26,8 +26,11 @@ cd ../front
 npm install && npm run dev                 # site sur http://localhost:5173
 ```
 
-> Le front n'utilise pas encore l'API : il fonctionne avec des données de démonstration
-> stockées dans le navigateur. Le branchement est la prochaine étape (voir `todo.md`).
+L'API et le front doivent tourner **en même temps** (deux terminaux) : en développement,
+le front transmet à l'API toutes les requêtes `/api/...` (voir `front/vite.config.js`).
+
+Comptes de démonstration : `collectionneurdu92@example.com` / `password123`,
+administrateur : `admin@example.com` / `admin123`. Pour repartir des données d'origine : `npm run db:reset` dans `back/`.
 
 ## Secrets
 

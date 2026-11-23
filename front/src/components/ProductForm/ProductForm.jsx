@@ -12,11 +12,12 @@ const EMPTY_PRODUCT = {
   category: CATEGORIES[0].value,
   year_of_acquisition: new Date().getFullYear(),
   state_of_wear: 'Neuf',
-  box: true,
+  has_box: true,
   state_of_box: 'Neuf',
-  size: { scale: '1/8' },
+  scale: '1/8',
 };
 
+// Les noms des champs (`name`) sont ceux attendus par l'API (voir back/README.md).
 // Champs texte "simples" : on les décrit dans un tableau puis on génère
 // les <TextField> avec .map(), au lieu de copier-coller 13 fois le même code.
 const DETAIL_FIELDS = [
@@ -26,20 +27,20 @@ const DETAIL_FIELDS = [
   { name: 'version', label: 'Version' },
   { name: 'material', label: 'Matière' },
   { name: 'tags', label: 'Tags (séparés par des virgules)' },
-  { name: 'img', label: 'Image (URL ou /img/...)' },
+  { name: 'image_url', label: 'Image (URL ou /img/...)' },
   { name: 'year_of_acquisition', label: "Année d'acquisition", type: 'number' },
   { name: 'state_of_wear', label: 'État de la figurine' },
   { name: 'state_of_box', label: 'État de la boîte' },
-  { name: 'EAN_number', label: 'Code EAN' },
-  { name: 'size_height', label: 'Hauteur (cm)', type: 'number' },
-  { name: 'size_width', label: 'Largeur (cm)', type: 'number' },
-  { name: 'size_scale', label: 'Échelle' },
+  { name: 'ean_code', label: 'Code EAN (8 ou 13 chiffres)' },
+  { name: 'height_cm', label: 'Hauteur (cm)', type: 'number' },
+  { name: 'width_cm', label: 'Largeur (cm)', type: 'number' },
+  { name: 'scale', label: 'Échelle' },
 ];
 
 /**
  * Convertit un produit en valeurs de formulaire.
  * Les champs d'un formulaire contiennent toujours du texte : on transforme donc
- * les nombres, les tableaux (tags) et les objets (size) en chaînes de caractères.
+ * les nombres, les booléens et les tableaux (tags) en chaînes de caractères.
  */
 function productToFormValues(product) {
   return {
@@ -53,19 +54,22 @@ function productToFormValues(product) {
     version: product.version ?? '',
     material: product.material ?? '',
     tags: (product.tags ?? []).join(', '),
-    img: product.img ?? '',
+    image_url: product.image_url ?? '',
     year_of_acquisition: product.year_of_acquisition ?? '',
     state_of_wear: product.state_of_wear ?? '',
-    box: product.box ? 'yes' : 'no',
+    has_box: product.has_box ? 'yes' : 'no',
     state_of_box: product.state_of_box ?? '',
-    EAN_number: product.EAN_number ?? '',
-    size_height: product.size?.height ?? '',
-    size_width: product.size?.width ?? '',
-    size_scale: product.size?.scale ?? '',
+    ean_code: product.ean_code ?? '',
+    height_cm: product.height_cm ?? '',
+    width_cm: product.width_cm ?? '',
+    scale: product.scale ?? '',
   };
 }
 
-/** Opération inverse : convertit les valeurs du formulaire en champs de produit. */
+/**
+ * Opération inverse : convertit les valeurs du formulaire en champs de produit, au format de l'API.
+ * Un champ texte vide est envoyé tel quel : l'API l'enregistre comme "non renseigné" (NULL).
+ */
 function formValuesToProduct(formValues) {
   return {
     title: formValues.title.trim(),
@@ -82,17 +86,15 @@ function formValuesToProduct(formValues) {
       .split(',')
       .map((tag) => tag.trim())
       .filter(Boolean),
-    img: formValues.img.trim(),
+    image_url: formValues.image_url.trim(),
     year_of_acquisition: Number(formValues.year_of_acquisition) || null,
     state_of_wear: formValues.state_of_wear.trim(),
-    box: formValues.box === 'yes',
+    has_box: formValues.has_box === 'yes',
     state_of_box: formValues.state_of_box.trim(),
-    EAN_number: formValues.EAN_number.trim(),
-    size: {
-      height: Number(formValues.size_height) || null,
-      width: Number(formValues.size_width) || null,
-      scale: formValues.size_scale.trim(),
-    },
+    ean_code: formValues.ean_code.trim(),
+    height_cm: Number(formValues.height_cm) || null,
+    width_cm: Number(formValues.width_cm) || null,
+    scale: formValues.scale.trim(),
   };
 }
 
@@ -114,7 +116,8 @@ function validateFormValues(formValues) {
  * @param {object} props
  * @param {object} [props.initialProduct] - Produit à modifier (vide pour une création).
  * @param {string} props.submitLabel - Texte du bouton de validation.
- * @param {Function} props.onSubmit - Appelée avec les champs du produit quand le formulaire est valide.
+ * @param {Function} props.onSubmit - Fonction async appelée avec les champs du produit quand le formulaire
+ *   est valide. Si elle lance une erreur (refus de l'API), son message est affiché sous le formulaire.
  * @param {Function} props.onCancel - Appelée au clic sur "Annuler".
  */
 export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabel, onSubmit, onCancel }) {
@@ -124,6 +127,8 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
   // La fonction passée à useState n'est appelée qu'au premier affichage.
   const [formValues, setFormValues] = useState(() => productToFormValues(initialProduct));
   const [errorMessage, setErrorMessage] = useState('');
+  // Vrai pendant l'envoi à l'API : le bouton est désactivé pour éviter un double envoi.
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Appelée à chaque frappe dans n'importe quel champ : on utilise l'attribut `name`
   // du champ pour savoir quelle propriété de `formValues` mettre à jour.
@@ -132,12 +137,23 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
     setFormValues((previousValues) => ({ ...previousValues, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    // 1. Vérification rapide dans le navigateur, sans attendre le serveur.
     const validationError = validateFormValues(formValues);
     setErrorMessage(validationError);
-    if (!validationError) {
-      onSubmit(formValuesToProduct(formValues));
+    if (validationError) {
+      return;
+    }
+
+    // 2. Envoi à l'API, qui refait toutes les vérifications (on ne fait jamais confiance au navigateur).
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formValuesToProduct(formValues));
+    } catch (error) {
+      setErrorMessage(error.message);
+      // Le formulaire n'est réactivé qu'en cas d'erreur : en cas de succès, la page change.
+      setIsSubmitting(false);
     }
   }
 
@@ -164,7 +180,7 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
           ))}
         </TextField>
 
-        <TextField select label="Boîte d'origine" name="box" value={formValues.box} onChange={handleChange}>
+        <TextField select label="Boîte d'origine" name="has_box" value={formValues.has_box} onChange={handleChange}>
           <MenuItem value="yes">Oui</MenuItem>
           <MenuItem value="no">Non</MenuItem>
         </TextField>
@@ -206,7 +222,7 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
         <Button variant="outlined" onClick={onCancel}>
           Annuler
         </Button>
-        <Button variant="contained" type="submit" className="button-gradient">
+        <Button variant="contained" type="submit" className="button-gradient" disabled={isSubmitting}>
           {submitLabel}
         </Button>
       </div>

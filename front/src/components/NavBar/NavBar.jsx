@@ -93,6 +93,7 @@ export default function NavBar() {
         <div className="navbar-auth">
           {currentUser ? (
             <>
+              <Link to="/messages">MESSAGES</Link>
               <Link to="/profile">PROFIL</Link>
               <button type="button" className="logout-button" onClick={logout}>
                 Déconnexion

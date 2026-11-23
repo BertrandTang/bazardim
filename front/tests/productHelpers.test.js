@@ -3,15 +3,15 @@ import { formatPrice, getProductImage } from '../src/utils/productHelpers.js';
 
 describe('getProductImage', () => {
   it('garde une image utilisable (URL http(s) ou chemin du site)', () => {
-    expect(getProductImage({ id: 'FIG001', img: 'https://exemple.com/a.jpg' })).toBe('https://exemple.com/a.jpg');
-    expect(getProductImage({ id: 'FIG001', img: '/img/img_3.jpg' })).toBe('/img/img_3.jpg');
+    expect(getProductImage({ id: 1, image_url: 'https://exemple.com/a.jpg' })).toBe('https://exemple.com/a.jpg');
+    expect(getProductImage({ id: 1, image_url: '/img/img_3.jpg' })).toBe('/img/img_3.jpg');
   });
 
   it('choisit toujours la même image de démo quand l’image est absente ou inutilisable', () => {
-    const product = { id: 'FIG007', img: 'url_image/vegeta.jpg' };
+    const product = { id: 7, image_url: null };
     expect(getProductImage(product)).toBe('/img/img_8.jpg');
     expect(getProductImage(product)).toBe(getProductImage(product));
-    expect(getProductImage({ id: 'SANS-CHIFFRE' })).toBe('/img/img_1.jpg');
+    expect(getProductImage({ id: 11, image_url: 'pas-une-url.jpg' })).toBe('/img/img_1.jpg');
   });
 });
 

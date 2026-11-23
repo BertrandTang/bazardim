@@ -38,25 +38,27 @@ export default function SignUp() {
     setFormValues((previousValues) => ({ ...previousValues, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
+    // Vérification rapide dans le navigateur ; l'API refait toutes les vérifications.
     const validationError = validateSignUp(formValues);
     if (validationError) {
       setErrorMessage(validationError);
       return;
     }
 
-    const isRegistered = register({
-      username: formValues.username.trim(),
-      email: formValues.email.trim().toLowerCase(),
-      password: formValues.password,
-    });
-    if (!isRegistered) {
-      setErrorMessage('Un compte existe déjà avec cet email.');
-      return;
+    try {
+      await register({
+        username: formValues.username.trim(),
+        email: formValues.email.trim().toLowerCase(),
+        password: formValues.password,
+      });
+      navigate('/profile');
+    } catch (error) {
+      // Message renvoyé par l'API, ex : "Un compte existe déjà avec cet email."
+      setErrorMessage(error.message);
     }
-    navigate('/profile');
   }
 
   return (

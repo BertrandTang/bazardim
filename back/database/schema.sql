@@ -86,6 +86,23 @@ CREATE TABLE likes (
 );
 
 -- ---------------------------------------------------------------------
+-- Messagerie : un utilisateur (sender) écrit à un autre (recipient),
+-- en général à propos d'une annonce (product).
+-- ---------------------------------------------------------------------
+CREATE TABLE messages (
+  id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  sender_id    INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  recipient_id INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  -- Si l'annonce est supprimée, on garde le message (product_id devient NULL).
+  product_id   INTEGER     REFERENCES products (id) ON DELETE SET NULL,
+  content      TEXT        NOT NULL,
+  is_read      BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Règle métier vérifiée aussi par la base : on ne s'écrit pas à soi-même.
+  CHECK (sender_id <> recipient_id)
+);
+
+-- ---------------------------------------------------------------------
 -- Index : PostgreSQL n'indexe pas automatiquement les clés étrangères.
 -- Ces index accélèrent les recherches et jointures les plus fréquentes.
 -- ---------------------------------------------------------------------
@@ -94,6 +111,8 @@ CREATE INDEX products_licence_id_index  ON products (licence_id);
 CREATE INDEX products_category_index    ON products (category);
 CREATE INDEX product_tags_tag_id_index  ON product_tags (tag_id);
 CREATE INDEX likes_product_id_index     ON likes (product_id);
+CREATE INDEX messages_recipient_id_index ON messages (recipient_id);
+CREATE INDEX messages_sender_id_index    ON messages (sender_id);
 
 -- ---------------------------------------------------------------------
 -- Vue "product_details" : un produit avec le nom de sa licence, le pseudo

@@ -7,7 +7,8 @@ const CartContext = createContext(null);
 /**
  * Fournit le panier à toute l'application.
  *
- * Le panier ne stocke que l'identifiant du produit et la quantité : { productId, quantity }.
+ * Le panier reste enregistré dans le navigateur (localStorage) : un visiteur peut le remplir
+ * sans être connecté. Il ne stocke que l'identifiant du produit et la quantité : { productId, quantity }.
  * Les informations du produit (titre, prix...) sont relues dans ProductsContext, ce qui évite
  * d'afficher un prix périmé si le vendeur modifie son annonce.
  */

@@ -72,25 +72,29 @@ Organisation **MVC** classique (la « vue » est le JSON renvoyé). Le trajet d'
 Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+ `details` par champ pour une erreur de validation 400).
 🔒 = connexion requise (cookie envoyé avec `credentials: 'include'` côté front).
 
-| Méthode   | Route                   | Description                                                                              |
-| --------- | ----------------------- | ---------------------------------------------------------------------------------------- |
-| GET       | `/api/health`           | État de l'API et de la base                                                              |
-| POST      | `/api/auth/register`    | Inscription `{ username, email, password }` → 201 + cookie                               |
-| POST      | `/api/auth/login`       | Connexion `{ email, password }` → cookie                                                 |
-| POST      | `/api/auth/logout`      | Déconnexion → 204                                                                        |
-| GET 🔒    | `/api/auth/me`          | Utilisateur connecté                                                                     |
-| GET       | `/api/users/:id`        | Profil public (pseudo, image — pas d'email)                                              |
-| PATCH 🔒  | `/api/users/me`         | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)  |
-| DELETE 🔒 | `/api/users/me`         | Supprimer son compte `{ current_password }` (RGPD)                                       |
-| GET       | `/api/products`         | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset` |
-| GET       | `/api/products/:id`     | Détail d'un produit                                                                      |
-| POST 🔒   | `/api/products`         | Créer une annonce                                                                        |
-| PUT 🔒    | `/api/products/:id`     | Modifier son annonce (propriétaire ou admin)                                             |
-| DELETE 🔒 | `/api/products/:id`     | Supprimer son annonce (propriétaire ou admin)                                            |
-| GET       | `/api/licences`         | Licences utilisées par au moins une annonce                                              |
-| GET 🔒    | `/api/likes`            | Produits mis en favoris                                                                  |
-| PUT 🔒    | `/api/likes/:productId` | Ajouter aux favoris (sans effet si déjà présent)                                         |
-| DELETE 🔒 | `/api/likes/:productId` | Retirer des favoris                                                                      |
+| Méthode   | Route                    | Description                                                                              |
+| --------- | ------------------------ | ---------------------------------------------------------------------------------------- |
+| GET       | `/api/health`            | État de l'API et de la base                                                              |
+| POST      | `/api/auth/register`     | Inscription `{ username, email, password }` → 201 + cookie                               |
+| POST      | `/api/auth/login`        | Connexion `{ email, password }` → cookie                                                 |
+| POST      | `/api/auth/logout`       | Déconnexion → 204                                                                        |
+| GET 🔒    | `/api/auth/me`           | Utilisateur connecté                                                                     |
+| GET       | `/api/users/:id`         | Profil public (pseudo, image — pas d'email)                                              |
+| PATCH 🔒  | `/api/users/me`          | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)  |
+| DELETE 🔒 | `/api/users/me`          | Supprimer son compte `{ current_password }` (RGPD)                                       |
+| GET       | `/api/products`          | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset` |
+| GET       | `/api/products/:id`      | Détail d'un produit                                                                      |
+| POST 🔒   | `/api/products`          | Créer une annonce                                                                        |
+| PUT 🔒    | `/api/products/:id`      | Modifier son annonce (propriétaire ou admin)                                             |
+| DELETE 🔒 | `/api/products/:id`      | Supprimer son annonce (propriétaire ou admin)                                            |
+| GET       | `/api/licences`          | Licences utilisées par au moins une annonce                                              |
+| GET 🔒    | `/api/likes`             | Produits mis en favoris                                                                  |
+| PUT 🔒    | `/api/likes/:productId`  | Ajouter aux favoris (sans effet si déjà présent)                                         |
+| DELETE 🔒 | `/api/likes/:productId`  | Retirer des favoris                                                                      |
+| GET 🔒    | `/api/messages/received` | Messages reçus (boîte de réception)                                                      |
+| GET 🔒    | `/api/messages/sent`     | Messages envoyés                                                                         |
+| POST 🔒   | `/api/messages`          | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                |
+| PATCH 🔒  | `/api/messages/:id/read` | Marquer un message reçu comme lu (destinataire uniquement)                               |
 
 Exemple de produit envoyé à `POST /api/products` :
 

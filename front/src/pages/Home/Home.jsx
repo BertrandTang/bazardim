@@ -28,7 +28,7 @@ function getSearchableText(product) {
  * - la recherche (paramètre d'URL ?q=luffy).
  */
 export default function Home({ category }) {
-  const { products } = useProducts();
+  const { products, isLoading, loadingError } = useProducts();
   const [searchParams] = useSearchParams();
 
   const licenceFilter = searchParams.get('licence') ?? '';
@@ -67,9 +67,16 @@ export default function Home({ category }) {
         </p>
       )}
 
-      {filteredProducts.length === 0 ? (
+      {isLoading && <p className="home-empty">Chargement des produits…</p>}
+      {loadingError && (
+        <p className="home-empty" role="alert">
+          {loadingError}
+        </p>
+      )}
+      {!isLoading && !loadingError && filteredProducts.length === 0 && (
         <p className="home-empty">Aucun produit ne correspond à votre recherche.</p>
-      ) : (
+      )}
+      {filteredProducts.length > 0 && (
         <div className="home-grid">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />

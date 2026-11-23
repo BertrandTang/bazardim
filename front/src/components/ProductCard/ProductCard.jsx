@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
 import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
 import AddToCartButton from '../AddToCartButton/AddToCartButton.jsx';
@@ -13,12 +14,27 @@ import './ProductCard.css';
  * - si `onEdit` et `onDelete` sont fournis (page "Mes produits") : boutons Modifier / Supprimer.
  */
 export default function ProductCard({ product, onEdit, onDelete }) {
+  const { currentUser, isLoading: isAuthLoading } = useAuth();
   const { isLiked, toggleLike } = useLikes();
+  const navigate = useNavigate();
 
   const isOwnerView = Boolean(onEdit && onDelete);
   const liked = isLiked(product.id);
   const likeLabel = liked ? 'Retirer des favoris' : 'Ajouter aux favoris';
   const productUrl = `/product/${product.id}`;
+
+  // Les favoris sont enregistrés sur le compte : un visiteur est d'abord envoyé vers la connexion.
+  function handleLikeClick() {
+    // Au tout début, on ne sait pas encore si quelqu'un est connecté : on ignore le clic.
+    if (isAuthLoading) {
+      return;
+    }
+    if (!currentUser) {
+      navigate('/auth');
+      return;
+    }
+    toggleLike(product.id);
+  }
 
   // Étiquettes colorées affichées sous le titre (on ignore celles qui sont vides).
   const labels = [
@@ -30,7 +46,7 @@ export default function ProductCard({ product, onEdit, onDelete }) {
 
   return (
     <article className="product-card">
-      <SellerLink userId={product.owner_user_id} username={product.owner_username} />
+      <SellerLink userId={product.owner_id} username={product.owner_username} />
 
       <div className="product-image">
         <Link to={productUrl}>
@@ -43,7 +59,7 @@ export default function ProductCard({ product, onEdit, onDelete }) {
             aria-label={likeLabel}
             aria-pressed={liked}
             title={likeLabel}
-            onClick={() => toggleLike(product.id)}
+            onClick={handleLikeClick}
           >
             {liked ? '♥' : '♡'}
           </button>

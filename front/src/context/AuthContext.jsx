@@ -1,10 +1,5 @@
-import { createContext, useContext } from 'react';
-import profilesData from '../data/profiles.json';
-import useLocalStorageState from '../hooks/useLocalStorageState.js';
-
-// ⚠️ TEMPORAIRE : en attendant le back-end, les comptes sont stockés dans le navigateur
-// (localStorage) et les mots de passe sont en clair. Il faudra remplacer ces fonctions
-// par des appels à l'API (ex : POST /auth/login, POST /auth/register).
+import { createContext, useContext, useEffect, useState } from 'react';
+import * as api from '../services/api.js';
 
 // Un "contexte" permet de partager des données avec TOUS les composants de l'application
 // sans devoir les passer de parent en enfant via les props.
@@ -13,60 +8,53 @@ const AuthContext = createContext(null);
 /**
  * Fournit l'utilisateur connecté et les fonctions de connexion à toute l'application.
  * Tous les composants placés à l'intérieur de <AuthProvider> peuvent appeler useAuth().
+ *
+ * La connexion est gérée par l'API : elle dépose un cookie "httpOnly" dans le navigateur.
+ * Le front ne voit jamais ce cookie ni le mot de passe : il garde seulement l'utilisateur
+ * renvoyé par l'API ({ id, username, email, profile_image_url, role }).
  */
 export function AuthProvider({ children }) {
-  // Liste de tous les comptes : ceux du fichier JSON + ceux créés via l'inscription.
-  const [users, setUsers] = useLocalStorageState('users', profilesData.profiles);
+  // Utilisateur connecté, ou null pour un visiteur.
+  const [currentUser, setCurrentUser] = useState(null);
+  // Vrai tant qu'on ne sait pas encore si quelqu'un est connecté (réponse de l'API en attente).
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Identifiant de l'utilisateur connecté, ou null si personne n'est connecté.
-  const [currentUserId, setCurrentUserId] = useLocalStorageState('currentUserId', null);
+  // useEffect avec [] : exécuté une seule fois, après le premier affichage.
+  // On demande à l'API qui est connecté (le cookie a pu être déposé lors d'une visite précédente).
+  useEffect(() => {
+    api
+      .fetchCurrentUser()
+      .then((user) => setCurrentUser(user))
+      .catch(() => setCurrentUser(null))
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  // Pas besoin de useState ici : c'est une valeur recalculée à chaque affichage
-  // à partir des deux états ci-dessus.
-  const currentUser = users.find((user) => user.user_id === currentUserId) ?? null;
+  // Les fonctions suivantes sont "async" : elles attendent la réponse de l'API.
+  // En cas d'erreur (mauvais mot de passe, email déjà pris...), l'API renvoie un message
+  // et la fonction lance une erreur que la page attrape (try/catch) pour l'afficher.
 
-  /** Retrouve un utilisateur à partir de son identifiant (nombre ou texte venant de l'URL). */
-  function findUserById(userId) {
-    return users.find((user) => String(user.user_id) === String(userId)) ?? null;
+  async function login(email, password) {
+    const user = await api.login(email, password);
+    setCurrentUser(user);
   }
 
-  /** Connecte l'utilisateur. Retourne true si l'email et le mot de passe sont corrects. */
-  function login(email, password) {
-    const matchingUser = users.find((user) => user.email === email && user.password === password);
-    if (!matchingUser) {
-      return false;
-    }
-    setCurrentUserId(matchingUser.user_id);
-    return true;
+  async function register({ username, email, password }) {
+    const user = await api.register({ username, email, password });
+    setCurrentUser(user);
   }
 
-  function logout() {
-    setCurrentUserId(null);
+  async function logout() {
+    await api.logout();
+    setCurrentUser(null);
   }
 
-  /** Crée un compte puis connecte l'utilisateur. Retourne false si l'email est déjà utilisé. */
-  function register({ username, email, password }) {
-    const emailAlreadyUsed = users.some((user) => user.email === email);
-    if (emailAlreadyUsed) {
-      return false;
-    }
-
-    const newUser = { user_id: Date.now(), username, email, password, profile_img: '' };
-    // On passe une fonction à setUsers : React nous donne la liste actuelle
-    // et on retourne la nouvelle liste (on ne modifie jamais l'ancienne directement).
-    setUsers((previousUsers) => [...previousUsers, newUser]);
-    setCurrentUserId(newUser.user_id);
-    return true;
+  /** Met à jour le compte connecté (pseudo, email, image, mot de passe). */
+  async function updateAccount(changes) {
+    const user = await api.updateAccount(changes);
+    setCurrentUser(user);
   }
 
-  /** Met à jour les informations du compte connecté (pseudo, email, image...). */
-  function updateCurrentUser(changes) {
-    setUsers((previousUsers) =>
-      previousUsers.map((user) => (user.user_id === currentUserId ? { ...user, ...changes } : user)),
-    );
-  }
-
-  const contextValue = { currentUser, findUserById, login, logout, register, updateCurrentUser };
+  const contextValue = { currentUser, isLoading, login, logout, register, updateAccount };
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 

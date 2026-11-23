@@ -1,10 +1,11 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider } from '../src/context/AuthContext.jsx';
 import { CartProvider } from '../src/context/CartContext.jsx';
 import { LikesProvider } from '../src/context/LikesContext.jsx';
 import { ProductsProvider } from '../src/context/ProductsContext.jsx';
+import { setLoggedInUser } from './fakeApi.js';
 
 /** Les mêmes Providers que dans App.jsx, pour que les composants testés aient accès aux données. */
 export function AllProviders({ children }) {
@@ -30,11 +31,12 @@ function CurrentLocation() {
  *
  * @param {React.ReactNode} ui - Le composant à tester.
  * @param {object} [options]
- * @param {string} [options.route] - Adresse de départ (ex : "/product/FIG001").
+ * @param {string} [options.route] - Adresse de départ (ex : "/product/1").
  * @param {string} [options.path] - Modèle de route du composant (ex : "/product/:id"), pour useParams.
  * @returns L'objet de Testing Library + `user` pour simuler clics et saisies.
+ *   La fonction est async : à utiliser avec `await renderWithProviders(...)`.
  */
-export function renderWithProviders(ui, { route = '/', path = '*' } = {}) {
+export async function renderWithProviders(ui, { route = '/', path = '*' } = {}) {
   const user = userEvent.setup();
   const result = render(
     <AllProviders>
@@ -48,10 +50,23 @@ export function renderWithProviders(ui, { route = '/', path = '*' } = {}) {
       </MemoryRouter>
     </AllProviders>,
   );
+  await waitForDataToLoad();
   return { user, ...result };
 }
 
-/** Enregistre un utilisateur comme connecté avant d'afficher le composant (voir AuthContext). */
+/**
+ * Laisse le temps aux Providers et aux pages de recevoir les réponses de la (fausse) API.
+ * Au démarrage, plusieurs chargements s'enchaînent (utilisateur connecté, puis ses favoris...) :
+ * on laisse donc passer quelques "tours" avant de commencer les vérifications.
+ * `act` indique à React d'appliquer tous les changements d'état qui en résultent.
+ */
+export async function waitForDataToLoad() {
+  for (let round = 0; round < 3; round += 1) {
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  }
+}
+
+/** Enregistre un utilisateur comme connecté avant d'afficher le composant (voir tests/fakeApi.js). */
 export function loginAs(userId) {
-  localStorage.setItem('currentUserId', JSON.stringify(userId));
+  setLoggedInUser(userId);
 }

@@ -1,29 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductForm from '../../components/ProductForm/ProductForm.jsx';
-import { useAuth } from '../../context/AuthContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
 import './Sell.css';
 
 /** Page de mise en vente d'un produit (réservée aux utilisateurs connectés, voir RequireAuth). */
 export default function Sell() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
   const { addProduct } = useProducts();
 
-  // Appelée par ProductForm quand le formulaire est valide.
-  function handleCreateProduct(productFields) {
-    const now = new Date().toISOString();
-    const newProduct = {
-      ...productFields,
-      id: `USR${Date.now()}`, // identifiant temporaire : ce sera le rôle du back-end
-      owner_user_id: currentUser.user_id,
-      owner_username: currentUser.username,
-      created_at: now,
-      updated_at: now,
-    };
-    addProduct(newProduct);
-    navigate(`/product/${newProduct.id}`);
+  // Appelée par ProductForm quand le formulaire est valide. L'API crée l'annonce,
+  // lui donne un identifiant et l'associe à l'utilisateur connecté.
+  // En cas d'erreur, ProductForm affiche le message (voir son handleSubmit).
+  async function handleCreateProduct(productFields) {
+    const createdProduct = await addProduct(productFields);
+    navigate(`/product/${createdProduct.id}`);
   }
 
   return (

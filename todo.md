@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████░░░░░░░░░░░░` 42 % (42 / 101 tâches)**
+**Progression globale : `█████████░░░░░░░░░░░` 45 % (46 / 102 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
-| Bloc 2 — Front-end | `█████████████░░░░░░░` 63 % | 24 / 38 |
-| Bloc 3 — Back-end | `█████████░░░░░░░░░░░` 47 % | 17 / 36 |
+| Bloc 2 — Front-end | `██████████████░░░░░░` 68 % | 26 / 38 |
+| Bloc 3 — Back-end | `██████████░░░░░░░░░░` 51 % | 19 / 37 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -21,19 +21,21 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 
 | Partie | État |
 | --- | --- |
-| Front-end (React) | ✅ Fonctionnel : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion. Données simulées dans le localStorage. |
-| Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris. ❌ Pas encore branchée au front, pas de paiement. |
-| Tests | ✅ Back : 36 tests, 94 % de couverture. ✅ Front : 52 tests, 91 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Front-end (React) | ✅ Branché sur l'API : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion, messagerie. |
+| Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris, messagerie. ❌ Pas encore de commande ni de paiement. |
+| Tests | ✅ Back : 42 tests, 95 % de couverture. ✅ Front : 67 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
-### Les 5 priorités
+Périmètre fonctionnel retenu : comptes, annonces (création, modification, suppression), recherche et filtres,
+favoris, panier, messagerie simple (boîte de réception, sans discussion en direct), commande et paiement.
 
-1. **Brancher le front sur l'API** : remplacer les fonctions `⚠️ TEMPORAIRE` des contextes par des appels `fetch`.
-2. **Paiement Stripe** + commandes + stratégie de monétisation (C23).
-3. **Conformité RGPD** : bannière cookies, politique de confidentialité, mentions légales, demande d'accès aux données, double opt-in (C11).
-4. **Audits Lighthouse** (accessibilité, SEO, performance) à lancer et à mettre dans le dossier — commande dans la section C13.
-5. **Dossier écrit du bloc 1** : rien n'est encore coché.
+### Les 4 priorités
+
+1. **Paiement Stripe** + commandes + stratégie de monétisation (C23).
+2. **Conformité RGPD** : bannière cookies, politique de confidentialité, mentions légales, demande d'accès aux données, double opt-in (C11).
+3. **Audits Lighthouse** (accessibilité, SEO, performance) à lancer et à mettre dans le dossier — commande dans la section C13.
+4. **Dossier écrit du bloc 1** : rien n'est encore coché.
 
 ---
 
@@ -52,7 +54,7 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 - [ ] **E8 / C7, C8, C10** — Dossier de conception :
   - [ ] Diagramme de cas d'utilisation (UML) couvrant toutes les fonctionnalités.
   - [ ] Diagramme de classes (analyse + conception).
-  - [ ] MCD / MLD (Merise) ou diagramme entité-association + schéma de la base. Entités probables : `User`, `Product`, `Category`, `Licence`, `Character`, `Tag`, `Like`, `Order`, `OrderItem`, `Payment`.
+  - [ ] MCD / MLD (Merise) ou diagramme entité-association + schéma de la base. Entités : `User`, `Product`, `Licence`, `Tag`, `Like`, `Message` (déjà en base, voir `back/database/schema.sql`) + `Order`, `OrderItem`, `Payment` (à venir).
   - [ ] Schéma d'architecture logicielle (front SPA ↔ API REST ↔ base de données ↔ Stripe).
 - [ ] **C9** — Architecture des données : cycle de vie (collecte → stockage → suppression), sauvegardes et restauration de la base.
 - [ ] **E9 / C11** — Audit RGPD (sur le site fourni par l'école).
@@ -72,7 +74,7 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 - [x] Un `<h1>` sur chaque page (accueil : adapté à la catégorie / licence) + lien « Aller au contenu » pour le clavier.
 - [x] Navigation au clavier testée automatiquement (menus, lien d'évitement, formulaires).
 - [ ] Tester avec un lecteur d'écran (VoiceOver sur Mac : Cmd + F5) et noter les résultats dans le dossier.
-- [ ] Vérifier que **tous les cas d'utilisation** du dossier de conception sont implémentés (commande, historique d'achats, messagerie entre utilisateurs ? tri par prix ? pagination ?).
+- [ ] Vérifier que **tous les cas d'utilisation** du dossier de conception sont implémentés (le périmètre est en haut de ce fichier).
 
 ### C14 — Charte graphique
 
@@ -84,7 +86,7 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 - [x] **Prettier** (front et back) : `npm run format`, vérifié par la CI.
 - [ ] Sécurité (à configurer au déploiement) : HTTPS / certificat SSL, en-têtes HTTP de sécurité (CSP, `X-Content-Type-Options`, `Strict-Transport-Security`...), CORS côté API. Vérifier avec securityheaders.com et Mozilla Observatory.
 - [x] `npm audit` sans vulnérabilité (vérifié par la CI).
-- [ ] Supprimer le stockage des mots de passe en clair dans le localStorage (disparaîtra avec le vrai back-end : le front ne doit garder qu'un jeton ou un cookie `httpOnly`).
+- [x] Plus aucun mot de passe ni donnée de compte dans le localStorage : la connexion passe par un cookie `httpOnly` déposé par l'API (illisible par le JavaScript de la page).
 - [x] Éco-conception : pages chargées à la demande (`React.lazy`), Material UI n'est plus chargé sur la page d'accueil : JavaScript initial de 163 Ko → 91 Ko compressés (−44 %).
 - [ ] Mesurer avec **EcoIndex** / GreenIT-Analysis et mettre le score dans le dossier.
 - [x] Images de démonstration redimensionnées (41 Mo → 2,3 Mo).
@@ -92,7 +94,7 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 
 ### C17 / E12 — Consommer une API
 
-- [ ] Consommer **votre propre API** (back-end) avec `fetch` + authentification (JWT ou cookie de session).
+- [x] Consommer **votre propre API** (back-end) avec `fetch` + authentification (JWT dans un cookie `httpOnly`) : `front/src/services/api.js`. Messages d'erreur de l'API affichés dans les formulaires, états de chargement, serveur injoignable géré.
 - [x] Consommer **une API tierce** : autocomplétion de l'adresse de livraison dans le panier avec l'**API Adresse (Base Adresse Nationale)**, API officielle de l'État produite par l'IGN ([fiche data.gouv.fr](https://www.data.gouv.fr/dataservices/api-adresse-base-adresse-nationale-ban)), `services/addressApi.js` + `components/AddressAutocomplete/`. Gestion du délai de frappe, de l'annulation des requêtes, du chargement et des erreurs.
 - [ ] Justifier dans le dossier le format choisi (REST + JSON) et la gestion des erreurs réseau (message à l'utilisateur, état de chargement).
 
@@ -132,7 +134,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 ### C21 / E15 — Couche de persistance et sécurité en profondeur
 
 - [x] Base PostgreSQL dans Docker (`docker-compose.yml`) + base de test séparée.
-- [x] Schéma normalisé (`back/database/schema.sql`) : tables `users`, `products`, `licences`, `tags`, `product_tags`, `likes`, contraintes `CHECK` / `UNIQUE` / clés étrangères, index, vue `product_details`.
+- [x] Schéma normalisé (`back/database/schema.sql`) : tables `users`, `products`, `licences`, `tags`, `product_tags`, `likes`, `messages`, contraintes `CHECK` / `UNIQUE` / clés étrangères, index, vue `product_details`.
 - [x] Données de démo (`npm run db:reset`) importées depuis les anciens JSON, en passant par la même validation que l'API.
 - [x] Mots de passe hachés avec **bcrypt** ; jamais renvoyés par l'API.
 - [x] Validation de toutes les entrées avec **zod** ; requêtes SQL paramétrées (anti-injection).
@@ -145,15 +147,10 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 
 ### C22 / E16 — Développement de l'API
 
-- [x] Routes REST : auth, comptes, produits (filtres + pagination), licences, favoris.
+- [x] Routes REST : auth, comptes, produits (filtres + pagination), licences, favoris, messagerie.
 - [x] Organisation MVC : `routes/` → `controllers/` → `validators/` (données reçues) et `models/` (requêtes SQL).
-- [ ] **Brancher le front** : remplacer les fonctions `⚠️ TEMPORAIRE` de `front/src/context/` par des appels `fetch(..., { credentials: 'include' })`. Points à adapter côté front :
-  - noms de champs de l'API : `owner_id` (au lieu de `owner_user_id`), `image_url` (au lieu de `img`), `has_box` (au lieu de `box`), `ean_code` (au lieu de `EAN_number`), `height_cm` / `width_cm` / `scale` (au lieu de l'objet `size`), `profile_image_url` ;
-  - identifiants numériques (1, 2...) au lieu de "FIG001" ;
-  - modification d'email / mot de passe : ajouter un champ « mot de passe actuel » dans le profil ;
-  - favoris d'un visiteur non connecté : les garder dans le localStorage, ou demander la connexion ;
-  - panier : peut rester dans le localStorage jusqu'à la création des commandes.
-  - configurer un proxy Vite (`server.proxy` : `/api` → `http://localhost:3000`) pour appeler l'API sans souci de CORS en développement.
+- [x] **Front branché sur l'API** (`front/src/services/api.js`, proxy Vite `/api` → `http://localhost:3000`). Le panier reste dans le localStorage jusqu'à la création des commandes.
+- [x] **Messagerie** : contacter le vendeur depuis la fiche produit, boîte de réception / messages envoyés, réponse, marquer comme lu (`/api/messages`, page `/messages`).
 - [ ] Upload d'images d'annonces (**multer**) au lieu d'une URL saisie à la main.
 
 ### C23 / E17 — Paiement et monétisation

@@ -60,14 +60,17 @@ export default function Profile() {
 /* Onglet "Profil" : modification des informations du compte           */
 /* ------------------------------------------------------------------ */
 function SettingsSection() {
-  const { currentUser, updateCurrentUser } = useAuth();
+  const { currentUser, updateAccount } = useAuth();
+  // Les noms des champs sont ceux attendus par l'API (PATCH /api/users/me).
   const [formValues, setFormValues] = useState({
     username: currentUser.username,
     email: currentUser.email,
-    profile_img: currentUser.profile_img,
-    newPassword: '',
+    profile_image_url: currentUser.profile_image_url ?? '',
+    current_password: '',
+    new_password: '',
   });
   const [isSaved, setIsSaved] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -75,42 +78,63 @@ function SettingsSection() {
     setIsSaved(false);
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     const changes = {
       username: formValues.username.trim(),
       email: formValues.email.trim().toLowerCase(),
-      profile_img: formValues.profile_img.trim(),
+      profile_image_url: formValues.profile_image_url.trim(),
     };
-    // On ne change le mot de passe que si un nouveau a été saisi.
-    if (formValues.newPassword) {
-      changes.password = formValues.newPassword;
+    // Les mots de passe ne sont envoyés que s'ils ont été saisis.
+    // L'API exige le mot de passe actuel pour changer d'email ou de mot de passe.
+    if (formValues.current_password) {
+      changes.current_password = formValues.current_password;
     }
-    updateCurrentUser(changes);
-    setFormValues((previousValues) => ({ ...previousValues, newPassword: '' }));
-    setIsSaved(true);
+    if (formValues.new_password) {
+      changes.new_password = formValues.new_password;
+    }
+
+    try {
+      await updateAccount(changes);
+      setErrorMessage('');
+      setIsSaved(true);
+      // On vide les champs de mot de passe après l'enregistrement.
+      setFormValues((previousValues) => ({ ...previousValues, current_password: '', new_password: '' }));
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
   }
 
   return (
     <Stack component="form" spacing={2} sx={{ maxWidth: 500 }} onSubmit={handleSubmit}>
-      <Avatar src={formValues.profile_img} alt="" sx={{ width: 80, height: 80 }} />
+      <Avatar src={formValues.profile_image_url} alt="" sx={{ width: 80, height: 80 }} />
       <TextField label="Pseudo" name="username" value={formValues.username} onChange={handleChange} />
       <TextField label="Email" name="email" type="email" value={formValues.email} onChange={handleChange} />
       <TextField
-        label="Nouveau mot de passe"
-        name="newPassword"
-        type="password"
-        autoComplete="new-password"
-        helperText="Laisser vide pour conserver le mot de passe actuel"
-        value={formValues.newPassword}
+        label="Image de profil (URL)"
+        name="profile_image_url"
+        value={formValues.profile_image_url}
         onChange={handleChange}
       />
       <TextField
-        label="Image de profil (URL)"
-        name="profile_img"
-        value={formValues.profile_img}
+        label="Nouveau mot de passe"
+        name="new_password"
+        type="password"
+        autoComplete="new-password"
+        helperText="Laisser vide pour conserver le mot de passe actuel"
+        value={formValues.new_password}
         onChange={handleChange}
       />
+      <TextField
+        label="Mot de passe actuel"
+        name="current_password"
+        type="password"
+        autoComplete="current-password"
+        helperText="Obligatoire pour changer d’email ou de mot de passe"
+        value={formValues.current_password}
+        onChange={handleChange}
+      />
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
       {isSaved && <Alert severity="success">Profil mis à jour.</Alert>}
       <Button type="submit" variant="contained">
         Enregistrer
@@ -126,12 +150,19 @@ function MyProductsSection() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { products, deleteProduct } = useProducts();
+  const [deleteError, setDeleteError] = useState('');
 
-  const myProducts = products.filter((product) => product.owner_user_id === currentUser.user_id);
+  const myProducts = products.filter((product) => product.owner_id === currentUser.id);
 
-  function handleDelete(product) {
-    if (window.confirm(`Supprimer l'annonce « ${product.title} » ?`)) {
-      deleteProduct(product.id);
+  async function handleDelete(product) {
+    if (!window.confirm(`Supprimer l'annonce « ${product.title} » ?`)) {
+      return;
+    }
+    try {
+      await deleteProduct(product.id);
+      setDeleteError('');
+    } catch (error) {
+      setDeleteError(error.message);
     }
   }
 
@@ -140,6 +171,7 @@ function MyProductsSection() {
       <Button className="button-gradient profile-add-product" variant="contained" onClick={() => navigate('/vendre')}>
         Ajouter un produit en vente
       </Button>
+      {deleteError && <Alert severity="error">{deleteError}</Alert>}
       {myProducts.length === 0 ? (
         <p className="profile-empty">Vous n’avez encore aucune annonce.</p>
       ) : (

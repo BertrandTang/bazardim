@@ -1,24 +1,31 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import figuresData from '../src/data/figures.json';
+import { PRODUCTS } from './fixtures.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
 import NavBar from '../src/components/NavBar/NavBar.jsx';
 import ProductCard from '../src/components/ProductCard/ProductCard.jsx';
 import ProductForm from '../src/components/ProductForm/ProductForm.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
 
-const vegeta = figuresData.figures[0]; // FIG001, 59.99 €, vendu par l'utilisateur 101
+const vegeta = PRODUCTS[0]; // produit 1, 59.99 €, vendu par l'utilisateur 1
 
 describe('ProductCard', () => {
-  it('affiche le produit et ses liens', () => {
-    renderWithProviders(<ProductCard product={vegeta} />);
+  it('affiche le produit et ses liens', async () => {
+    await renderWithProviders(<ProductCard product={vegeta} />);
     expect(screen.getByRole('heading', { name: vegeta.title })).toBeInTheDocument();
     expect(screen.getByText('59.99 €')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /CollectionneurDu92/ })).toHaveAttribute('href', '/user/101');
+    expect(screen.getByRole('link', { name: /CollectionneurDu92/ })).toHaveAttribute('href', '/user/1');
+  });
+
+  it('envoie un visiteur vers la connexion quand il clique sur le cœur', async () => {
+    const { user } = await renderWithProviders(<ProductCard product={vegeta} />);
+    await user.click(screen.getByRole('button', { name: 'Ajouter aux favoris' }));
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/auth');
   });
 
   it('ajoute aux favoris et au panier', async () => {
-    const { user } = renderWithProviders(<ProductCard product={vegeta} />);
+    loginAs(2);
+    const { user } = await renderWithProviders(<ProductCard product={vegeta} />);
 
     const likeButton = screen.getByRole('button', { name: 'Ajouter aux favoris' });
     await user.click(likeButton);
@@ -31,7 +38,9 @@ describe('ProductCard', () => {
   it('affiche Modifier / Supprimer dans la version propriétaire', async () => {
     const handleEdit = vi.fn();
     const handleDelete = vi.fn();
-    const { user } = renderWithProviders(<ProductCard product={vegeta} onEdit={handleEdit} onDelete={handleDelete} />);
+    const { user } = await renderWithProviders(
+      <ProductCard product={vegeta} onEdit={handleEdit} onDelete={handleDelete} />,
+    );
 
     expect(screen.queryByRole('button', { name: 'AJOUTER' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Modifier' }));
@@ -44,7 +53,7 @@ describe('ProductCard', () => {
 describe('ProductForm', () => {
   it('affiche une erreur si les champs obligatoires sont vides ou le prix invalide', async () => {
     const handleSubmit = vi.fn();
-    const { user } = renderWithProviders(
+    const { user } = await renderWithProviders(
       <ProductForm submitLabel="Publier" onSubmit={handleSubmit} onCancel={vi.fn()} />,
     );
 
@@ -58,9 +67,9 @@ describe('ProductForm', () => {
     expect(handleSubmit).not.toHaveBeenCalled();
   });
 
-  it('convertit les valeurs saisies en champs de produit', async () => {
+  it('convertit les valeurs saisies en champs de produit, au format de l’API', async () => {
     const handleSubmit = vi.fn();
-    const { user } = renderWithProviders(
+    const { user } = await renderWithProviders(
       <ProductForm submitLabel="Publier" onSubmit={handleSubmit} onCancel={vi.fn()} />,
     );
 
@@ -75,14 +84,26 @@ describe('ProductForm', () => {
         title: 'Luffy',
         price: 49.9,
         tags: ['shf', 'bandai'],
-        box: true,
+        has_box: true,
         category: 'FIGURINE',
+        scale: '1/8',
       }),
     );
   });
 
-  it('pré-remplit le formulaire avec le produit à modifier', () => {
-    renderWithProviders(
+  it('affiche l’erreur renvoyée par l’API', async () => {
+    const handleSubmit = vi.fn().mockRejectedValue(new Error('Données invalides. ean_code : 8 ou 13 chiffres'));
+    const { user } = await renderWithProviders(
+      <ProductForm initialProduct={vegeta} submitLabel="Enregistrer" onSubmit={handleSubmit} onCancel={vi.fn()} />,
+    );
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('ean_code : 8 ou 13 chiffres');
+    // Le bouton est de nouveau utilisable pour corriger et renvoyer.
+    expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeEnabled();
+  });
+
+  it('pré-remplit le formulaire avec le produit à modifier', async () => {
+    await renderWithProviders(
       <ProductForm initialProduct={vegeta} submitLabel="Enregistrer" onSubmit={vi.fn()} onCancel={vi.fn()} />,
     );
     expect(screen.getByLabelText(/Titre/)).toHaveValue(vegeta.title);
@@ -92,13 +113,13 @@ describe('ProductForm', () => {
 
 describe('NavBar', () => {
   it('lance une recherche en ajoutant ?q= à l’adresse', async () => {
-    const { user } = renderWithProviders(<NavBar />, { route: '/cart' });
+    const { user } = await renderWithProviders(<NavBar />, { route: '/cart' });
     await user.type(screen.getByRole('searchbox', { name: 'Rechercher un produit' }), 'luffy{Enter}');
     expect(screen.getByTestId('current-location')).toHaveTextContent('/?q=luffy');
   });
 
   it('ouvre le menu des catégories au clavier et le ferme avec Échap', async () => {
-    const { user } = renderWithProviders(<NavBar />);
+    const { user } = await renderWithProviders(<NavBar />);
     const categoriesButton = screen.getByRole('button', { name: 'CATEGORIES' });
 
     categoriesButton.focus();
@@ -111,9 +132,10 @@ describe('NavBar', () => {
     expect(categoriesButton).toHaveFocus();
   });
 
-  it('affiche Profil et Déconnexion quand l’utilisateur est connecté', async () => {
-    loginAs(101);
-    const { user } = renderWithProviders(<NavBar />);
+  it('affiche Messages, Profil et Déconnexion quand l’utilisateur est connecté', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(<NavBar />);
+    expect(screen.getByRole('link', { name: 'MESSAGES' })).toHaveAttribute('href', '/messages');
     expect(screen.getByRole('link', { name: 'PROFIL' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Déconnexion' }));
     expect(screen.getByRole('link', { name: 'CONNEXION' })).toBeInTheDocument();
@@ -121,8 +143,8 @@ describe('NavBar', () => {
 });
 
 describe('RequireAuth', () => {
-  it('redirige vers la connexion si personne n’est connecté', () => {
-    renderWithProviders(
+  it('redirige vers la connexion si personne n’est connecté', async () => {
+    await renderWithProviders(
       <RequireAuth>
         <p>Page privée</p>
       </RequireAuth>,
@@ -132,9 +154,9 @@ describe('RequireAuth', () => {
     expect(screen.getByTestId('current-location')).toHaveTextContent('/auth');
   });
 
-  it('affiche la page si l’utilisateur est connecté', () => {
-    loginAs(101);
-    renderWithProviders(
+  it('affiche la page si l’utilisateur est connecté', async () => {
+    loginAs(1);
+    await renderWithProviders(
       <RequireAuth>
         <p>Page privée</p>
       </RequireAuth>,
