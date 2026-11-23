@@ -1,15 +1,45 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import AddressAutocomplete from '../../components/AddressAutocomplete/AddressAutocomplete.jsx';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import useLocalStorageState from '../../hooks/useLocalStorageState.js';
+import { createOrder } from '../../services/api.js';
+import { redirectTo } from '../../utils/redirect.js';
 import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
 import './Cart.css';
 
 /** Page panier : liste des articles, modification des quantités et total de la commande. */
 export default function Cart() {
+  const { currentUser } = useAuth();
   const { cartLines, totalPrice, changeQuantity, removeFromCart, clearCart } = useCart();
   // Adresse de livraison choisie, gardée d'une visite à l'autre (null tant qu'aucune n'est choisie).
   const [shippingAddress, setShippingAddress] = useLocalStorageState('shippingAddress', null);
+  const [orderError, setOrderError] = useState('');
+  // Vrai pendant la création de la commande : évite un double clic sur "Commander".
+  const [isOrdering, setIsOrdering] = useState(false);
+
+  /**
+   * Crée la commande puis envoie l'utilisateur sur la page de paiement de Stripe.
+   * Le panier n'est vidé qu'une fois le paiement confirmé (page de confirmation) :
+   * si l'utilisateur annule le paiement, il retrouve son panier intact.
+   */
+  async function handleOrder() {
+    setOrderError('');
+    setIsOrdering(true);
+    try {
+      const { checkout_url: checkoutUrl } = await createOrder({
+        // On n'envoie que les identifiants et les quantités : le back relit les prix.
+        items: cartLines.map(({ product, quantity }) => ({ product_id: product.id, quantity })),
+        shipping_address: shippingAddress.label,
+      });
+      redirectTo(checkoutUrl);
+    } catch (error) {
+      setOrderError(error.message);
+      setIsOrdering(false);
+    }
+  }
 
   if (cartLines.length === 0) {
     return (
@@ -83,11 +113,33 @@ export default function Cart() {
       <div className="cart-summary">
         <span className="cart-summary-label">Total commande</span>
         <span className="cart-summary-value">{formatPrice(totalPrice)}</span>
-        {/* TODO : brancher le paiement (Stripe) une fois le back-end en place */}
-        <button type="button" className="cart-checkout-button" disabled>
-          Commander (bientôt disponible)
-        </button>
+        {currentUser ? (
+          <button
+            type="button"
+            className="cart-checkout-button"
+            onClick={handleOrder}
+            disabled={!shippingAddress || isOrdering}
+          >
+            {isOrdering ? 'Redirection vers le paiement…' : 'Commander et payer'}
+          </button>
+        ) : (
+          // `state` : après la connexion, l'utilisateur revient sur le panier (voir la page Auth).
+          <Link to="/auth" state={{ from: { pathname: '/cart' } }} className="cart-checkout-button">
+            Se connecter pour commander
+          </Link>
+        )}
       </div>
+      {currentUser && !shippingAddress && (
+        <p className="cart-hint">Choisissez une adresse de livraison pour pouvoir commander.</p>
+      )}
+      {orderError && (
+        <p className="form-error" role="alert">
+          {orderError}
+        </p>
+      )}
+      <p className="cart-hint">
+        Paiement sécurisé par Stripe (mode test : carte <code>4242 4242 4242 4242</code>, date future, CVC au choix).
+      </p>
     </section>
   );
 }

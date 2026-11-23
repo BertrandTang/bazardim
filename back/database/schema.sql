@@ -55,6 +55,9 @@ CREATE TABLE products (
   width_cm            NUMERIC(6, 1),
   scale               VARCHAR(20),
   image_url           VARCHAR(500),
+  -- Date de la vente : NULL tant que l'annonce est en vente. Les figurines sont souvent
+  -- des pièces uniques : une annonce payée est marquée vendue (voir orders.model.js).
+  sold_at             TIMESTAMPTZ,
   created_at          TIMESTAMPTZ   NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
@@ -103,6 +106,37 @@ CREATE TABLE messages (
 );
 
 -- ---------------------------------------------------------------------
+-- Commandes : une commande regroupe plusieurs lignes (order_items).
+-- Elle est créée "pending" (en attente), puis passe à "paid" quand Stripe
+-- confirme le paiement.
+-- ---------------------------------------------------------------------
+CREATE TABLE orders (
+  id                INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  -- Si l'acheteur supprime son compte, la commande est gardée sans lui (comptabilité),
+  -- mais elle n'est plus reliée à une personne (RGPD).
+  buyer_id          INTEGER        REFERENCES users (id) ON DELETE SET NULL,
+  status            VARCHAR(20)    NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
+  total_price       NUMERIC(10, 2) NOT NULL CHECK (total_price > 0),
+  shipping_address  VARCHAR(300)   NOT NULL,
+  -- Identifiant de la session de paiement chez Stripe (cs_test_...).
+  stripe_session_id VARCHAR(255)   UNIQUE,
+  created_at        TIMESTAMPTZ    NOT NULL DEFAULT now(),
+  paid_at           TIMESTAMPTZ
+);
+
+CREATE TABLE order_items (
+  id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  order_id      INTEGER        NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
+  -- Si l'annonce est supprimée plus tard, la ligne de commande reste (product_id devient NULL).
+  product_id    INTEGER        REFERENCES products (id) ON DELETE SET NULL,
+  -- Titre et prix COPIÉS au moment de l'achat : la commande ne change pas
+  -- si le vendeur modifie son annonce ensuite.
+  product_title VARCHAR(150)   NOT NULL,
+  unit_price    NUMERIC(10, 2) NOT NULL CHECK (unit_price > 0),
+  quantity      INTEGER        NOT NULL CHECK (quantity > 0)
+);
+
+-- ---------------------------------------------------------------------
 -- Index : PostgreSQL n'indexe pas automatiquement les clés étrangères.
 -- Ces index accélèrent les recherches et jointures les plus fréquentes.
 -- ---------------------------------------------------------------------
@@ -113,6 +147,8 @@ CREATE INDEX product_tags_tag_id_index  ON product_tags (tag_id);
 CREATE INDEX likes_product_id_index     ON likes (product_id);
 CREATE INDEX messages_recipient_id_index ON messages (recipient_id);
 CREATE INDEX messages_sender_id_index    ON messages (sender_id);
+CREATE INDEX orders_buyer_id_index       ON orders (buyer_id);
+CREATE INDEX order_items_order_id_index  ON order_items (order_id);
 
 -- ---------------------------------------------------------------------
 -- Vue "product_details" : un produit avec le nom de sa licence, le pseudo
@@ -140,6 +176,7 @@ SELECT
   products.width_cm,
   products.scale,
   products.image_url,
+  products.sold_at,
   products.owner_id,
   users.username AS owner_username,
   -- array_agg regroupe les tags en un tableau ; FILTER ignore les produits sans tag.

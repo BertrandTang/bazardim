@@ -28,7 +28,8 @@ function getSearchableText(product) {
  * - la recherche (paramètre d'URL ?q=luffy).
  */
 export default function Home({ category }) {
-  const { products, isLoading, loadingError } = useProducts();
+  // Seules les annonces encore en vente sont proposées.
+  const { availableProducts, isLoading, loadingError } = useProducts();
   const [searchParams] = useSearchParams();
 
   const licenceFilter = searchParams.get('licence') ?? '';
@@ -37,7 +38,7 @@ export default function Home({ category }) {
 
   // Pas besoin de useState : la liste filtrée est recalculée à chaque affichage
   // à partir des produits et de l'URL.
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = availableProducts.filter((product) => {
     const matchesCategory = !category || product.category === category;
     const matchesLicence = !licenceFilter || product.licence_name === licenceFilter;
     const matchesSearch = !searchText || getSearchableText(product).includes(searchText);
@@ -58,7 +59,7 @@ export default function Home({ category }) {
     <section className="home-page">
       <PageMetadata
         title={pageTitle}
-        description={`${heading} vendues par des collectionneurs sur Bazardim. ${products.length} annonces à découvrir.`}
+        description={`${heading} vendues par des collectionneurs sur Bazardim. ${availableProducts.length} annonces à découvrir.`}
       />
       <h1 className="home-title">{heading}</h1>
       {rawSearchText && (

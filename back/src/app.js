@@ -4,11 +4,13 @@ import express from 'express';
 import helmet from 'helmet';
 import { config } from './config/config.js';
 import { query } from './config/database.js';
+import { handleStripeWebhook } from './controllers/orders.controller.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { requestLogger } from './middlewares/requestLogger.js';
 import authRoutes from './routes/auth.routes.js';
 import likesRoutes from './routes/likes.routes.js';
 import messagesRoutes from './routes/messages.routes.js';
+import ordersRoutes from './routes/orders.routes.js';
 import productsRoutes from './routes/products.routes.js';
 import usersRoutes from './routes/users.routes.js';
 
@@ -31,6 +33,10 @@ if (!config.isTest) {
   app.use(requestLogger);
 }
 
+// Webhook Stripe : déclaré AVANT express.json, car il a besoin du corps brut (non transformé)
+// de la requête pour vérifier la signature de Stripe.
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
+
 // Lit le corps JSON des requêtes (limité à 100 Ko pour éviter les envois géants).
 app.use(express.json({ limit: '100kb' }));
 
@@ -49,6 +55,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/likes', likesRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/orders', ordersRoutes);
 app.use('/api', productsRoutes);
 
 // ----- Gestion des erreurs (toujours en dernier) -----

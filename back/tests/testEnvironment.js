@@ -5,7 +5,8 @@ import { parseEnv } from 'node:util';
 // Variables d'environnement utilisées pendant les tests. Aucun secret n'est écrit ici :
 // - l'adresse de la base de test vient de TEST_DATABASE_URL (fichier back/.env en local,
 //   variable fournie par GitHub Actions en CI) ;
-// - la clé JWT est tirée au hasard à chaque lancement des tests.
+// - la clé JWT est tirée au hasard à chaque lancement des tests ;
+// - les clés Stripe sont fausses : Stripe n'est jamais appelé pendant les tests.
 
 const ENV_FILE = new URL('../.env', import.meta.url);
 const environmentFromFile = existsSync(ENV_FILE) ? parseEnv(readFileSync(ENV_FILE, 'utf8')) : {};
@@ -25,4 +26,7 @@ export const TEST_ENVIRONMENT = {
   DATABASE_URL: testDatabaseUrl,
   JWT_SECRET: randomBytes(32).toString('hex'),
   FRONT_URL: 'http://localhost:5173',
+  // Fausses clés : pendant les tests, Stripe est simulé (voir tests/orders.test.js).
+  STRIPE_SECRET_KEY: 'sk_test_fausse_cle_pour_les_tests',
+  STRIPE_WEBHOOK_SECRET: 'whsec_faux_secret_pour_les_tests',
 };

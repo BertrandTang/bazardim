@@ -178,6 +178,10 @@
   font-weight: 700;
 }
 
+.cart-checkout-button:hover {
+  color: #fff;
+}
+
 .cart-checkout-button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
@@ -204,4 +208,11 @@
 .cart-shipping h2 {
   margin: 0 0 12px;
   font-size: 18px;
+}
+
+.cart-hint {
+  margin: 8px 0 0;
+  text-align: right;
+  color: #444;
+  font-size: 14px;
 }

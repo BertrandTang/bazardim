@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import * as api from '../services/api.js';
 
 const ProductsContext = createContext(null);
@@ -24,9 +24,21 @@ export function ProductsProvider({ children }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  // Liste des licences sans doublons ("One Piece", "Naruto"...).
+  /**
+   * Recharge la liste depuis l'API, par exemple après un paiement (les produits achetés sont devenus "vendus").
+   * useCallback garde la même fonction d'un affichage à l'autre : elle peut ainsi être utilisée
+   * dans un useEffect sans le relancer en boucle (voir la page OrderConfirmation).
+   */
+  const reloadProducts = useCallback(() => {
+    return api.fetchProducts().then((loadedProducts) => setProducts(loadedProducts));
+  }, []);
+
+  // Annonces encore en vente : celles qui n'ont pas de date de vente (sold_at).
+  const availableProducts = products.filter((product) => !product.sold_at);
+
+  // Liste des licences des annonces en vente, sans doublons ("One Piece", "Naruto"...).
   // `new Set()` supprime automatiquement les doublons, puis on le retransforme en tableau.
-  const licences = [...new Set(products.map((product) => product.licence_name).filter(Boolean))];
+  const licences = [...new Set(availableProducts.map((product) => product.licence_name).filter(Boolean))];
 
   /** Retrouve un produit à partir de son identifiant (nombre, ou texte venant de l'URL). */
   function findProductById(productId) {
@@ -56,6 +68,7 @@ export function ProductsProvider({ children }) {
 
   const contextValue = {
     products,
+    availableProducts,
     isLoading,
     loadingError,
     licences,
@@ -63,6 +76,7 @@ export function ProductsProvider({ children }) {
     addProduct,
     updateProduct,
     deleteProduct,
+    reloadProducts,
   };
   return <ProductsContext.Provider value={contextValue}>{children}</ProductsContext.Provider>;
 }

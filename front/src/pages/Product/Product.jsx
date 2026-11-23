@@ -173,6 +173,7 @@ export default function Product() {
 
             <div className="product-detail-bottom">
               <span className="product-price">{formatPrice(product.price)}</span>
+              {product.sold_at && <span className="product-sold-badge">Vendu</span>}
               {isOwner ? (
                 <>
                   <Button variant="contained" className="button-gradient" onClick={() => setIsEditing(true)}>
@@ -183,7 +184,8 @@ export default function Product() {
                   </Button>
                 </>
               ) : (
-                <AddToCartButton productId={product.id} />
+                // Une annonce vendue ne peut plus être ajoutée au panier.
+                !product.sold_at && <AddToCartButton productId={product.id} />
               )}
             </div>
             {deleteError && (

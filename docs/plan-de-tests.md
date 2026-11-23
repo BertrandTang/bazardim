@@ -8,7 +8,7 @@ qui échoue si un test échoue ou si la couverture du code passe sous 50 % (le m
 | --- | --- | --- |
 | Outils | Vitest + React Testing Library (navigateur simulé : jsdom) | Vitest + supertest, sur une vraie base PostgreSQL de test |
 | Lancer | `cd front && npm run test:coverage` | `cd back && npm run test:coverage` |
-| Nombre de tests | 67 | 43 |
+| Nombre de tests | 78 | 53 |
 | Couverture des lignes | 89 % | 95 % |
 | Emplacement | `front/tests/*.test.js(x)` | `back/tests/*.test.js` |
 
@@ -32,6 +32,9 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | --- | --- | --- | --- | --- |
 | Catalogue | Ouvrir l'accueil | Tous les produits du catalogue et un titre `<h1>` | Intégration | `pages.test.jsx` |
 | Catalogue | Ouvrir une catégorie (Statues) | Toutes les statues, et seulement elles | Intégration | `pages.test.jsx` |
+| Catalogue | Une annonce est vendue | Elle n'apparaît plus sur l'accueil | Intégration | `pages.test.jsx` |
+| Fiche produit | Annonce vendue (page et carte) | Badge « Vendu », pas de bouton AJOUTER | Intégration / Composant | `pages.test.jsx`, `components.test.jsx` |
+| Panier | Annonce vendue entre-temps | Retirée du panier | Intégration | `pages.test.jsx` |
 | Recherche | Taper « luffy » + Entrée dans la barre | Adresse `/?q=luffy` | Composant | `components.test.jsx` |
 | Recherche | Ouvrir `/?q=vegeta` | « 1 résultat(s) pour « vegeta » » | Intégration | `pages.test.jsx` |
 | Recherche | Licence inconnue | Message « Aucun produit ne correspond » | Intégration | `pages.test.jsx` |
@@ -58,6 +61,11 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Messagerie | Visiteur sur la fiche produit | Lien « Connectez-vous » | Intégration | `pages.test.jsx` |
 | Messagerie | Répondre à un message reçu | Réponse envoyée, message marqué lu, visible dans « Envoyés » | Intégration | `pages.test.jsx` |
 | Messagerie | Annonce supprimée, boîte vide | « annonce supprimée », « Aucun message. » | Intégration | `pages.test.jsx` |
+| Commande | Visiteur dans le panier | Lien « Se connecter pour commander » | Intégration | `pages.test.jsx` |
+| Commande | Sans adresse, puis avec adresse | Bouton désactivé, puis redirection vers la page de paiement Stripe | Intégration | `pages.test.jsx` |
+| Commande | Acheter sa propre annonce | Message de refus de l'API | Intégration | `pages.test.jsx` |
+| Paiement | Retour de Stripe : en attente puis payé | « Vérifier à nouveau », puis « Merci », panier vidé | Intégration | `pages.test.jsx` |
+| Commande | Commande inconnue / onglet « Mes commandes » | « Commande introuvable » / liste avec le total | Intégration | `pages.test.jsx` |
 | Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur (401) | Message lisible, pas de plantage | Unitaire | `api.test.js` |
 | Panier | Ajouter, +, −, retirer, vider | Quantités et total recalculés | Intégration | `pages.test.jsx` |
 | Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `contexts.test.jsx` |
@@ -90,6 +98,14 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Messagerie | Marquer comme lu un message qui ne nous est pas destiné | 403 | `messages.test.js` |
 | Messagerie (confidentialité) | Un autre utilisateur, même administrateur, consulte ses messages | Il ne voit pas les messages des autres (403 s'il tente d'agir dessus) | `messages.test.js` |
 | Messagerie | Annonce supprimée | Le message est conservé (`product_id` vide) | `messages.test.js` |
+| Commande | Créer une commande | 201, total calculé avec les prix de la base, montants en centimes envoyés à Stripe | `orders.test.js` |
+| Commande | Prix envoyé par le navigateur | Ignoré : le total vient de la base | `orders.test.js` |
+| Commande | Panier vide, adresse manquante, produit inexistant, sa propre annonce | 400 / 400 / 404 / 400, Stripe jamais appelé | `orders.test.js` |
+| Commande | Stripe indisponible | 502 et commande supprimée | `orders.test.js` |
+| Paiement | Relire une commande en attente | Payée si Stripe confirme le paiement | `orders.test.js` |
+| Paiement | Webhook avec une signature invalide / valide | 400 / commande payée et produits marqués vendus | `orders.test.js` |
+| Annonce vendue | Paiement confirmé, puis nouvelle commande du même produit | `sold_at` rempli, puis 409 « vient d'être vendu » | `orders.test.js` |
+| Commande (confidentialité) | Un autre utilisateur consulte la commande | 404, n'apparaît pas dans sa liste | `orders.test.js` |
 | Compte | Changer de mot de passe ou d'email sans le mot de passe actuel | 403 | `users.test.js` |
 | Compte | Envoyer `role: admin` | 400 (champ refusé) | `users.test.js` |
 | Compte (RGPD) | Supprimer son compte | Compte, annonces et session supprimés | `users.test.js` |
@@ -98,4 +114,4 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 ## Ce qui n'est pas (encore) couvert
 
 - Tests d'accessibilité avec un lecteur d'écran (VoiceOver, NVDA) : à faire manuellement.
-- Le paiement (Stripe), pas encore développé.
+- Le paiement réel sur la page de Stripe (carte de test) : à faire à la main, la page de Stripe est protégée contre les robots.

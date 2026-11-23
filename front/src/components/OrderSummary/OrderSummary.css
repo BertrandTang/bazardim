@@ -1,0 +1,60 @@
+.order-summary {
+  background: #fff;
+  color: #222;
+  border-radius: 0 26px 0 26px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.order-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.order-summary-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.order-status {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #eee;
+  color: #333;
+}
+
+.order-status.paid {
+  background: #1b5e20;
+  color: #fff;
+}
+
+.order-summary-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-summary-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.order-summary-address,
+.order-summary-total {
+  margin: 0;
+}
+
+.order-summary-total {
+  text-align: right;
+}

@@ -52,6 +52,7 @@ export default function ProductCard({ product, onEdit, onDelete }) {
         <Link to={productUrl}>
           <img src={getProductImage(product)} alt={product.title} loading="lazy" />
         </Link>
+        {product.sold_at && <span className="product-sold-badge">Vendu</span>}
         {!isOwnerView && (
           <button
             type="button"
@@ -93,7 +94,8 @@ export default function ProductCard({ product, onEdit, onDelete }) {
             </button>
           </div>
         ) : (
-          <AddToCartButton productId={product.id} />
+          // Une annonce vendue ne peut plus être ajoutée au panier.
+          !product.sold_at && <AddToCartButton productId={product.id} />
         )}
       </div>
     </article>

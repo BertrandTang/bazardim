@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Avatar, Button, Stack, TextField, Typography } from '@mui/material';
+import OrderSummary from '../../components/OrderSummary/OrderSummary.jsx';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import PasswordField from '../../components/PasswordField/PasswordField.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
+import { fetchOrders } from '../../services/api.js';
 import './Profile.css';
 
 // Onglets du menu latéral. `component` est le composant affiché quand l'onglet est actif
@@ -15,6 +17,7 @@ const SECTIONS = [
   { id: 'settings', label: 'Profil', component: SettingsSection },
   { id: 'products', label: 'Mes produits', component: MyProductsSection },
   { id: 'likes', label: 'Mes likes', component: MyLikesSection },
+  { id: 'orders', label: 'Mes commandes', component: MyOrdersSection },
 ];
 
 /** Page "Mon profil" (réservée aux utilisateurs connectés, voir RequireAuth). */
@@ -208,5 +211,39 @@ function MyLikesSection() {
         <ProductCard key={product.id} product={product} />
       ))}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Onglet "Mes commandes" : achats de l'utilisateur                     */
+/* ------------------------------------------------------------------ */
+function MyOrdersSection() {
+  // null = chargement en cours ; ensuite, la liste des commandes renvoyée par l'API.
+  const [orders, setOrders] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Chargement des commandes à l'ouverture de l'onglet.
+  useEffect(() => {
+    fetchOrders()
+      .then((loadedOrders) => setOrders(loadedOrders))
+      .catch((error) => setErrorMessage(error.message));
+  }, []);
+
+  if (errorMessage) {
+    return <Alert severity="error">{errorMessage}</Alert>;
+  }
+  if (orders === null) {
+    return <p className="profile-empty">Chargement…</p>;
+  }
+  if (orders.length === 0) {
+    return <p className="profile-empty">Vous n’avez pas encore passé de commande.</p>;
+  }
+
+  return (
+    <Stack spacing={2}>
+      {orders.map((order) => (
+        <OrderSummary key={order.id} order={order} />
+      ))}
+    </Stack>
   );
 }

@@ -36,6 +36,12 @@ describe('ProductCard', () => {
     expect(screen.getByText('Ajouté au panier')).toBeInTheDocument();
   });
 
+  it('affiche le badge "Vendu" et pas de bouton AJOUTER pour une annonce vendue', async () => {
+    await renderWithProviders(<ProductCard product={{ ...vegeta, sold_at: '2026-11-23T10:00:00Z' }} />);
+    expect(screen.getByText('Vendu')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'AJOUTER' })).not.toBeInTheDocument();
+  });
+
   it('affiche Modifier / Supprimer dans la version propriétaire', async () => {
     const handleEdit = vi.fn();
     const handleDelete = vi.fn();

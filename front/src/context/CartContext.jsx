@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useCallback, useContext } from 'react';
 import useLocalStorageState from '../hooks/useLocalStorageState.js';
 import { useProducts } from './ProductsContext.jsx';
 
@@ -17,10 +17,10 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useLocalStorageState('cartItems', []);
 
   // On associe chaque ligne du panier à son produit complet.
-  // Si un produit a été supprimé entre-temps, on l'ignore.
+  // Si un produit a été supprimé ou vendu entre-temps, on l'ignore.
   const cartLines = cartItems
     .map((cartItem) => ({ product: findProductById(cartItem.productId), quantity: cartItem.quantity }))
-    .filter((cartLine) => cartLine.product !== null);
+    .filter((cartLine) => cartLine.product !== null && !cartLine.product.sold_at);
 
   // Nombre total d'articles (affiché dans la pastille de la barre de navigation).
   const itemCount = cartLines.reduce((total, cartLine) => total + cartLine.quantity, 0);
@@ -54,9 +54,10 @@ export function CartProvider({ children }) {
     setCartItems((previousItems) => previousItems.filter((cartItem) => cartItem.productId !== productId));
   }
 
-  function clearCart() {
-    setCartItems([]);
-  }
+  // useCallback garde la MÊME fonction d'un affichage à l'autre (au lieu d'en recréer une).
+  // C'est nécessaire car la page de confirmation de commande l'utilise dans un useEffect :
+  // une fonction recréée à chaque affichage relancerait cet effet en boucle.
+  const clearCart = useCallback(() => setCartItems([]), [setCartItems]);
 
   const contextValue = {
     cartLines,

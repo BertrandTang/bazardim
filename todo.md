@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `█████████░░░░░░░░░░░` 45 % (46 / 102 tâches)**
+**Progression globale : `██████████░░░░░░░░░░` 48 % (50 / 104 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
 | Bloc 2 — Front-end | `██████████████░░░░░░` 68 % | 26 / 38 |
-| Bloc 3 — Back-end | `██████████░░░░░░░░░░` 51 % | 19 / 37 |
+| Bloc 3 — Back-end | `████████████░░░░░░░░` 59 % | 23 / 39 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -22,8 +22,8 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | Partie | État |
 | --- | --- |
 | Front-end (React) | ✅ Branché sur l'API : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion, messagerie. |
-| Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris, messagerie. ❌ Pas encore de commande ni de paiement. |
-| Tests | ✅ Back : 43 tests, 95 % de couverture. ✅ Front : 67 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris, messagerie. commandes et paiement Stripe (mode test). |
+| Tests | ✅ Back : 53 tests, 95 % de couverture. ✅ Front : 78 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
@@ -32,8 +32,8 @@ favoris, panier, messagerie simple (boîte de réception, sans discussion en dir
 
 ### Les 4 priorités
 
-1. **Paiement Stripe** + commandes + stratégie de monétisation (C23).
-2. **Conformité RGPD** : bannière cookies, politique de confidentialité, mentions légales, demande d'accès aux données, double opt-in (C11).
+1. **Conformité RGPD** : bannière cookies, politique de confidentialité, mentions légales, demande d'accès aux données, double opt-in (C11).
+2. **Stratégie de monétisation et CGV** à rédiger (C23).
 3. **Audits Lighthouse** (accessibilité, SEO, performance) à lancer et à mettre dans le dossier — commande dans la section C13.
 4. **Dossier écrit du bloc 1** : rien n'est encore coché.
 
@@ -155,9 +155,11 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 
 ### C23 / E17 — Paiement et monétisation
 
-- [ ] Tables `orders` / `order_items` + routes `POST /api/orders`, `GET /api/orders`.
-- [ ] Intégrer **Stripe Checkout** en mode test (bouton « Commander » du panier, actuellement désactivé).
-- [ ] Webhook Stripe pour confirmer le paiement côté serveur (recalculer le total côté back : ne jamais faire confiance au montant envoyé par le front).
+- [x] Tables `orders` / `order_items` (titre et prix copiés à l'achat) + routes `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`.
+- [x] **Stripe Checkout** en mode test : bouton « Commander et payer » du panier, page de confirmation, onglet « Mes commandes » du profil. Total recalculé côté back (le front n'envoie aucun prix).
+- [x] Webhook Stripe (`POST /api/stripe/webhook`, signature vérifiée) + vérification du paiement à l'affichage de la confirmation.
+- [x] Annonce **vendue** après paiement (`products.sold_at`) : retirée de l'accueil, du profil public et des paniers, badge « Vendu » sur sa page et dans « Mes produits » ; une annonce vendue ne peut plus être commandée (409).
+- [ ] Faire un vrai paiement de test à la main (carte `4242 4242 4242 4242`) et garder des captures pour le dossier.
 - [ ] Marketplace entre particuliers → étudier **Stripe Connect** (reversement aux vendeurs).
 - [ ] Rédiger la stratégie de monétisation : commission sur chaque vente (ex : 5 %), mise en avant payante d'annonces, abonnement vendeur pro...
 - [ ] CGV / conditions générales d'utilisation (contraintes légales de la vente en ligne).

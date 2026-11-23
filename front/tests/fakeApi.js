@@ -23,9 +23,11 @@ export function resetFakeApi() {
   database = {
     // Chaque compte reçoit le mot de passe de test.
     users: USERS.map((user) => ({ ...user, password: TEST_PASSWORD })),
-    products: structuredClone(PRODUCTS),
+    // Au départ, toutes les annonces sont en vente (sold_at vide).
+    products: PRODUCTS.map((product) => ({ ...product, sold_at: null })),
     likes: [], // { userId, productId }
     messages: [],
+    orders: [],
     loggedInUserId: null,
   };
 }
@@ -193,6 +195,67 @@ export async function unlikeProduct(productId) {
   const user = getLoggedInUser();
   database.likes = database.likes.filter((like) => !(like.userId === user.id && like.productId === productId));
   return null;
+}
+
+// ----- Commandes et paiement -----
+
+/** Marque une commande comme payée et ses produits comme vendus (simule la confirmation de Stripe). */
+export function markFakeOrderAsPaid(orderId) {
+  const order = database.orders.find((candidate) => candidate.id === orderId);
+  order.status = 'paid';
+  order.paid_at = new Date().toISOString();
+  for (const item of order.items) {
+    findProduct(item.product_id).sold_at = order.paid_at;
+  }
+}
+
+/** Marque directement une annonce comme vendue (pour préparer un test). */
+export function markFakeProductAsSold(productId) {
+  findProduct(productId).sold_at = new Date().toISOString();
+}
+
+export async function createOrder({ items, shipping_address: shippingAddress }) {
+  const user = getLoggedInUser();
+  if (items.length === 0) {
+    throw new ApiError(400, 'Le panier est vide.');
+  }
+  const orderItems = items.map((item) => {
+    const product = findProduct(item.product_id);
+    if (product.sold_at) {
+      throw new ApiError(409, `« ${product.title} » vient d’être vendu, retirez-le de votre panier.`);
+    }
+    if (product.owner_id === user.id) {
+      throw new ApiError(400, `Vous ne pouvez pas acheter votre propre annonce (« ${product.title} »).`);
+    }
+    return { product_id: product.id, product_title: product.title, unit_price: product.price, quantity: item.quantity };
+  });
+  const totalInCents = orderItems.reduce((total, item) => total + Math.round(item.unit_price * 100) * item.quantity, 0);
+  const order = {
+    id: nextId(database.orders),
+    buyer_id: user.id,
+    status: 'pending',
+    total_price: totalInCents / 100,
+    shipping_address: shippingAddress,
+    created_at: new Date().toISOString(),
+    paid_at: null,
+    items: orderItems,
+  };
+  database.orders.push(order);
+  return { order_id: order.id, checkout_url: `https://checkout.stripe.com/c/pay/fausse-session-${order.id}` };
+}
+
+export async function fetchOrders() {
+  const user = getLoggedInUser();
+  return structuredClone(database.orders.filter((order) => order.buyer_id === user.id));
+}
+
+export async function fetchOrder(orderId) {
+  const user = getLoggedInUser();
+  const order = database.orders.find((candidate) => candidate.id === Number(orderId) && candidate.buyer_id === user.id);
+  if (!order) {
+    throw new ApiError(404, 'Commande introuvable.');
+  }
+  return structuredClone(order);
 }
 
 // ----- Messagerie -----
