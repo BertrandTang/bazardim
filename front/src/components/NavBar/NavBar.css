@@ -261,17 +261,58 @@
   .navbar-search {
     max-width: 100%;
   }
+
+  /* Liens du compte (Messages, Profil, Déconnexion) sur une ligne au lieu d'une colonne. */
+  .navbar-auth {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 16px;
+  }
 }
 
+/* Téléphones : tout est resserré pour que chaque ligne tienne dans l'écran. */
 @media (max-width: 480px) {
-  .navbar-middle a,
-  .navbar-dropdown-button {
-    font-size: 14px;
+  .navbar-container {
+    margin: 8px 8px 4px;
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .navbar-left {
+    gap: 10px;
   }
 
   .navbar-logo {
-    width: 60px;
-    height: 60px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .navbar-search {
+    padding: 6px 12px;
+  }
+
+  .navbar-search input {
+    font-size: 16px; /* 16 px minimum : en dessous, l'iPhone zoome sur le champ quand on tape */
+  }
+
+  /* flex-wrap : si l'écran est vraiment étroit, un lien passe à la ligne au lieu de dépasser. */
+  .navbar-middle {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+
+  .navbar-middle a,
+  .navbar-dropdown-button {
+    font-size: 13px;
+  }
+
+  .navbar-container .navbar-sell-button {
+    padding: 8px 12px;
+  }
+
+  .navbar-auth {
+    font-size: 13px;
   }
 }
 

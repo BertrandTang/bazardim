@@ -35,7 +35,9 @@ export default function Profile() {
     <div className="profile-page">
       <PageMetadata title={`Mon profil - ${activeSection.label}`} noIndex />
       <nav className="profile-sidebar" aria-label="Sections du profil">
-        <Stack spacing={1}>
+        {/* useFlexGap : l'espacement utilise "gap", ce qui permet de passer les boutons
+            en ligne sur mobile (voir Profile.css). */}
+        <Stack spacing={1} useFlexGap className="profile-sidebar-buttons">
           {SECTIONS.map((section) => (
             <Button
               key={section.id}

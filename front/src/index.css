@@ -152,3 +152,12 @@ button {
   letter-spacing: 4px;
   text-transform: uppercase;
 }
+
+/* ----- Téléphones ----- */
+@media (max-width: 600px) {
+  /* Titres de page plus petits : un long titre de produit ne prend plus tout l'écran. */
+  h1 {
+    font-size: 1.6rem;
+    line-height: 1.25;
+  }
+}

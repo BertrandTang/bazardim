@@ -95,8 +95,6 @@
   border-radius: 8px;
 }
 
-/* ----- Boutons + / − ----- */
-
 /* ----- Total ----- */
 .cart-summary {
   margin-top: 20px;
@@ -115,6 +113,7 @@
 }
 
 .cart-summary-value {
+  white-space: nowrap; /* "149.99 €" reste sur une ligne */
   font-size: 20px;
   font-weight: 700;
   color: var(--color-primary);
@@ -145,6 +144,13 @@
     align-items: flex-start;
     gap: 12px;
   }
+
+  /* Total et bouton "Commander et payer" l'un sous l'autre, le bouton sur toute la largeur. */
+  .cart-summary {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
 }
 
 /* ----- Adresse de livraison ----- */
@@ -166,4 +172,11 @@
   text-align: right;
   color: #444;
   font-size: 14px;
+}
+
+/* Placé après .cart-hint : à priorité égale, c'est la dernière règle du fichier qui s'applique. */
+@media (max-width: 640px) {
+  .cart-hint {
+    text-align: center;
+  }
 }

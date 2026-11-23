@@ -90,7 +90,8 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 - [x] Éco-conception : pages chargées à la demande (`React.lazy`), Material UI n'est plus chargé sur la page d'accueil : JavaScript initial de 163 Ko → 91 Ko compressés (−44 %).
 - [ ] Mesurer avec **EcoIndex** / GreenIT-Analysis et mettre le score dans le dossier.
 - [x] Images de démonstration redimensionnées (41 Mo → 2,3 Mo).
-- [ ] Tester sur Chrome, Firefox, Safari et sur mobile (compatibilité navigateurs).
+- [x] **Responsive mobile** : toutes les pages vérifiées à 320 px, 375 px et 1280 px de large, sans défilement horizontal. Barre de navigation resserrée, onglets du profil en ligne, titres plus petits, total du panier empilé.
+- [ ] Tester sur Chrome, Firefox, Safari et sur un vrai téléphone (compatibilité navigateurs).
 
 ### C17 / E12 — Consommer une API
 

@@ -124,6 +124,16 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Compte (RGPD) | Supprimer son compte | Compte, annonces et session supprimés | `users.test.js` |
 | Sécurité | En-têtes HTTP, CORS | `nosniff`, origine autorisée = front uniquement | `users.test.js` |
 
+## Vérification manuelle de l'affichage (responsive)
+
+Chaque page (accueil, fiche produit, connexion, inscription, panier, messagerie, vente, profil et ses onglets, profil public, page 404) est ouverte dans Chrome à **320 px** (petit téléphone), **375 px** (iPhone) et **1280 px** (ordinateur) de large.
+
+| Vérification | Résultat attendu |
+| --- | --- |
+| Largeur de la page | Aucun défilement horizontal, rien ne dépasse de l'écran |
+| Barre de navigation | Tous les liens visibles et cliquables, sur plusieurs lignes si besoin |
+| Textes longs (titre de produit, pseudo) | Passent à la ligne ; les prix restent sur une seule ligne |
+
 ## Ce qui n'est pas (encore) couvert
 
 - Tests d'accessibilité avec un lecteur d'écran (VoiceOver, NVDA) : à faire manuellement.

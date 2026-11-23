@@ -30,5 +30,15 @@
 @media (max-width: 768px) {
   .profile-page {
     flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  /* Les onglets passent en ligne (et à la ligne si besoin) au lieu d'une longue colonne.
+     Deux classes pour passer devant le style interne du composant Stack de Material UI. */
+  .profile-sidebar .profile-sidebar-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
