@@ -8,8 +8,8 @@ qui échoue si un test échoue ou si la couverture du code passe sous 50 % (le m
 | --- | --- | --- |
 | Outils | Vitest + React Testing Library (navigateur simulé : jsdom) | Vitest + supertest, sur une vraie base PostgreSQL de test |
 | Lancer | `cd front && npm run test:coverage` | `cd back && npm run test:coverage` |
-| Nombre de tests | 56 | 42 |
-| Couverture des lignes | 91 % | 96 % |
+| Nombre de tests | 52 | 36 |
+| Couverture des lignes | 91 % | 94 % |
 | Emplacement | `front/tests/*.test.js(x)` | `back/tests/*.test.js` |
 
 Types de tests :
@@ -50,10 +50,7 @@ Types de tests :
 | Livraison (API tierce) | API indisponible | Message d'erreur, saisie libre possible | Composant | `AddressAutocomplete.test.jsx` |
 | Livraison (API tierce) | Moins de 3 caractères | Aucun appel à l'API | Composant | `AddressAutocomplete.test.jsx` |
 | Profil | Modifier son pseudo | « Profil mis à jour » | Intégration | `pages.test.jsx` |
-| Profil | Onglets produits / likes / avis | Bonnes listes affichées | Intégration | `pages.test.jsx` |
-| Avis | Publier un avis sur un vendeur | Avis affiché, note moyenne mise à jour | Intégration | `pages.test.jsx` |
-| Avis | Avis d'un autre utilisateur | Pas de bouton Modifier | Composant | `components.test.jsx` |
-| Avis | L'auteur modifie puis supprime | Avis modifié puis supprimé | Composant | `components.test.jsx` |
+| Profil | Onglets produits / likes | Bonnes listes affichées | Intégration | `pages.test.jsx` |
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 
@@ -71,9 +68,6 @@ Types de tests :
 | Produits | Filtres catégorie, licence, recherche, vendeur, pagination | Seuls les bons produits | `products.test.js` |
 | Produits | Modifier / supprimer l'annonce d'un autre | 403 | `products.test.js` |
 | Produits | Un administrateur supprime une annonce | 204 (modération) | `products.test.js` |
-| Avis | Se noter soi-même, vendeur inexistant, note hors 1-5 | 400 / 404 / 400 | `reviews.test.js` |
-| Avis | Note moyenne d'un vendeur | Moyenne exacte | `reviews.test.js` |
-| Avis | Modifier l'avis d'un autre | 403 | `reviews.test.js` |
 | Favoris | Liker deux fois, retirer | Pas de doublon, retrait effectif | `likes.test.js` |
 | Compte | Changer de mot de passe ou d'email sans le mot de passe actuel | 403 | `users.test.js` |
 | Compte | Envoyer `role: admin` | 400 (champ refusé) | `users.test.js` |

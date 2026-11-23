@@ -5,7 +5,6 @@ import { AuthProvider } from '../src/context/AuthContext.jsx';
 import { CartProvider } from '../src/context/CartContext.jsx';
 import { LikesProvider } from '../src/context/LikesContext.jsx';
 import { ProductsProvider } from '../src/context/ProductsContext.jsx';
-import { ReviewsProvider } from '../src/context/ReviewsContext.jsx';
 
 /** Les mêmes Providers que dans App.jsx, pour que les composants testés aient accès aux données. */
 export function AllProviders({ children }) {
@@ -13,9 +12,7 @@ export function AllProviders({ children }) {
     <AuthProvider>
       <ProductsProvider>
         <CartProvider>
-          <LikesProvider>
-            <ReviewsProvider>{children}</ReviewsProvider>
-          </LikesProvider>
+          <LikesProvider>{children}</LikesProvider>
         </CartProvider>
       </ProductsProvider>
     </AuthProvider>

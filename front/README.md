@@ -19,7 +19,7 @@ npm run preview        # sert le build de production en local
 Comptes de démonstration (voir `src/data/profiles.json`) :
 `collectionneurdu92@example.com` / `password123`, `admin@example.com` / `admin123`.
 
-> En attendant le back-end, toutes les données (comptes, produits, panier, likes, avis)
+> En attendant le back-end, toutes les données (comptes, produits, panier, likes)
 > sont sauvegardées dans le **localStorage** du navigateur. Pour repartir des données
 > d'origine : outils de développement → Application → Local Storage → « Clear ».
 > Les endroits à remplacer par des appels API sont signalés par `⚠️ TEMPORAIRE`.
@@ -35,8 +35,7 @@ src/
 │   ├── AuthContext       Comptes et utilisateur connecté
 │   ├── ProductsContext   Annonces (création, modification, suppression)
 │   ├── CartContext       Panier
-│   ├── LikesContext      Favoris
-│   └── ReviewsContext    Avis sur les vendeurs
+│   └── LikesContext      Favoris
 ├── hooks/
 │   └── useLocalStorageState.js   useState sauvegardé dans le localStorage
 ├── services/             Appels à des API externes (adresses : Géoplateforme de l'IGN)

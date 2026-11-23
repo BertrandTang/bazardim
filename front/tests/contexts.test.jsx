@@ -1,19 +1,17 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { AllProviders, loginAs } from './renderWithProviders.jsx';
+import { AllProviders } from './renderWithProviders.jsx';
 import { useAuth } from '../src/context/AuthContext.jsx';
 import { useCart } from '../src/context/CartContext.jsx';
 import { useLikes } from '../src/context/LikesContext.jsx';
 import { useProducts } from '../src/context/ProductsContext.jsx';
-import { useReviews } from '../src/context/ReviewsContext.jsx';
 
 // renderHook exécute un hook comme s'il était dans un composant ;
 // `wrapper` l'entoure des Providers de l'application.
 function renderAllHooks() {
-  return renderHook(
-    () => ({ auth: useAuth(), cart: useCart(), likes: useLikes(), products: useProducts(), reviews: useReviews() }),
-    { wrapper: AllProviders },
-  );
+  return renderHook(() => ({ auth: useAuth(), cart: useCart(), likes: useLikes(), products: useProducts() }), {
+    wrapper: AllProviders,
+  });
 }
 
 describe('AuthContext', () => {
@@ -114,34 +112,5 @@ describe('LikesContext', () => {
     act(() => result.current.likes.toggleLike('FIG002'));
     act(() => result.current.likes.toggleLike('FIG002'));
     expect(result.current.likes.likedProductIds).toEqual([]);
-  });
-});
-
-describe('ReviewsContext', () => {
-  it('publie un avis, calcule la moyenne et réserve la modification à l’auteur', () => {
-    loginAs(101);
-    const { result } = renderAllHooks();
-
-    act(() => result.current.reviews.addReview(105, 4, 'Bien'));
-    act(() => result.current.reviews.addReview(105, 2, 'Bof'));
-    expect(result.current.reviews.getAverageRating(105)).toBe(3);
-    expect(result.current.reviews.getAverageRating(999)).toBe(0);
-    expect(result.current.reviews.getReviewsWrittenBy(101)).toHaveLength(2);
-
-    const [review] = result.current.reviews.getReviewsAbout(105);
-    act(() => result.current.reviews.updateReview(review.id, 5, 'Finalement top'));
-    expect(result.current.reviews.getReviewsAbout(105).find((item) => item.id === review.id).comment).toBe(
-      'Finalement top',
-    );
-
-    // Un autre utilisateur ne peut ni modifier ni supprimer cet avis.
-    act(() => result.current.auth.login('admin@example.com', 'admin123'));
-    expect(result.current.reviews.isAuthorOf(review)).toBe(false);
-    act(() => result.current.reviews.deleteReview(review.id));
-    expect(result.current.reviews.getReviewsAbout(105)).toHaveLength(2);
-
-    act(() => result.current.auth.login('collectionneurdu92@example.com', 'password123'));
-    act(() => result.current.reviews.deleteReview(review.id));
-    expect(result.current.reviews.getReviewsAbout(105)).toHaveLength(1);
   });
 });

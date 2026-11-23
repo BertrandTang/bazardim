@@ -20,23 +20,16 @@ export async function findPasswordHashById(userId) {
   return rows[0]?.password_hash ?? null;
 }
 
-/**
- * Profil public d'un vendeur : pas d'email (donnée personnelle), mais sa note moyenne
- * et son nombre d'avis, calculés à partir de la table reviews.
- */
+/** Profil public d'un vendeur : pas d'email (donnée personnelle). */
 export async function findPublicProfileById(userId) {
   const rows = await query(
     `SELECT
        users.id,
        users.username,
        users.profile_image_url,
-       users.created_at,
-       COALESCE(AVG(reviews.rating), 0)::float AS average_rating,
-       COUNT(reviews.id)::int AS review_count
+       users.created_at
      FROM users
-     LEFT JOIN reviews ON reviews.seller_id = users.id
-     WHERE users.id = $1
-     GROUP BY users.id`,
+     WHERE users.id = $1`,
     [userId],
   );
   return rows[0] ?? null;
@@ -71,7 +64,7 @@ export async function updateUserById(userId, { username, email, profileImageUrl,
   return rows[0];
 }
 
-/** Supprime le compte. Ses annonces, avis et likes partent avec (ON DELETE CASCADE). */
+/** Supprime le compte. Ses annonces et likes partent avec (ON DELETE CASCADE). */
 export async function deleteUserById(userId) {
   await query('DELETE FROM users WHERE id = $1', [userId]);
 }

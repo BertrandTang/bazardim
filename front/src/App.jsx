@@ -6,7 +6,6 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { LikesProvider } from './context/LikesContext.jsx';
 import { ProductsProvider } from './context/ProductsContext.jsx';
-import { ReviewsProvider } from './context/ReviewsContext.jsx';
 import { CATEGORIES } from './data/categories.js';
 import Home from './pages/Home/Home.jsx';
 
@@ -31,46 +30,44 @@ export default function App() {
       <ProductsProvider>
         <CartProvider>
           <LikesProvider>
-            <ReviewsProvider>
-              <BrowserRouter>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/licences" element={<Home />} />
-                    {/* Une page par catégorie, générée à partir de la liste CATEGORIES */}
-                    {CATEGORIES.map((category) => (
-                      <Route key={category.value} path={category.path} element={<Home category={category.value} />} />
-                    ))}
-                    <Route path="/product/:id" element={<Product />} />
-                    <Route path="/user/:id" element={<UserProfile />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/signup" element={<SignUp />} />
+            <BrowserRouter>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/licences" element={<Home />} />
+                  {/* Une page par catégorie, générée à partir de la liste CATEGORIES */}
+                  {CATEGORIES.map((category) => (
+                    <Route key={category.value} path={category.path} element={<Home category={category.value} />} />
+                  ))}
+                  <Route path="/product/:id" element={<Product />} />
+                  <Route path="/user/:id" element={<UserProfile />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/signup" element={<SignUp />} />
 
-                    {/* Pages réservées aux utilisateurs connectés */}
-                    <Route
-                      path="/vendre"
-                      element={
-                        <RequireAuth>
-                          <Sell />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <RequireAuth>
-                          <Profile />
-                        </RequireAuth>
-                      }
-                    />
+                  {/* Pages réservées aux utilisateurs connectés */}
+                  <Route
+                    path="/vendre"
+                    element={
+                      <RequireAuth>
+                        <Sell />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <RequireAuth>
+                        <Profile />
+                      </RequireAuth>
+                    }
+                  />
 
-                    {/* "*" correspond à toutes les adresses qui n'ont pas de route : page 404 */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Layout>
-              </BrowserRouter>
-            </ReviewsProvider>
+                  {/* "*" correspond à toutes les adresses qui n'ont pas de route : page 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </BrowserRouter>
           </LikesProvider>
         </CartProvider>
       </ProductsProvider>

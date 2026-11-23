@@ -7,7 +7,7 @@ describe('GET /api/users/:id (profil public)', () => {
   it('ne révèle ni l’email ni le mot de passe', async () => {
     const { user } = await createLoggedInUser();
     const response = await anonymous().get(`/api/users/${user.id}`).expect(200);
-    expect(response.body).toMatchObject({ id: user.id, username: user.username, average_rating: 0, review_count: 0 });
+    expect(response.body).toMatchObject({ id: user.id, username: user.username });
     expect(response.body).not.toHaveProperty('email');
     expect(response.body).not.toHaveProperty('password_hash');
   });

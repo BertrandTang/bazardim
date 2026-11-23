@@ -21,9 +21,9 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 
 | Partie | État |
 | --- | --- |
-| Front-end (React) | ✅ Fonctionnel : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, avis vendeurs, inscription / connexion. Données simulées dans le localStorage. |
-| Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, avis, favoris. ❌ Pas encore branchée au front, pas de paiement. |
-| Tests | ✅ Back : 42 tests, 96 % de couverture. ✅ Front : 56 tests, 91 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Front-end (React) | ✅ Fonctionnel : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion. Données simulées dans le localStorage. |
+| Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris. ❌ Pas encore branchée au front, pas de paiement. |
+| Tests | ✅ Back : 36 tests, 94 % de couverture. ✅ Front : 52 tests, 91 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
@@ -52,7 +52,7 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 - [ ] **E8 / C7, C8, C10** — Dossier de conception :
   - [ ] Diagramme de cas d'utilisation (UML) couvrant toutes les fonctionnalités.
   - [ ] Diagramme de classes (analyse + conception).
-  - [ ] MCD / MLD (Merise) ou diagramme entité-association + schéma de la base. Entités probables : `User`, `Product`, `Category`, `Licence`, `Character`, `Tag`, `Review`, `Like`, `Order`, `OrderItem`, `Payment`.
+  - [ ] MCD / MLD (Merise) ou diagramme entité-association + schéma de la base. Entités probables : `User`, `Product`, `Category`, `Licence`, `Character`, `Tag`, `Like`, `Order`, `OrderItem`, `Payment`.
   - [ ] Schéma d'architecture logicielle (front SPA ↔ API REST ↔ base de données ↔ Stripe).
 - [ ] **C9** — Architecture des données : cycle de vie (collecte → stockage → suppression), sauvegardes et restauration de la base.
 - [ ] **E9 / C11** — Audit RGPD (sur le site fourni par l'école).
@@ -98,7 +98,7 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 
 ### C18 / E13 — Tests front ⚠️ couverture ≥ 50 % obligatoire
 
-- [x] **Vitest** + **React Testing Library** + couverture (`npm test`, `npm run test:coverage`) : 56 tests, 91 % des lignes, seuil bloquant à 50 % (le minimum exigé).
+- [x] **Vitest** + **React Testing Library** + couverture (`npm test`, `npm run test:coverage`) : 52 tests, 91 % des lignes, seuil bloquant à 50 % (le minimum exigé).
 - [x] **Plan de tests** front et back : [docs/plan-de-tests.md](docs/plan-de-tests.md) (à relire et à compléter avec tes cas d'utilisation).
 - [x] Tests unitaires : utilitaires, hook `useLocalStorageState`, contextes, service d'adresses.
 - [x] Tests de composants et de pages : cartes, formulaires, barre de navigation, toutes les pages.
@@ -132,12 +132,12 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 ### C21 / E15 — Couche de persistance et sécurité en profondeur
 
 - [x] Base PostgreSQL dans Docker (`docker-compose.yml`) + base de test séparée.
-- [x] Schéma normalisé (`back/database/schema.sql`) : tables `users`, `products`, `licences`, `tags`, `product_tags`, `reviews`, `likes`, contraintes `CHECK` / `UNIQUE` / clés étrangères, index, vue `product_details`.
+- [x] Schéma normalisé (`back/database/schema.sql`) : tables `users`, `products`, `licences`, `tags`, `product_tags`, `likes`, contraintes `CHECK` / `UNIQUE` / clés étrangères, index, vue `product_details`.
 - [x] Données de démo (`npm run db:reset`) importées depuis les anciens JSON, en passant par la même validation que l'API.
 - [x] Mots de passe hachés avec **bcrypt** ; jamais renvoyés par l'API.
 - [x] Validation de toutes les entrées avec **zod** ; requêtes SQL paramétrées (anti-injection).
 - [x] Authentification : JWT dans un cookie `httpOnly` + `SameSite=Lax` (+ `secure` en production).
-- [x] Contrôle d'accès : propriétaire ou admin pour modifier / supprimer (annonces, avis).
+- [x] Contrôle d'accès : propriétaire ou admin pour modifier / supprimer une annonce.
 - [x] Journal des requêtes avec un middleware maison (`src/middlewares/requestLogger.js`), route `/api/health` pour la supervision.
 - [x] Configuration validée au démarrage (`src/config/config.js`), `.env` ignoré par Git, `.env.example` fourni.
 - [ ] Stratégie de **sauvegarde / restauration** de la base (`pg_dump` planifié) à décrire et tester (C9, C32).
@@ -145,12 +145,11 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 
 ### C22 / E16 — Développement de l'API
 
-- [x] Routes REST : auth, comptes, produits (filtres + pagination), licences, avis, favoris.
+- [x] Routes REST : auth, comptes, produits (filtres + pagination), licences, favoris.
 - [x] Organisation MVC : `routes/` → `controllers/` → `validators/` (données reçues) et `models/` (requêtes SQL).
 - [ ] **Brancher le front** : remplacer les fonctions `⚠️ TEMPORAIRE` de `front/src/context/` par des appels `fetch(..., { credentials: 'include' })`. Points à adapter côté front :
   - noms de champs de l'API : `owner_id` (au lieu de `owner_user_id`), `image_url` (au lieu de `img`), `has_box` (au lieu de `box`), `ean_code` (au lieu de `EAN_number`), `height_cm` / `width_cm` / `scale` (au lieu de l'objet `size`), `profile_image_url` ;
   - identifiants numériques (1, 2...) au lieu de "FIG001" ;
-  - la note d'un avis va de 1 à 5 (0 refusé) ;
   - modification d'email / mot de passe : ajouter un champ « mot de passe actuel » dans le profil ;
   - favoris d'un visiteur non connecté : les garder dans le localStorage, ou demander la connexion ;
   - panier : peut rester dans le localStorage jusqu'à la création des commandes.
@@ -175,7 +174,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 
 ### C25 / E19 — Tests back
 
-- [x] 42 tests d'intégration (Vitest + supertest) sur une vraie base PostgreSQL de test, **96 % de couverture** (seuil bloquant à 50 %, le minimum exigé).
+- [x] 36 tests d'intégration (Vitest + supertest) sur une vraie base PostgreSQL de test, **94 % de couverture** (seuil bloquant à 50 %, le minimum exigé).
 - [ ] Rédiger le **plan de tests** (tableau scénario / résultat attendu) à partir des fichiers `back/tests/*.test.js` et le mettre dans le dossier avec la capture du rapport de couverture.
 
 ### C26 / E20 — Industrialisation back
@@ -223,8 +222,8 @@ L'épreuve porte sur une application **fournie le jour J**, pas sur Bazardim. Ma
 À réutiliser dans le dossier pour montrer la démarche qualité :
 
 - **Bugs corrigés** : deux paniers différents coexistaient (`CartProvider` déclaré deux fois) ; une annonce modifiée n'était à jour que sur sa page (pas sur l'accueil ni le profil) ; un même produit avait une image différente selon la page ; le mode sombre affichait du texte blanc sur fond blanc ; l'inscription n'enregistrait rien.
-- **Architecture** : toutes les données partagées passent par des contextes React (`Products`, `Reviews` ajoutés) et un hook commun `useLocalStorageState`. Les compteurs `productsVersion` et les événements personnalisés ont été supprimés.
-- **Duplication supprimée** : un seul formulaire produit (`ProductForm`) pour la vente et la modification ; une seule carte produit (fusion avec `ProductCardOwner`) ; un formulaire d'avis réutilisable ; styles CSS en double supprimés ; couleurs centralisées en variables CSS.
+- **Architecture** : toutes les données partagées passent par des contextes React (`Products` ajouté) et un hook commun `useLocalStorageState`. Les compteurs `productsVersion` et les événements personnalisés ont été supprimés.
+- **Duplication supprimée** : un seul formulaire produit (`ProductForm`) pour la vente et la modification ; une seule carte produit (fusion avec `ProductCardOwner`) ; styles CSS en double supprimés ; couleurs centralisées en variables CSS.
 - **Code mort supprimé** : `CategoryBar`, `HeroCarousel`, `categories.json`, champs alternatifs inutilisés (`product_title`, `product_price`...).
 - **Accessibilité** : le focus clavier est de nouveau visible (il était masqué partout), messages d'erreur dans la page au lieu de `alert()`, libellés ARIA sur la recherche, le panier et les boutons +/−.
 - **Qualité** : ESLint installé et configuré (22 problèmes → 0), noms de variables explicites, commentaires et JSDoc.

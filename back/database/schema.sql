@@ -75,21 +75,6 @@ CREATE TABLE product_tags (
 );
 
 -- ---------------------------------------------------------------------
--- Avis laissés par un utilisateur (author) sur un vendeur (seller)
--- ---------------------------------------------------------------------
-CREATE TABLE reviews (
-  id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  seller_id  INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-  author_id  INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-  rating     SMALLINT    NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  comment    TEXT        NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  -- Règle métier vérifiée aussi par la base : on ne peut pas se noter soi-même.
-  CHECK (seller_id <> author_id)
-);
-
--- ---------------------------------------------------------------------
 -- Favoris ("likes") : un utilisateur aime un produit au plus une fois
 -- (la clé primaire composée l'empêche).
 -- ---------------------------------------------------------------------
@@ -108,8 +93,6 @@ CREATE INDEX products_owner_id_index    ON products (owner_id);
 CREATE INDEX products_licence_id_index  ON products (licence_id);
 CREATE INDEX products_category_index    ON products (category);
 CREATE INDEX product_tags_tag_id_index  ON product_tags (tag_id);
-CREATE INDEX reviews_seller_id_index    ON reviews (seller_id);
-CREATE INDEX reviews_author_id_index    ON reviews (author_id);
 CREATE INDEX likes_product_id_index     ON likes (product_id);
 
 -- ---------------------------------------------------------------------

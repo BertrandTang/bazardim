@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import figuresData from '../src/data/figures.json';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
@@ -193,7 +193,7 @@ describe('Profile (mon profil)', () => {
     expect(screen.getByText('Profil mis à jour.')).toBeInTheDocument();
   });
 
-  it('liste mes produits, mes likes et mes avis', async () => {
+  it('liste mes produits et mes likes', async () => {
     loginAs(101);
     localStorage.setItem('likesByUser', JSON.stringify({ 101: ['FIG002'] }));
     vi.spyOn(window, 'confirm').mockReturnValue(true);
@@ -206,29 +206,16 @@ describe('Profile (mon profil)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
     expect(screen.getByRole('heading', { name: 'Figurine S.H. Figuarts Luffy' })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Avis' }));
-    expect(screen.getByText('Aucun avis reçu pour le moment.')).toBeInTheDocument();
   });
 });
 
 describe('UserProfile (profil public)', () => {
-  it('permet à un utilisateur connecté de laisser un avis', async () => {
-    loginAs(101);
-    const { user } = renderWithProviders(<UserProfile />, { route: '/user/105', path: '/user/:id' });
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('FigurineParadise');
-    expect(screen.queryByText(/@example.com/)).not.toBeInTheDocument();
-
-    await user.type(screen.getByLabelText('Votre commentaire'), 'Envoi rapide');
-    await user.click(screen.getByRole('button', { name: 'Publier l’avis' }));
-    const reviewsBlock = screen.getByRole('heading', { name: 'Avis récents' }).parentElement;
-    expect(within(reviewsBlock).getByText('Envoi rapide')).toBeInTheDocument();
-    expect(screen.getByText('5.0 / 5')).toBeInTheDocument();
-  });
-
-  it('invite un visiteur à se connecter pour laisser un avis', () => {
+  it('affiche le pseudo et les annonces du vendeur, sans son email', () => {
     renderWithProviders(<UserProfile />, { route: '/user/105', path: '/user/:id' });
-    expect(screen.getByRole('link', { name: 'Connectez-vous' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('FigurineParadise');
+    expect(screen.getByRole('heading', { name: 'Annonces de FigurineParadise' })).toBeInTheDocument();
+    // L'email est une donnée personnelle (RGPD) : il ne doit pas apparaître sur le profil public.
+    expect(screen.queryByText(/@example.com/)).not.toBeInTheDocument();
   });
 
   it('indique un profil introuvable', () => {

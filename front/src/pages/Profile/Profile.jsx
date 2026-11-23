@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Avatar, Button, Rating, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Avatar, Button, Stack, TextField, Typography } from '@mui/material';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
-import ReviewCard from '../../components/ReviewCard/ReviewCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
-import { useReviews } from '../../context/ReviewsContext.jsx';
 import './Profile.css';
 
 // Onglets du menu latéral. `component` est le composant affiché quand l'onglet est actif
@@ -16,7 +14,6 @@ const SECTIONS = [
   { id: 'settings', label: 'Profil', component: SettingsSection },
   { id: 'products', label: 'Mes produits', component: MyProductsSection },
   { id: 'likes', label: 'Mes likes', component: MyLikesSection },
-  { id: 'reviews', label: 'Avis', component: MyReviewsSection },
 ];
 
 /** Page "Mon profil" (réservée aux utilisateurs connectés, voir RequireAuth). */
@@ -179,51 +176,6 @@ function MyLikesSection() {
       {likedProducts.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Onglet "Avis" : avis reçus et avis écrits par l'utilisateur          */
-/* ------------------------------------------------------------------ */
-function MyReviewsSection() {
-  const { currentUser, findUserById } = useAuth();
-  const { getReviewsAbout, getReviewsWrittenBy, getAverageRating } = useReviews();
-
-  const receivedReviews = getReviewsAbout(currentUser.user_id);
-  const writtenReviews = getReviewsWrittenBy(currentUser.user_id);
-  const averageRating = getAverageRating(currentUser.user_id);
-
-  return (
-    <div className="profile-reviews">
-      <div className="profile-reviews-summary">
-        <Rating value={averageRating} precision={0.5} readOnly />
-        <span>{averageRating ? `${averageRating.toFixed(1)} / 5` : 'Aucune note'}</span>
-        <small>{receivedReviews.length} avis reçus</small>
-      </div>
-
-      {receivedReviews.length === 0 ? (
-        <p className="profile-empty">Aucun avis reçu pour le moment.</p>
-      ) : (
-        <div className="profile-reviews-list">
-          {receivedReviews.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
-        </div>
-      )}
-
-      <Typography variant="h6" component="h2" sx={{ mt: 3 }} gutterBottom>
-        Mes avis laissés
-      </Typography>
-      {writtenReviews.length === 0 ? (
-        <p className="profile-empty">Vous n’avez pas encore laissé d’avis.</p>
-      ) : (
-        <div className="profile-reviews-list">
-          {writtenReviews.map((review) => (
-            <ReviewCard key={review.id} review={review} targetUser={findUserById(review.targetUserId)} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

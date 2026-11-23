@@ -9,7 +9,7 @@ import { closeDatabase, query } from '../src/config/database.js';
  */
 export function useEmptyDatabase() {
   beforeEach(async () => {
-    // TRUNCATE vide les tables ; CASCADE vide aussi celles qui en dépendent (produits, avis, likes...).
+    // TRUNCATE vide les tables ; CASCADE vide aussi celles qui en dépendent (produits, likes...).
     await query('TRUNCATE users, licences, tags RESTART IDENTITY CASCADE');
   });
   afterAll(async () => {

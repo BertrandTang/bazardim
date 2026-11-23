@@ -27,26 +27,6 @@
   gap: 16px;
 }
 
-.profile-reviews {
-  background: #fff;
-  border-radius: 0 26px 0 26px;
-  padding: 16px;
-  color: #222;
-}
-
-.profile-reviews-summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.profile-reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 @media (max-width: 768px) {
   .profile-page {
     flex-direction: column;

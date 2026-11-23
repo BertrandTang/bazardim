@@ -9,7 +9,6 @@ import { requestLogger } from './middlewares/requestLogger.js';
 import authRoutes from './routes/auth.routes.js';
 import likesRoutes from './routes/likes.routes.js';
 import productsRoutes from './routes/products.routes.js';
-import reviewsRoutes from './routes/reviews.routes.js';
 import usersRoutes from './routes/users.routes.js';
 
 // L'application est créée ici, sans démarrer le serveur : les tests peuvent ainsi
@@ -47,7 +46,6 @@ app.get('/api/health', async (request, response) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/reviews', reviewsRoutes);
 app.use('/api/likes', likesRoutes);
 app.use('/api', productsRoutes);
 

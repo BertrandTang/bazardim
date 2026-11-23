@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import figuresData from '../src/data/figures.json';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
@@ -6,7 +6,6 @@ import NavBar from '../src/components/NavBar/NavBar.jsx';
 import ProductCard from '../src/components/ProductCard/ProductCard.jsx';
 import ProductForm from '../src/components/ProductForm/ProductForm.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
-import ReviewCard from '../src/components/ReviewCard/ReviewCard.jsx';
 
 const vegeta = figuresData.figures[0]; // FIG001, 59.99 €, vendu par l'utilisateur 101
 
@@ -141,46 +140,5 @@ describe('RequireAuth', () => {
       </RequireAuth>,
     );
     expect(screen.getByText('Page privée')).toBeInTheDocument();
-  });
-});
-
-describe('ReviewCard', () => {
-  const review = {
-    id: 'REV1',
-    targetUserId: '105',
-    authorUserId: '101',
-    authorUsername: 'CollectionneurDu92',
-    rating: 4,
-    comment: 'Vendeur sérieux',
-    createdAt: '2026-01-01T00:00:00.000Z',
-  };
-
-  it('ne propose pas de modifier l’avis d’un autre', () => {
-    renderWithProviders(<ReviewCard review={review} />);
-    expect(screen.getByText('Vendeur sérieux')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
-  });
-
-  it('permet à l’auteur de modifier puis supprimer son avis', async () => {
-    loginAs(101);
-    localStorage.setItem('profileReviews', JSON.stringify([review]));
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    const { user } = renderWithProviders(
-      <ReviewCard review={review} targetUser={{ user_id: 105, username: 'FigurineParadise' }} />,
-    );
-
-    expect(screen.getByRole('link', { name: 'FigurineParadise' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Modifier' }));
-    const form = screen.getByRole('textbox').closest('form');
-    await user.clear(within(form).getByRole('textbox'));
-    await user.click(within(form).getByRole('button', { name: 'Enregistrer' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Le commentaire est obligatoire.');
-
-    await user.type(within(form).getByRole('textbox'), 'Avis corrigé');
-    await user.click(within(form).getByRole('button', { name: 'Enregistrer' }));
-    expect(JSON.parse(localStorage.getItem('profileReviews'))[0].comment).toBe('Avis corrigé');
-
-    await user.click(screen.getByRole('button', { name: 'Supprimer' }));
-    expect(JSON.parse(localStorage.getItem('profileReviews'))).toEqual([]);
   });
 });
