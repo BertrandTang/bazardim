@@ -117,7 +117,10 @@ CREATE TABLE orders (
   -- mais elle n'est plus reliée à une personne (RGPD).
   buyer_id          INTEGER        REFERENCES users (id) ON DELETE SET NULL,
   status            VARCHAR(20)    NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
+  -- Montant payé par l'acheteur = prix des articles + frais de service.
   total_price       NUMERIC(10, 2) NOT NULL CHECK (total_price > 0),
+  -- Frais de service de Bazardim (monétisation), voir src/utils/serviceFee.js.
+  service_fee       NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (service_fee >= 0),
   shipping_address  VARCHAR(300)   NOT NULL,
   -- Identifiant de la session de paiement chez Stripe (cs_test_...).
   stripe_session_id VARCHAR(255)   UNIQUE,

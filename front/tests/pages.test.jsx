@@ -138,13 +138,18 @@ describe('Cart (panier)', () => {
   it('affiche les annonces et le total, retire une annonce et vide le panier', async () => {
     fillCart([1, 2]); // produits 1 (59.99 €) et 2 (74.99 €)
     const { user } = await renderWithProviders(<Cart />);
-    expect(screen.getByText('134.98 €')).toBeInTheDocument();
+    // Ligne du récapitulatif (libellé + montant) : le <div> qui contient le libellé <dt>.
+    const summaryLine = (label) => screen.getByText(label, { selector: 'dt' }).parentElement;
+    expect(summaryLine('Articles')).toHaveTextContent('134.98 €');
+    // Frais de service affichés avant le paiement : 0.70 € + 5 % de 134.98 € (6.75 €) = 7.45 €.
+    expect(summaryLine('Frais de service')).toHaveTextContent('7.45 €');
+    expect(summaryLine('Total')).toHaveTextContent('142.43 €');
     // Pièces uniques : pas de boutons de quantité.
     expect(screen.queryByRole('button', { name: '+' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Retirer Figurine S.H. Figuarts Vegeta/ }));
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
-    expect(screen.getByText('74.99 €', { selector: '.cart-summary-value' })).toBeInTheDocument();
+    expect(summaryLine('Total')).toHaveTextContent('79.44 €'); // 74.99 € + 4.45 € de frais
 
     await user.click(screen.getByRole('button', { name: 'Vider le panier' }));
     expect(screen.getByText('Votre panier est vide.')).toBeInTheDocument();
@@ -434,7 +439,9 @@ describe('Profile (mon profil)', () => {
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
     await user.click(screen.getByRole('button', { name: 'Mes commandes' }));
     expect(await screen.findByRole('heading', { name: /Commande n° 1/ })).toBeInTheDocument();
-    expect(screen.getByText(/^Total/)).toHaveTextContent('174.98 €'); // 74.99 € + 99.99 €
+    // Articles : 74.99 € + 99.99 € = 174.98 € ; frais : 0.70 € + 5 % (8.75 €) = 9.45 €.
+    expect(screen.getByText(/^Frais de service/)).toHaveTextContent('9.45 €');
+    expect(screen.getByText(/^Total/)).toHaveTextContent('184.43 €');
   });
 });
 

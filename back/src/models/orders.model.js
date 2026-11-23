@@ -8,6 +8,7 @@ const ORDER_SELECT = `
     orders.buyer_id,
     orders.status,
     orders.total_price,
+    orders.service_fee,
     orders.shipping_address,
     orders.stripe_session_id,
     orders.created_at,
@@ -30,13 +31,13 @@ const ORDER_SELECT = `
  * Crée une commande "en attente de paiement" et ses articles, dans une transaction
  * (soit tout est enregistré, soit rien). Retourne l'id de la commande.
  */
-export async function insertOrder({ buyerId, shippingAddress, totalPrice, lines }) {
+export async function insertOrder({ buyerId, shippingAddress, totalPrice, serviceFee, lines }) {
   return withTransaction(async (transactionQuery) => {
     const rows = await transactionQuery(
-      `INSERT INTO orders (buyer_id, shipping_address, total_price)
-       VALUES ($1, $2, $3)
+      `INSERT INTO orders (buyer_id, shipping_address, total_price, service_fee)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [buyerId, shippingAddress, totalPrice],
+      [buyerId, shippingAddress, totalPrice, serviceFee],
     );
     const orderId = rows[0].id;
 

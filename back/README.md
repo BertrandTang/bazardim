@@ -57,7 +57,7 @@ Les annonces n'acceptent que des images du site (`/uploads/...` ou les images de
 Le trajet d'une commande :
 
 1. Le front envoie `POST /api/orders` avec les identifiants des annonces du panier (pièces uniques : pas de quantité, **jamais de prix**) et l'adresse de livraison.
-2. Le back relit les prix dans la base, calcule le total, enregistre la commande « en attente » (`pending`) et crée une **session Stripe Checkout**. Il renvoie l'adresse de la page de paiement (`checkout_url`).
+2. Le back relit les prix dans la base, calcule les **frais de service** (0,70 € + 5 % du prix des articles, `src/utils/serviceFee.js`) et le total, enregistre la commande « en attente » (`pending`) et crée une **session Stripe Checkout**. Il renvoie l'adresse de la page de paiement (`checkout_url`).
 3. Le front redirige l'acheteur vers cette page, hébergée par Stripe : la carte bancaire ne passe jamais par notre serveur.
 4. Après le paiement, Stripe renvoie l'acheteur sur `/commande/confirmation?order_id=...`. La commande passe à `paid`, et ses produits sont marqués **vendus** (`sold_at`, ils ne peuvent plus être commandés). Cela se fait de deux façons :
    - **webhook** : Stripe appelle `POST /api/stripe/webhook` (signature vérifiée avec `STRIPE_WEBHOOK_SECRET`). C'est la méthode fiable, même si l'acheteur ferme son navigateur ;
@@ -65,6 +65,8 @@ Le trajet d'une commande :
 
 En local, pour recevoir aussi le webhook, installer la [Stripe CLI](https://docs.stripe.com/stripe-cli) puis lancer
 `stripe listen --forward-to localhost:3000/api/stripe/webhook` : elle affiche un secret `whsec_...` à copier dans `STRIPE_WEBHOOK_SECRET`.
+
+**Monétisation** : Bazardim gagne de l'argent grâce aux frais de service payés par l'acheteur. Ils sont affichés dans le panier avant le paiement, envoyés à Stripe comme une ligne à part (« Frais de service Bazardim ») et enregistrés dans `orders.service_fee`. Évolution prévue pour une vraie marketplace : **Stripe Connect**, qui reverse automatiquement le prix de l'annonce au vendeur et garde la commission (`application_fee_amount`).
 
 Carte de test : `4242 4242 4242 4242`, n'importe quelle date future et n'importe quel CVC. Seules les clés `sk_test_` sont acceptées par la configuration.
 

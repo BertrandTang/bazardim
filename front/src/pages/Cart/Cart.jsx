@@ -8,9 +8,10 @@ import useLocalStorageState from '../../hooks/useLocalStorageState.js';
 import { createOrder } from '../../services/api.js';
 import { redirectTo } from '../../utils/redirect.js';
 import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
+import { computeServiceFee, SERVICE_FEE_DESCRIPTION } from '../../utils/serviceFee.js';
 import './Cart.css';
 
-/** Page panier : liste des articles, modification des quantités et total de la commande. */
+/** Page panier : liste des articles, adresse de livraison et total de la commande (frais de service compris). */
 export default function Cart() {
   const { currentUser } = useAuth();
   const { cartProducts, totalPrice, removeFromCart, clearCart } = useCart();
@@ -19,6 +20,8 @@ export default function Cart() {
   const [orderError, setOrderError] = useState('');
   // Vrai pendant la création de la commande : évite un double clic sur "Commander".
   const [isOrdering, setIsOrdering] = useState(false);
+  // Frais de service ajoutés au prix des articles (voir utils/serviceFee.js).
+  const serviceFee = computeServiceFee(totalPrice);
 
   /**
    * Crée la commande puis envoie l'utilisateur sur la page de paiement de Stripe.
@@ -95,8 +98,21 @@ export default function Cart() {
       </section>
 
       <div className="cart-summary">
-        <span className="cart-summary-label">Total commande</span>
-        <span className="cart-summary-value">{formatPrice(totalPrice)}</span>
+        {/* Détail du prix : <dl> (liste de définitions) associe chaque libellé (dt) à son montant (dd). */}
+        <dl className="cart-summary-lines">
+          <div>
+            <dt>Articles</dt>
+            <dd>{formatPrice(totalPrice)}</dd>
+          </div>
+          <div>
+            <dt>Frais de service</dt>
+            <dd>{formatPrice(serviceFee)}</dd>
+          </div>
+          <div className="cart-summary-total">
+            <dt>Total</dt>
+            <dd>{formatPrice(totalPrice + serviceFee)}</dd>
+          </div>
+        </dl>
         {currentUser ? (
           <button
             type="button"
@@ -121,6 +137,7 @@ export default function Cart() {
           {orderError}
         </p>
       )}
+      <p className="cart-hint">Frais de service Bazardim : {SERVICE_FEE_DESCRIPTION}.</p>
       <p className="cart-hint">
         Paiement sécurisé par Stripe (mode test : carte <code>4242 4242 4242 4242</code>, date future, CVC au choix).
       </p>

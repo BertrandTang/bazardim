@@ -1,6 +1,7 @@
 import { config } from '../config/config.js';
 import { stripe } from '../config/stripe.js';
 import { HttpError } from '../utils/errors.js';
+import { computeServiceFeeInCents } from '../utils/serviceFee.js';
 import { idSchema } from '../validators/common.validator.js';
 import { createOrderSchema } from '../validators/orders.validator.js';
 import {
@@ -63,12 +64,14 @@ export async function createOrder(request, response) {
     lines.push({ productId: product.id, productTitle: product.title, price: product.price });
   }
 
-  // 2. Total calculé côté serveur, en centimes.
-  const totalInCents = lines.reduce((total, line) => total + toCents(line.price), 0);
+  // 2. Montants calculés côté serveur, en centimes : prix des articles + frais de service.
+  const itemsTotalInCents = lines.reduce((total, line) => total + toCents(line.price), 0);
+  const serviceFeeInCents = computeServiceFeeInCents(itemsTotalInCents);
   const orderId = await insertOrder({
     buyerId: request.user.id,
     shippingAddress,
-    totalPrice: totalInCents / 100,
+    totalPrice: (itemsTotalInCents + serviceFeeInCents) / 100,
+    serviceFee: serviceFeeInCents / 100,
     lines,
   });
 
@@ -78,14 +81,25 @@ export async function createOrder(request, response) {
   try {
     session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      line_items: lines.map((line) => ({
-        quantity: 1, // pièce unique
-        price_data: {
-          currency: 'eur',
-          unit_amount: toCents(line.price),
-          product_data: { name: line.productTitle },
+      line_items: [
+        ...lines.map((line) => ({
+          quantity: 1, // pièce unique
+          price_data: {
+            currency: 'eur',
+            unit_amount: toCents(line.price),
+            product_data: { name: line.productTitle },
+          },
+        })),
+        // Dernière ligne : les frais de service, affichés à part sur la page de paiement.
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'eur',
+            unit_amount: serviceFeeInCents,
+            product_data: { name: 'Frais de service Bazardim' },
+          },
         },
-      })),
+      ],
       customer_email: request.user.email,
       // Permet de retrouver la commande à partir de la session Stripe.
       client_reference_id: String(orderId),

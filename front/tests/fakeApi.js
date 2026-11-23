@@ -5,6 +5,7 @@
 // mais elles lisent et modifient des données gardées en mémoire (copiées de fixtures.js).
 // Les règles importantes de la vraie API sont reproduites (connexion, droits du propriétaire...).
 // La vraie API est testée de son côté, dans back/tests/.
+import { computeServiceFee } from '../src/utils/serviceFee.js';
 import { PRODUCTS, TEST_PASSWORD, USERS } from './fixtures.js';
 
 export class ApiError extends Error {
@@ -258,12 +259,14 @@ export async function createOrder({ product_ids: productIds, shipping_address: s
     }
     return { product_id: product.id, product_title: product.title, price: product.price };
   });
-  const totalInCents = orderItems.reduce((total, item) => total + Math.round(item.price * 100), 0);
+  const itemsTotalInCents = orderItems.reduce((total, item) => total + Math.round(item.price * 100), 0);
+  const serviceFee = computeServiceFee(itemsTotalInCents / 100);
   const order = {
     id: nextId(database.orders),
     buyer_id: user.id,
     status: 'pending',
-    total_price: totalInCents / 100,
+    service_fee: serviceFee,
+    total_price: (itemsTotalInCents + Math.round(serviceFee * 100)) / 100,
     shipping_address: shippingAddress,
     created_at: new Date().toISOString(),
     paid_at: null,

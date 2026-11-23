@@ -55,9 +55,14 @@
   white-space: nowrap;
 }
 
+.order-summary-fee,
 .order-summary-address,
 .order-summary-total {
   margin: 0;
+}
+
+.order-summary-fee {
+  color: #555;
 }
 
 .order-summary-total {
