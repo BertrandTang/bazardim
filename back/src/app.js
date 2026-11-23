@@ -2,9 +2,11 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
 import { config } from './config/config.js';
 import { query } from './config/database.js';
 import { handleStripeWebhook } from './controllers/orders.controller.js';
+import { openApiDocument } from './docs/openapi.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { requestLogger } from './middlewares/requestLogger.js';
 import authRoutes from './routes/auth.routes.js';
@@ -49,6 +51,12 @@ app.get('/api/health', async (request, response) => {
   await query('SELECT 1');
   response.json({ status: 'ok' });
 });
+
+// Documentation de l'API (OpenAPI / Swagger, voir docs/openapi.js) :
+// - /api/docs      : page interactive pour lire et essayer chaque route ;
+// - /api/docs.json : la même description au format JSON, lisible par d'autres outils.
+app.get('/api/docs.json', (request, response) => response.json(openApiDocument));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument, { customSiteTitle: 'API Bazardim' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);

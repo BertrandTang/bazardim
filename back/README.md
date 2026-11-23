@@ -87,6 +87,7 @@ back/
 │   ├── controllers/        Règles métier : droits, codes HTTP (ex : products.controller.js)
 │   ├── models/             Requêtes SQL vers la base (ex : products.model.js)
 │   ├── validators/         Validation des données reçues avec zod (ex : products.validator.js)
+│   ├── docs/               Documentation OpenAPI de l'API (affichée par Swagger UI sur /api/docs)
 │   ├── middlewares/        Authentification (requireAuth), journal des requêtes, gestion des erreurs
 │   └── utils/              Hachage des mots de passe, classe HttpError
 └── tests/                  Un fichier de test par ressource (auth, users, products...)
@@ -96,6 +97,8 @@ Organisation **MVC** classique (la « vue » est le JSON renvoyé). Le trajet d'
 **route** → `requireAuth` (si protégée) → **contrôleur** (valide les données avec le **validateur**, vérifie les droits) → **modèle** (SQL) → réponse JSON. En cas d'erreur, le contrôleur lance une `HttpError` et `errorHandler` répond.
 
 ## Routes de l'API
+
+**Documentation interactive (Swagger)** : [http://localhost:3000/api/docs](http://localhost:3000/api/docs), API lancée. Chaque route y est décrite (paramètres, corps, réponses) et peut être essayée avec « Try it out ». La même description au format standard OpenAPI 3 (JSON) est disponible sur `/api/docs.json`, pour d'autres outils (Postman, Insomnia, générateurs de clients…). Elle est écrite dans `src/docs/openapi.js`.
 
 Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+ `details` par champ pour une erreur de validation 400).
 🔒 = connexion requise (cookie envoyé avec `credentials: 'include'` côté front).
