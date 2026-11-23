@@ -28,11 +28,9 @@ app.use(helmet());
 // `credentials: true` autorise l'envoi du cookie de connexion.
 app.use(cors({ origin: config.FRONT_URL, credentials: true }));
 
-// Journal de chaque requête dans le terminal (voir middlewares/requestLogger.js).
-// Désactivé pendant les tests pour garder une sortie lisible.
-if (!config.isTest) {
-  app.use(requestLogger);
-}
+// Journal de chaque requête (voir middlewares/requestLogger.js et config/logger.js).
+// Pendant les tests, winston est réglé en mode silencieux : rien n'est affiché.
+app.use(requestLogger);
 
 // Webhook Stripe : déclaré AVANT express.json, car il a besoin du corps brut (non transformé)
 // de la requête pour vérifier la signature de Stripe.

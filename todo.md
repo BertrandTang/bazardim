@@ -140,7 +140,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Validation de toutes les entrées avec **zod** ; requêtes SQL paramétrées (anti-injection).
 - [x] Authentification : JWT dans un cookie `httpOnly` + `SameSite=Lax` (+ `secure` en production).
 - [x] Contrôle d'accès : propriétaire ou admin pour modifier / supprimer une annonce.
-- [x] Journal des requêtes avec un middleware maison (`src/middlewares/requestLogger.js`), route `/api/health` pour la supervision.
+- [x] Journalisation avec **winston** (`src/config/logger.js`) : niveaux info / warn / error, erreurs écrites dans `back/logs/errors.log` ; middleware `src/middlewares/requestLogger.js` pour une ligne par requête ; route `/api/health` pour la supervision.
 - [x] Configuration validée au démarrage (`src/config/config.js`), `.env` ignoré par Git, `.env.example` fourni.
 - [ ] Stratégie de **sauvegarde / restauration** de la base (`pg_dump` planifié) à décrire et tester (C9, C32).
 - [ ] **Authentification forte** (citée dans la C21) : au minimum, savoir l'expliquer au jury (2FA par code e-mail ou application TOTP) ; idéalement, l'implémenter pour les administrateurs.

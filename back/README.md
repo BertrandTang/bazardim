@@ -39,7 +39,7 @@ Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@exa
 - **zod** : validation de tout ce qui entre dans l'API (corps, paramètres d'URL, configuration).
 - **Authentification** : mot de passe haché avec **bcrypt**, jeton **JWT** rangé dans un cookie `httpOnly` + `SameSite=Lax` (inaccessible au JavaScript de la page).
 - **Sécurité** : `helmet` (en-têtes HTTP), CORS limité au front, limitation du nombre de tentatives de connexion, contrôle du propriétaire sur chaque modification, contraintes en base (`CHECK`, `UNIQUE`, clés étrangères).
-- **Journalisation** : un middleware maison (`middlewares/requestLogger.js`) affiche chaque requête dans le terminal (méthode, adresse, code de réponse, durée) ; les erreurs inattendues sont affichées par `errorHandler`.
+- **Journalisation (winston)** : le journal est configuré dans `config/logger.js`, avec trois niveaux (`info`, `warn`, `error`) et la date sur chaque ligne. Le middleware `middlewares/requestLogger.js` écrit une ligne par requête (méthode, adresse, code de réponse, durée) : `info` si tout va bien, `warn` pour un 4xx, `error` pour un 5xx. Les erreurs inattendues sont journalisées par `errorHandler` avec leur pile d'appels. Tout s'affiche dans le terminal, et les erreurs sont aussi écrites dans `back/logs/errors.log` (ignoré par git). Aucun log pendant les tests.
 - **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test. Stripe est simulé (`vi.mock`) : les tests ne l'appellent jamais.
 
 ## Images (multer)
@@ -80,7 +80,7 @@ back/
 ├── src/
 │   ├── server.js           Démarre le serveur HTTP
 │   ├── app.js              Middlewares (sécurité, logs, JSON) + branchement des routes
-│   ├── config/             Variables d'environnement (config.js), connexion PostgreSQL (database.js)
+│   ├── config/             Variables d'environnement (config.js), connexion PostgreSQL (database.js), journal winston (logger.js)
 │   ├── routes/             URL → fonction du contrôleur (ex : products.routes.js)
 │   ├── controllers/        Règles métier : droits, codes HTTP (ex : products.controller.js)
 │   ├── models/             Requêtes SQL vers la base (ex : products.model.js)
