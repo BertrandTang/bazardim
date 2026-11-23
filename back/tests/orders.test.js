@@ -153,6 +153,35 @@ describe('Commandes et paiement Stripe', () => {
     expect(response.body.error).toContain('vient d’être vendu');
   });
 
+  it('une fois vendue, le vendeur voit l’acheteur et ne peut plus modifier l’annonce', async () => {
+    const context = await createSellerAndBuyer();
+    const { order_id: orderId } = (await placeOrder(context)).body;
+
+    // Avant le paiement : aucune vente.
+    expect((await context.seller.agent.get('/api/orders/sales').expect(200)).body).toEqual([]);
+
+    stripe.checkout.sessions.retrieve.mockResolvedValue({ payment_status: 'paid' });
+    await context.buyer.agent.get(`/api/orders/${orderId}`).expect(200);
+
+    // Le vendeur voit le pseudo de l'acheteur pour ses deux annonces.
+    const sales = (await context.seller.agent.get('/api/orders/sales').expect(200)).body;
+    expect(sales).toHaveLength(2);
+    expect(sales[0]).toMatchObject({ buyer_id: context.buyer.user.id, buyer_username: context.buyer.user.username });
+    expect(sales.map((sale) => sale.product_id).sort()).toEqual(
+      [context.firstProduct.id, context.secondProduct.id].sort(),
+    );
+
+    // L'acheteur, lui, n'a rien vendu.
+    expect((await context.buyer.agent.get('/api/orders/sales')).body).toEqual([]);
+
+    // L'annonce vendue ne peut plus être modifiée.
+    const response = await context.seller.agent
+      .put(`/api/products/${context.firstProduct.id}`)
+      .send(buildProduct({ title: 'Nouveau titre' }))
+      .expect(409);
+    expect(response.body.error).toContain('ne peut plus être modifiée');
+  });
+
   it('une commande n’est visible que par son acheteur', async () => {
     const context = await createSellerAndBuyer();
     const { order_id: orderId } = (await placeOrder(context)).body;

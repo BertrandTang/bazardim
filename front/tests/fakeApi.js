@@ -191,6 +191,9 @@ export async function createProduct(productFields) {
 export async function updateProduct(productId, productFields) {
   const product = findProduct(productId);
   checkOwner(product, getLoggedInUser());
+  if (product.sold_at) {
+    throw new ApiError(409, 'Cette annonce est vendue : elle ne peut plus être modifiée.');
+  }
   Object.assign(product, productFields);
   return structuredClone(product);
 }
@@ -273,6 +276,26 @@ export async function createOrder({ product_ids: productIds, shipping_address: s
 export async function fetchOrders() {
   const user = getLoggedInUser();
   return structuredClone(database.orders.filter((order) => order.buyer_id === user.id));
+}
+
+/** Ventes : pour chaque annonce de l'utilisateur dans une commande payée, l'acheteur. */
+export async function fetchSales() {
+  const user = getLoggedInUser();
+  const sales = [];
+  for (const order of database.orders.filter((candidate) => candidate.status === 'paid')) {
+    for (const item of order.items) {
+      if (findProduct(item.product_id).owner_id === user.id) {
+        const buyer = database.users.find((candidate) => candidate.id === order.buyer_id);
+        sales.push({
+          product_id: item.product_id,
+          buyer_id: order.buyer_id,
+          buyer_username: buyer.username,
+          paid_at: order.paid_at,
+        });
+      }
+    }
+  }
+  return sales;
 }
 
 export async function fetchOrder(orderId) {

@@ -126,6 +126,7 @@ Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+
 | PATCH 🔒  | `/api/messages/:id/read`     | Marquer un message reçu comme lu (destinataire uniquement)                                            |
 | POST 🔒   | `/api/orders`                | Commander `{ product_ids: [3, 8], shipping_address }` → `{ order_id, checkout_url }`                  |
 | GET 🔒    | `/api/orders`                | Mes commandes (avec leurs articles)                                                                   |
+| GET 🔒    | `/api/orders/sales`          | Mes ventes : pour chaque annonce vendue, l'acheteur (`buyer_id`, `buyer_username`) et la date         |
 | GET 🔒    | `/api/orders/:id`            | Une de mes commandes (vérifie le paiement auprès de Stripe si elle est en attente)                    |
 | POST      | `/api/stripe/webhook`        | Réservée à Stripe (signature vérifiée) : confirme un paiement                                         |
 

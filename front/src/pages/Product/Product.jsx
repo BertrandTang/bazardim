@@ -136,6 +136,7 @@ export default function Product() {
 
         <div className="product-detail-media">
           <img src={getProductImage(product)} alt={product.title} />
+          {product.sold_at && <span className="product-sold-badge">Vendu</span>}
         </div>
 
         <SellerLink userId={product.owner_id} username={product.owner_username} />
@@ -151,7 +152,8 @@ export default function Product() {
           ))}
         </div>
 
-        {isOwner && isEditing ? (
+        {/* Une annonce vendue ne peut plus être modifiée (l'API le refuse aussi). */}
+        {isOwner && isEditing && !product.sold_at ? (
           <ProductForm
             initialProduct={product}
             submitLabel="Enregistrer"
@@ -173,12 +175,13 @@ export default function Product() {
 
             <div className="product-detail-bottom">
               <span className="product-price">{formatPrice(product.price)}</span>
-              {product.sold_at && <span className="product-sold-badge">Vendu</span>}
               {isOwner ? (
                 <>
-                  <Button variant="contained" className="button-gradient" onClick={() => setIsEditing(true)}>
-                    Modifier
-                  </Button>
+                  {!product.sold_at && (
+                    <Button variant="contained" className="button-gradient" onClick={() => setIsEditing(true)}>
+                      Modifier
+                    </Button>
+                  )}
                   <Button variant="outlined" color="error" onClick={handleDelete}>
                     Supprimer
                   </Button>

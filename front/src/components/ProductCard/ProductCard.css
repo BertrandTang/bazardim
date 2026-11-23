@@ -121,6 +121,19 @@
   gap: 8px;
 }
 
+/* "Vendu à <pseudo>" : remplace le bouton Modifier sur une annonce vendue. */
+.product-sold-to {
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
+  overflow-wrap: anywhere; /* un pseudo très long passe à la ligne au lieu de déborder */
+}
+
+.product-sold-to a {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
 .product-edit-button,
 .product-delete-button {
   border: none;

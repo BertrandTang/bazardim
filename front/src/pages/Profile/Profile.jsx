@@ -10,7 +10,7 @@ import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
-import { fetchOrders } from '../../services/api.js';
+import { fetchOrders, fetchSales } from '../../services/api.js';
 import './Profile.css';
 
 // Onglets du menu latéral. `component` est le composant affiché quand l'onglet est actif
@@ -172,9 +172,23 @@ function MyProductsSection() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { products, deleteProduct } = useProducts();
-  const [deleteError, setDeleteError] = useState('');
+  const [sales, setSales] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const myProducts = products.filter((product) => product.owner_id === currentUser.id);
+
+  // Ventes (qui a acheté quelle annonce), chargées à l'ouverture de l'onglet.
+  // Le pseudo de l'acheteur n'est connu que du vendeur : il ne fait pas partie de l'annonce publique.
+  useEffect(() => {
+    fetchSales()
+      .then((loadedSales) => setSales(loadedSales))
+      .catch((error) => setErrorMessage(error.message));
+  }, []);
+
+  /** La vente d'une annonce (undefined si elle n'est pas vendue). */
+  function findSale(productId) {
+    return sales.find((sale) => sale.product_id === productId);
+  }
 
   async function handleDelete(product) {
     if (!window.confirm(`Supprimer l'annonce « ${product.title} » ?`)) {
@@ -182,9 +196,9 @@ function MyProductsSection() {
     }
     try {
       await deleteProduct(product.id);
-      setDeleteError('');
+      setErrorMessage('');
     } catch (error) {
-      setDeleteError(error.message);
+      setErrorMessage(error.message);
     }
   }
 
@@ -193,7 +207,7 @@ function MyProductsSection() {
       <Button className="button-gradient profile-add-product" variant="contained" onClick={() => navigate('/vendre')}>
         Ajouter un produit en vente
       </Button>
-      {deleteError && <Alert severity="error">{deleteError}</Alert>}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
       {myProducts.length === 0 ? (
         <p className="profile-empty">Vous n’avez encore aucune annonce.</p>
       ) : (
@@ -202,6 +216,7 @@ function MyProductsSection() {
             <ProductCard
               key={product.id}
               product={product}
+              sale={findSale(product.id)}
               onEdit={() => navigate(`/product/${product.id}?edit=1`)}
               onDelete={handleDelete}
             />

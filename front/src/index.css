@@ -117,6 +117,7 @@ button {
   font-size: 20px;
   font-weight: 700;
   color: var(--color-accent);
+  white-space: nowrap; /* le prix reste toujours sur une seule ligne */
 }
 
 /* Bouton Material UI aux couleurs de la marque.
@@ -135,20 +136,19 @@ button {
   font-weight: 700;
 }
 
-/* Badge "Vendu" : sur les cartes produit et la page d'un produit. */
+/* Bandeau "Vendu" : en travers de l'image, sur toute sa largeur (cartes produit et page d'un produit).
+   Le conteneur de l'image doit être en "position: relative" pour que le bandeau se place par rapport à lui. */
 .product-sold-badge {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: #333;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.product-image .product-sold-badge {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%); /* centré verticalement */
+  padding: 8px 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
 }

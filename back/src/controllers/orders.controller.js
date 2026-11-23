@@ -7,6 +7,7 @@ import {
   deleteOrderById,
   findOrderById,
   findOrdersByBuyer,
+  findSalesBySeller,
   insertOrder,
   markOrderAsPaid,
   setOrderStripeSession,
@@ -106,6 +107,14 @@ export async function createOrder(request, response) {
 export async function listOrders(request, response) {
   const orders = await findOrdersByBuyer(request.user.id);
   response.json(orders.map(toOrderResponse));
+}
+
+/**
+ * GET /api/orders/sales — ventes de l'utilisateur connecté : qui a acheté chacune de ses annonces.
+ * Seul le vendeur voit le pseudo de l'acheteur (il n'apparaît pas sur l'annonce publique).
+ */
+export async function listSales(request, response) {
+  response.json(await findSalesBySeller(request.user.id));
 }
 
 /**
