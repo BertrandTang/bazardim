@@ -368,9 +368,11 @@ describe('Profile (mon profil)', () => {
     await user.type(within(dialog).getByLabelText('Mot de passe actuel'), 'mauvais');
     await user.type(within(dialog).getByLabelText(/Écrivez SUPPRIMER/), 'supprimer');
     expect(deleteButton).toBeDisabled();
+    expect(within(dialog).getByText('Écrivez exactement SUPPRIMER, en majuscules.')).toBeInTheDocument();
 
+    // Un espace tapé en trop après le mot est accepté.
     await user.clear(within(dialog).getByLabelText(/Écrivez SUPPRIMER/));
-    await user.type(within(dialog).getByLabelText(/Écrivez SUPPRIMER/), 'SUPPRIMER');
+    await user.type(within(dialog).getByLabelText(/Écrivez SUPPRIMER/), 'SUPPRIMER ');
     expect(deleteButton).toBeEnabled();
 
     // Mauvais mot de passe : refus de l'API, le compte existe toujours.
