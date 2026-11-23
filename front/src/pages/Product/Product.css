@@ -19,6 +19,7 @@
 }
 
 .product-detail-media {
+  position: relative; /* pour placer le bandeau "Vendu" sur l'image */
   height: 420px;
   background: #fff;
   border-radius: 0 40px 0 40px;

@@ -98,3 +98,25 @@ export async function findOrdersByBuyer(buyerId) {
     [buyerId],
   );
 }
+
+/**
+ * Ventes d'un vendeur : pour chacune de ses annonces vendues (commande payée), qui l'a achetée et quand.
+ * LEFT JOIN sur users : si l'acheteur a supprimé son compte (buyer_id vide), la vente reste listée,
+ * avec un pseudo vide.
+ */
+export async function findSalesBySeller(sellerId) {
+  return query(
+    `SELECT
+       order_items.product_id,
+       orders.buyer_id,
+       users.username AS buyer_username,
+       orders.paid_at
+     FROM order_items
+     JOIN orders ON orders.id = order_items.order_id
+     JOIN products ON products.id = order_items.product_id
+     LEFT JOIN users ON users.id = orders.buyer_id
+     WHERE products.owner_id = $1 AND orders.status = 'paid'
+     ORDER BY orders.paid_at DESC`,
+    [sellerId],
+  );
+}

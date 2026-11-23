@@ -234,6 +234,15 @@ describe('Product (fiche produit)', () => {
     expect(screen.queryByRole('button', { name: 'AJOUTER' })).not.toBeInTheDocument();
   });
 
+  it('n’ouvre pas le formulaire de modification d’une annonce vendue', async () => {
+    markFakeProductAsSold(1);
+    loginAs(1); // propriétaire du produit 1
+    await renderWithProviders(<Product />, { route: '/product/1?edit=1', path: '/product/:id' });
+    expect(screen.queryByRole('button', { name: 'Enregistrer' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
+    expect(screen.getByText('Vendu')).toBeInTheDocument();
+  });
+
   it('indique un produit introuvable', async () => {
     await renderWithProviders(<Product />, { route: '/product/999', path: '/product/:id' });
     expect(screen.getByRole('heading', { name: 'Produit introuvable' })).toBeInTheDocument();
@@ -355,6 +364,23 @@ describe('Profile (mon profil)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
     expect(screen.getByRole('heading', { name: 'Figurine S.H. Figuarts Luffy' })).toBeInTheDocument();
+  });
+
+  it('une annonce vendue affiche son acheteur et ne peut plus être modifiée', async () => {
+    // L'utilisateur 2 achète et paie le produit 1 (Vegeta), qui appartient à l'utilisateur 1.
+    loginAs(2);
+    const { order_id: orderId } = await createOrder({ product_ids: [1], shipping_address: '1 rue de Paris' });
+    markFakeOrderAsPaid(orderId);
+
+    loginAs(1);
+    const { user } = await renderWithProviders(profilePage);
+    await user.click(screen.getByRole('button', { name: 'Mes produits' }));
+
+    const soldCard = screen.getByRole('heading', { name: PRODUCTS[0].title }).closest('article');
+    expect(within(soldCard).getByText('Vendu')).toBeInTheDocument();
+    expect(within(soldCard).getByRole('link', { name: 'FigurineParadise' })).toHaveAttribute('href', '/user/2');
+    expect(within(soldCard).queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
+    expect(within(soldCard).getByRole('button', { name: 'Supprimer' })).toBeInTheDocument();
   });
 
   it('supprime le compte après avoir écrit SUPPRIMER et donné son mot de passe', async () => {
