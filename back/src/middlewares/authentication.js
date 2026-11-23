@@ -31,15 +31,13 @@ export function clearAuthCookie(response) {
 }
 
 /**
- * Middleware qui protège une route : il vérifie le jeton du cookie puis place
- * l'utilisateur connecté dans `request.user`. Sinon, il répond 401.
- *
- * Utilisation : router.post('/products', requireAuth, createProduct);
+ * Lit le cookie de connexion et retrouve l'utilisateur connecté.
+ * Retourne { user } si la session est valide, sinon { user: null, reason } avec la raison.
  */
-export async function requireAuth(request, response, next) {
+async function readSession(request) {
   const token = request.cookies[AUTH_COOKIE_NAME];
   if (!token) {
-    throw new HttpError(401, 'Vous devez être connecté.');
+    return { user: null, reason: 'Vous devez être connecté.' };
   }
 
   let payload;
@@ -47,17 +45,36 @@ export async function requireAuth(request, response, next) {
     // verify() contrôle la signature (le jeton n'a pas été modifié) et la date d'expiration.
     payload = jwt.verify(token, config.JWT_SECRET);
   } catch {
-    throw new HttpError(401, 'Session expirée ou invalide, reconnectez-vous.');
+    return { user: null, reason: 'Session expirée ou invalide, reconnectez-vous.' };
   }
 
   // On relit l'utilisateur en base : un compte supprimé ne doit plus avoir accès.
   const user = await findUserById(payload.sub);
   if (!user) {
-    throw new HttpError(401, 'Ce compte n’existe plus.');
+    return { user: null, reason: 'Ce compte n’existe plus.' };
   }
+  return { user };
+}
 
+/**
+ * Middleware qui protège une route : il vérifie le jeton du cookie puis place
+ * l'utilisateur connecté dans `request.user`. Sinon, il répond 401.
+ *
+ * Utilisation : router.post('/products', requireAuth, createProduct);
+ */
+export async function requireAuth(request, response, next) {
+  const { user, reason } = await readSession(request);
+  if (!user) {
+    throw new HttpError(401, reason);
+  }
   request.user = user;
   next();
+}
+
+/** Utilisateur connecté, ou null pour un visiteur (sans lever d'erreur). */
+export async function findLoggedInUser(request) {
+  const { user } = await readSession(request);
+  return user;
 }
 
 /** Vrai si l'utilisateur est le propriétaire de la ressource, ou un administrateur. */

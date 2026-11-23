@@ -72,17 +72,9 @@ function buildErrorMessage(data, status) {
 
 // ----- Comptes et connexion -----
 
-/** Utilisateur connecté, ou null si personne n'est connecté. */
-export async function fetchCurrentUser() {
-  try {
-    return await request('/auth/me');
-  } catch (error) {
-    // 401 = pas de cookie de connexion valide : ce n'est pas une erreur, juste un visiteur.
-    if (error.status === 401) {
-      return null;
-    }
-    throw error;
-  }
+/** Utilisateur connecté, ou null si personne n'est connecté (l'API renvoie null pour un visiteur). */
+export function fetchCurrentUser() {
+  return request('/auth/me');
 }
 
 export function login(email, password) {

@@ -55,8 +55,8 @@ describe('services/api.js', () => {
     await expect(api.fetchProducts()).rejects.toThrow('Impossible de joindre le serveur');
   });
 
-  it('considère un visiteur non connecté (401) comme "personne", sans erreur', async () => {
-    mockFetchResponse(401, { error: 'Vous devez être connecté.' });
+  it('renvoie null pour un visiteur, et une erreur si le serveur échoue', async () => {
+    mockFetchResponse(200, null);
     await expect(api.fetchCurrentUser()).resolves.toBeNull();
 
     mockFetchResponse(500, { error: 'Erreur interne du serveur.' });

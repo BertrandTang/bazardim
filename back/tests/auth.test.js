@@ -75,17 +75,21 @@ describe('GET /api/auth/me et POST /api/auth/logout', () => {
     expect(response.body.id).toBe(user.id);
   });
 
-  it('répond 401 sans cookie', async () => {
-    await anonymous().get('/api/auth/me').expect(401);
+  it('renvoie null pour un visiteur (sans cookie) : ce n’est pas une erreur', async () => {
+    const response = await anonymous().get('/api/auth/me').expect(200);
+    expect(response.body).toBeNull();
   });
 
-  it('répond 401 avec un jeton falsifié', async () => {
-    await anonymous().get('/api/auth/me').set('Cookie', 'bazardim_token=faux.jeton.signature').expect(401);
+  it('renvoie null avec un jeton falsifié, et une route protégée répond 401', async () => {
+    const forgedCookie = 'bazardim_token=faux.jeton.signature';
+    expect((await anonymous().get('/api/auth/me').set('Cookie', forgedCookie).expect(200)).body).toBeNull();
+    const response = await anonymous().get('/api/likes').set('Cookie', forgedCookie).expect(401);
+    expect(response.body.error).toContain('Session expirée');
   });
 
   it('déconnecte : le cookie est supprimé', async () => {
     const { agent } = await createLoggedInUser();
     await agent.post('/api/auth/logout').expect(204);
-    await agent.get('/api/auth/me').expect(401);
+    expect((await agent.get('/api/auth/me').expect(200)).body).toBeNull();
   });
 });

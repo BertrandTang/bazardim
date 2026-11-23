@@ -1,5 +1,5 @@
 import { HttpError } from '../utils/errors.js';
-import { clearAuthCookie, setAuthCookie } from '../middlewares/authentication.js';
+import { clearAuthCookie, findLoggedInUser, setAuthCookie } from '../middlewares/authentication.js';
 import { hashPassword, verifyPassword } from '../utils/passwords.js';
 import { findCredentialsByEmail, findUserById, insertUser } from '../models/users.model.js';
 import { loginSchema, registerSchema } from '../validators/auth.validator.js';
@@ -35,7 +35,13 @@ export function logout(request, response) {
   response.status(204).end();
 }
 
-/** GET /api/auth/me — renvoie l'utilisateur connecté (placé dans request.user par requireAuth). */
-export function getCurrentUser(request, response) {
-  response.json(request.user);
+/**
+ * GET /api/auth/me — renvoie l'utilisateur connecté, ou null pour un visiteur.
+ *
+ * Le front appelle cette route à chaque ouverture du site pour savoir si quelqu'un est connecté.
+ * Un visiteur n'est pas une erreur : on répond 200 avec null plutôt que 401
+ * (sinon le navigateur affiche une erreur rouge dans la console à chaque visite).
+ */
+export async function getCurrentUser(request, response) {
+  response.json(await findLoggedInUser(request));
 }

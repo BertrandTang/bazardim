@@ -107,9 +107,13 @@ export const openApiDocument = {
     '/api/auth/me': {
       get: {
         tags: ['Authentification'],
-        summary: 'Compte de l’utilisateur connecté',
-        security: requiresLogin,
-        responses: { 200: jsonResponse('Compte', reference('Account')), 401: notLoggedIn },
+        summary: 'Compte de l’utilisateur connecté (null pour un visiteur)',
+        responses: {
+          200: jsonResponse('Compte de l’utilisateur connecté, ou null si personne n’est connecté', {
+            allOf: [reference('Account')],
+            nullable: true,
+          }),
+        },
       },
     },
 
