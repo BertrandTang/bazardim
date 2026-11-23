@@ -12,6 +12,14 @@
   font-size: 1.25rem;
 }
 
+/* Encadré d'avertissement en haut des conditions générales (site de démonstration). */
+.legal-notice {
+  padding: 12px 16px;
+  border-left: 4px solid var(--color-primary);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
 .legal-update {
   color: #666;
   font-size: 14px;

@@ -71,7 +71,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Commande | Acheter sa propre annonce | Message de refus de l'API | Intégration | `pages.test.jsx` |
 | Paiement | Retour de Stripe : en attente puis payé | « Vérifier à nouveau », puis « Merci », panier vidé | Intégration | `pages.test.jsx` |
 | Commande | Commande inconnue / onglet « Mes commandes » | « Commande introuvable » / liste avec le total | Intégration | `pages.test.jsx` |
-| Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur (401) | Message lisible, pas de plantage | Unitaire | `api.test.js` |
+| Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur non connecté | Message lisible, pas de plantage ; visiteur = `null` | Unitaire | `api.test.js` |
 | Panier | Ajouter deux fois la même annonce | Ajoutée une seule fois, bouton « DANS LE PANIER » (pièce unique) | Unitaire / Composant | `contexts.test.jsx`, `components.test.jsx` |
 | Panier | Afficher, retirer une annonce, vider | Détail articles / frais de service / total recalculé, pas de boutons de quantité | Intégration | `pages.test.jsx` |
 | Frais de service | 40 €, 0 €, 55,50 €, 134,98 € d'articles | 0,70 € + 5 %, arrondi au centime (même calcul que l'API) | Unitaire | `serviceFee.test.js` |
@@ -85,7 +85,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Suppression du compte (RGPD) | Bouton « Annuler » | Pop-up fermée, compte intact | Intégration | `pages.test.jsx` |
 | Profil | Onglets produits / likes | Bonnes listes affichées | Intégration | `pages.test.jsx` |
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
-| Pages légales | Pied de page, mentions légales, politique de confidentialité | Liens vers les deux pages ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD | Intégration | `pages.test.jsx` |
+| Pages légales | Pied de page, mentions légales, politique de confidentialité, conditions générales | Liens vers les trois pages (et vers les CGV dans le panier) ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD ; barème des frais de service | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 
 ## Back-end (API)
@@ -96,7 +96,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Inscription | Email ou pseudo déjà pris | 409 avec message clair | `auth.test.js` |
 | Inscription | Champs invalides | 400 avec la liste des champs en erreur | `auth.test.js` |
 | Connexion | Bon / mauvais mot de passe, email inconnu | 200 / 401 (même message dans les deux cas d'échec) | `auth.test.js` |
-| Session | Sans cookie, jeton falsifié, après déconnexion | 401 | `auth.test.js` |
+| Session | Sans cookie, jeton falsifié, après déconnexion | `GET /api/auth/me` renvoie `null` (un visiteur n'est pas une erreur) ; une route protégée répond 401 | `auth.test.js` |
 | Produits | Créer une annonce | 201, appartient à l'utilisateur connecté | `products.test.js` |
 | Produits | Prix négatif, catégorie inconnue, image `javascript:` | 400 | `products.test.js` |
 | Produits | Filtres catégorie, licence, recherche, vendeur, pagination | Seuls les bons produits | `products.test.js` |

@@ -16,6 +16,7 @@ import Home from './pages/Home/Home.jsx';
 const Auth = lazy(() => import('./pages/Auth/Auth.jsx'));
 const LegalNotice = lazy(() => import('./pages/Legal/LegalNotice.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/Legal/PrivacyPolicy.jsx'));
+const TermsAndConditions = lazy(() => import('./pages/Legal/TermsAndConditions.jsx'));
 const Cart = lazy(() => import('./pages/Cart/Cart.jsx'));
 const Messages = lazy(() => import('./pages/Messages/Messages.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound/NotFound.jsx'));
@@ -87,6 +88,7 @@ export default function App() {
 
                     <Route path="/mentions-legales" element={<LegalNotice />} />
                     <Route path="/confidentialite" element={<PrivacyPolicy />} />
+                    <Route path="/conditions-generales" element={<TermsAndConditions />} />
 
                     {/* "*" correspond à toutes les adresses qui n'ont pas de route : page 404 */}
                     <Route path="*" element={<NotFound />} />

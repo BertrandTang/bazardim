@@ -3,12 +3,12 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████████████░░░░` 78 % (61 / 78 tâches)**
+**Progression globale : `████████████████░░░░` 81 % (63 / 78 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
-| Bloc 2 — Front-end | `███████████████░░░░░` 75 % | 27 / 36 |
-| Bloc 3 — Back-end | `█████████████████░░░` 85 % | 28 / 33 |
+| Bloc 2 — Front-end | `████████████████░░░░` 78 % | 28 / 36 |
+| Bloc 3 — Back-end | `██████████████████░░` 88 % | 29 / 33 |
 | RGPD dans l'application | `████████████████░░░░` 80 % | 4 / 5 |
 | Hygiène du projet et Git | `██████████░░░░░░░░░░` 50 % | 2 / 4 |
 
@@ -135,7 +135,7 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Webhook Stripe (`POST /api/stripe/webhook`, signature vérifiée) + vérification du paiement à l'affichage de la confirmation.
 - [x] Modèle « pièce unique » (comme Vinted) : chaque annonce est ajoutée une seule fois au panier, sans quantité.
 - [x] **Monétisation** : frais de service payés par l'acheteur (0,70 € + 5 %), calculés par le back, affichés dans le panier avant le paiement, envoyés à Stripe comme une ligne à part et enregistrés dans `orders.service_fee`.
-- [ ] Page **CGU / CGV** (conditions d'utilisation et de vente : rôle de la plateforme, frais de service, paiement, livraison, litiges).
+- [x] Page **CGU / CGV** (`/conditions-generales`) : rôle d'intermédiaire, annonces, frais de service, paiement, livraison, rétractation entre particuliers, litiges ; lien dans le pied de page et dans le panier.
 - [ ] Faire un vrai paiement de test à la main (carte `4242 4242 4242 4242`) et garder des captures.
 
 ### C24 / E18 — API sécurisée pour des services tiers
