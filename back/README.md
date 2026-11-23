@@ -27,7 +27,7 @@ npm run dev        # http://localhost:3000/api/health
 | `npm start`             | API en production (variables d'environnement à fournir)                                    |
 | `npm run db:reset`      | ⚠️ efface la base, recrée les tables (`database/schema.sql`) et insère les données de démo |
 | `npm test`              | tests automatiques (sur la base `bazardim_test`, jamais sur celle de dev)                  |
-| `npm run test:coverage` | tests + rapport de couverture (`coverage/index.html`), échoue sous 80 %                    |
+| `npm run test:coverage` | tests + rapport de couverture (`coverage/index.html`), échoue sous 50 %                    |
 | `npm run lint`          | analyse statique (ESLint)                                                                  |
 
 Comptes de démo : `collectionneurdu92@example.com` / `password123`, administrateur : `admin@example.com` / `admin123`.
@@ -39,7 +39,7 @@ Comptes de démo : `collectionneurdu92@example.com` / `password123`, administrat
 - **zod** : validation de tout ce qui entre dans l'API (corps, paramètres d'URL, configuration).
 - **Authentification** : mot de passe haché avec **bcrypt**, jeton **JWT** rangé dans un cookie `httpOnly` + `SameSite=Lax` (inaccessible au JavaScript de la page).
 - **Sécurité** : `helmet` (en-têtes HTTP), CORS limité au front, limitation du nombre de tentatives de connexion, contrôle du propriétaire sur chaque modification, contraintes en base (`CHECK`, `UNIQUE`, clés étrangères).
-- **Journalisation** : `pino` (logs JSON, sans cookies ni mots de passe).
+- **Journalisation** : `morgan` affiche chaque requête dans le terminal (méthode, adresse, code de réponse, durée).
 - **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test.
 
 ## Organisation du code
@@ -54,20 +54,18 @@ back/
 ├── src/
 │   ├── server.js           Démarre le serveur HTTP
 │   ├── app.js              Middlewares (sécurité, logs, JSON) + branchement des routes
-│   ├── config.js           Lecture et validation des variables d'environnement
-│   ├── database.js         Connexion PostgreSQL : query() et withTransaction()
+│   ├── config/             Variables d'environnement (config.js), connexion PostgreSQL (database.js)
+│   ├── routes/             URL → fonction du contrôleur (ex : products.routes.js)
+│   ├── controllers/        Règles métier : droits, codes HTTP (ex : products.controller.js)
+│   ├── models/             Requêtes SQL vers la base (ex : products.model.js)
+│   ├── validators/         Validation des données reçues avec zod (ex : products.validator.js)
 │   ├── middlewares/        Authentification (requireAuth) et gestion des erreurs
-│   ├── utils/              Règles de validation communes, hachage des mots de passe
-│   └── modules/            Un dossier par ressource : auth, users, products, reviews, likes
-│       └── products/
-│           ├── products.routes.js      URL → fonction du contrôleur
-│           ├── products.controller.js  Règles métier (droits, codes HTTP)
-│           ├── products.schemas.js     Validation des données reçues
-│           └── products.repository.js  Requêtes SQL
-└── tests/                  Un fichier de test par module
+│   └── utils/              Hachage des mots de passe, classe HttpError
+└── tests/                  Un fichier de test par ressource (auth, users, products...)
 ```
 
-Le trajet d'une requête : **route** → `requireAuth` (si protégée) → **contrôleur** (valide les données avec le **schéma**, vérifie les droits) → **repository** (SQL) → réponse JSON. En cas d'erreur, le contrôleur lance une `HttpError` et `errorHandler` répond.
+Organisation **MVC** classique (la « vue » est le JSON renvoyé). Le trajet d'une requête :
+**route** → `requireAuth` (si protégée) → **contrôleur** (valide les données avec le **validateur**, vérifie les droits) → **modèle** (SQL) → réponse JSON. En cas d'erreur, le contrôleur lance une `HttpError` et `errorHandler` répond.
 
 ## Routes de l'API
 

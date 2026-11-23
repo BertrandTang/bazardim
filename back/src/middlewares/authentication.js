@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { config } from '../config.js';
-import { HttpError } from '../errors.js';
-import { findUserById } from '../modules/users/users.repository.js';
+import { config } from '../config/config.js';
+import { HttpError } from '../utils/errors.js';
+import { findUserById } from '../models/users.model.js';
 
 const AUTH_COOKIE_NAME = 'bazardim_token';
 const SESSION_DURATION_IN_SECONDS = 7 * 24 * 60 * 60; // 7 jours

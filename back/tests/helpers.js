@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { afterAll, beforeEach } from 'vitest';
 import app from '../src/app.js';
-import { closeDatabase, query } from '../src/database.js';
+import { closeDatabase, query } from '../src/config/database.js';
 
 /**
  * À appeler en haut de chaque fichier de test : chaque test démarre avec une base vide,

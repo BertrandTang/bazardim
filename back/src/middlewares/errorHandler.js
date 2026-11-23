@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { HttpError } from '../errors.js';
+import { HttpError } from '../utils/errors.js';
 
 // Codes d'erreur renvoyés par PostgreSQL (https://www.postgresql.org/docs/current/errcodes-appendix.html)
 const POSTGRES_UNIQUE_VIOLATION = '23505';
@@ -46,6 +46,6 @@ export function errorHandler(error, request, response, next) {
 
   // Erreur inattendue : on la journalise en détail, mais on ne renvoie au client
   // qu'un message générique (ne jamais exposer la pile d'appels ou le SQL).
-  request.log.error(error);
+  console.error(error);
   return response.status(500).json({ error: 'Erreur interne du serveur.' });
 }

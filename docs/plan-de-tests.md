@@ -2,15 +2,15 @@
 
 Ce plan relie chaque fonctionnalité de l'application aux tests automatiques qui la vérifient.
 Tous les tests sont lancés à chaque push par la CI GitHub Actions (`.github/workflows/ci.yml`),
-qui échoue si un test échoue ou si la couverture du code passe sous 80 %.
+qui échoue si un test échoue ou si la couverture du code passe sous 50 % (le minimum exigé par la certification).
 
 | | Front-end | Back-end |
 | --- | --- | --- |
 | Outils | Vitest + React Testing Library (navigateur simulé : jsdom) | Vitest + supertest, sur une vraie base PostgreSQL de test |
 | Lancer | `cd front && npm run test:coverage` | `cd back && npm run test:coverage` |
 | Nombre de tests | 56 | 42 |
-| Couverture des lignes | 92 % | 97 % |
-| Emplacement | `front/src/**/*.test.js(x)` | `back/tests/*.test.js` |
+| Couverture des lignes | 91 % | 96 % |
+| Emplacement | `front/tests/*.test.js(x)` | `back/tests/*.test.js` |
 
 Types de tests :
 
@@ -24,38 +24,38 @@ Types de tests :
 
 | Fonctionnalité | Scénario | Résultat attendu | Type | Fichier |
 | --- | --- | --- | --- | --- |
-| Catalogue | Ouvrir l'accueil | Tous les produits du catalogue et un titre `<h1>` | Intégration | `pages/pages.test.jsx` |
-| Catalogue | Ouvrir une catégorie (Statues) | Toutes les statues, et seulement elles | Intégration | `pages/pages.test.jsx` |
-| Recherche | Taper « luffy » + Entrée dans la barre | Adresse `/?q=luffy` | Composant | `components/components.test.jsx` |
-| Recherche | Ouvrir `/?q=vegeta` | « 1 résultat(s) pour « vegeta » » | Intégration | `pages/pages.test.jsx` |
-| Recherche | Licence inconnue | Message « Aucun produit ne correspond » | Intégration | `pages/pages.test.jsx` |
-| Navigation | Menu Catégories : Entrée puis Échap | Menu ouvert puis fermé, focus rendu au bouton | Composant | `components/components.test.jsx` |
-| Navigation | Adresse inexistante | Page 404 avec lien vers l'accueil | Composant | `pages/pages.test.jsx` |
-| Connexion | Mauvais mot de passe | Message d'erreur | Intégration | `pages/pages.test.jsx` |
-| Connexion | Bons identifiants | Redirection vers le profil | Intégration | `pages/pages.test.jsx` |
-| Connexion | Page privée sans être connecté | Redirection vers `/auth` | Composant | `components/components.test.jsx` |
-| Inscription | Mot de passe < 8 caractères / différent / email déjà pris | Message d'erreur adapté | Intégration | `pages/pages.test.jsx` |
-| Inscription | Formulaire valide | Compte créé, redirection vers le profil | Intégration | `pages/pages.test.jsx` |
-| Fiche produit | Ouvrir `/product/FIG001` | Caractéristiques + données structurées schema.org | Intégration | `pages/pages.test.jsx` |
-| Fiche produit | Identifiant inconnu | « Produit introuvable » | Intégration | `pages/pages.test.jsx` |
-| Vente | Formulaire vide / prix nul | Message d'erreur, rien n'est envoyé | Composant | `components/components.test.jsx` |
-| Vente | Formulaire valide | Annonce créée, ouverture de sa page | Intégration | `pages/pages.test.jsx` |
-| Modification | Le propriétaire modifie le titre | Nouveau titre affiché | Intégration | `pages/pages.test.jsx` |
-| Suppression | Le propriétaire supprime son annonce | Retour au profil | Intégration | `pages/pages.test.jsx` |
-| Favoris | Clic sur le cœur | Bouton « Retirer des favoris » activé | Composant | `components/components.test.jsx` |
-| Favoris | Changement d'utilisateur | Chaque utilisateur a ses propres favoris | Unitaire | `context/contexts.test.jsx` |
-| Panier | Ajouter, +, −, retirer, vider | Quantités et total recalculés | Intégration | `pages/pages.test.jsx` |
-| Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `context/contexts.test.jsx` |
-| Livraison (API tierce) | Taper une adresse | Suggestions de l'API Adresse (BAN), adresse choisie enregistrée | Composant | `components/AddressAutocomplete/...test.jsx` |
-| Livraison (API tierce) | API indisponible | Message d'erreur, saisie libre possible | Composant | `components/AddressAutocomplete/...test.jsx` |
-| Livraison (API tierce) | Moins de 3 caractères | Aucun appel à l'API | Composant | `components/AddressAutocomplete/...test.jsx` |
-| Profil | Modifier son pseudo | « Profil mis à jour » | Intégration | `pages/pages.test.jsx` |
-| Profil | Onglets produits / likes / avis | Bonnes listes affichées | Intégration | `pages/pages.test.jsx` |
-| Avis | Publier un avis sur un vendeur | Avis affiché, note moyenne mise à jour | Intégration | `pages/pages.test.jsx` |
-| Avis | Avis d'un autre utilisateur | Pas de bouton Modifier | Composant | `components/components.test.jsx` |
-| Avis | L'auteur modifie puis supprime | Avis modifié puis supprimé | Composant | `components/components.test.jsx` |
-| RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages/pages.test.jsx` |
-| Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `hooks/`, `utils/` |
+| Catalogue | Ouvrir l'accueil | Tous les produits du catalogue et un titre `<h1>` | Intégration | `pages.test.jsx` |
+| Catalogue | Ouvrir une catégorie (Statues) | Toutes les statues, et seulement elles | Intégration | `pages.test.jsx` |
+| Recherche | Taper « luffy » + Entrée dans la barre | Adresse `/?q=luffy` | Composant | `components.test.jsx` |
+| Recherche | Ouvrir `/?q=vegeta` | « 1 résultat(s) pour « vegeta » » | Intégration | `pages.test.jsx` |
+| Recherche | Licence inconnue | Message « Aucun produit ne correspond » | Intégration | `pages.test.jsx` |
+| Navigation | Menu Catégories : Entrée puis Échap | Menu ouvert puis fermé, focus rendu au bouton | Composant | `components.test.jsx` |
+| Navigation | Adresse inexistante | Page 404 avec lien vers l'accueil | Composant | `pages.test.jsx` |
+| Connexion | Mauvais mot de passe | Message d'erreur | Intégration | `pages.test.jsx` |
+| Connexion | Bons identifiants | Redirection vers le profil | Intégration | `pages.test.jsx` |
+| Connexion | Page privée sans être connecté | Redirection vers `/auth` | Composant | `components.test.jsx` |
+| Inscription | Mot de passe < 8 caractères / différent / email déjà pris | Message d'erreur adapté | Intégration | `pages.test.jsx` |
+| Inscription | Formulaire valide | Compte créé, redirection vers le profil | Intégration | `pages.test.jsx` |
+| Fiche produit | Ouvrir `/product/FIG001` | Caractéristiques + données structurées schema.org | Intégration | `pages.test.jsx` |
+| Fiche produit | Identifiant inconnu | « Produit introuvable » | Intégration | `pages.test.jsx` |
+| Vente | Formulaire vide / prix nul | Message d'erreur, rien n'est envoyé | Composant | `components.test.jsx` |
+| Vente | Formulaire valide | Annonce créée, ouverture de sa page | Intégration | `pages.test.jsx` |
+| Modification | Le propriétaire modifie le titre | Nouveau titre affiché | Intégration | `pages.test.jsx` |
+| Suppression | Le propriétaire supprime son annonce | Retour au profil | Intégration | `pages.test.jsx` |
+| Favoris | Clic sur le cœur | Bouton « Retirer des favoris » activé | Composant | `components.test.jsx` |
+| Favoris | Changement d'utilisateur | Chaque utilisateur a ses propres favoris | Unitaire | `contexts.test.jsx` |
+| Panier | Ajouter, +, −, retirer, vider | Quantités et total recalculés | Intégration | `pages.test.jsx` |
+| Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `contexts.test.jsx` |
+| Livraison (API tierce) | Taper une adresse | Suggestions de l'API Adresse (BAN), adresse choisie enregistrée | Composant | `AddressAutocomplete.test.jsx` |
+| Livraison (API tierce) | API indisponible | Message d'erreur, saisie libre possible | Composant | `AddressAutocomplete.test.jsx` |
+| Livraison (API tierce) | Moins de 3 caractères | Aucun appel à l'API | Composant | `AddressAutocomplete.test.jsx` |
+| Profil | Modifier son pseudo | « Profil mis à jour » | Intégration | `pages.test.jsx` |
+| Profil | Onglets produits / likes / avis | Bonnes listes affichées | Intégration | `pages.test.jsx` |
+| Avis | Publier un avis sur un vendeur | Avis affiché, note moyenne mise à jour | Intégration | `pages.test.jsx` |
+| Avis | Avis d'un autre utilisateur | Pas de bouton Modifier | Composant | `components.test.jsx` |
+| Avis | L'auteur modifie puis supprime | Avis modifié puis supprimé | Composant | `components.test.jsx` |
+| RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
+| Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 
 ## Back-end (API)
 
@@ -82,6 +82,5 @@ Types de tests :
 
 ## Ce qui n'est pas (encore) couvert
 
-- Tests de bout en bout dans un vrai navigateur (Playwright) : parcours achat complet.
 - Tests d'accessibilité avec un lecteur d'écran (VoiceOver, NVDA) : à faire manuellement.
 - Le paiement (Stripe), pas encore développé.

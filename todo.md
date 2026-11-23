@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████░░░░░░░░░░░░` 40 % (42 / 104 tâches)**
+**Progression globale : `████████░░░░░░░░░░░░` 42 % (42 / 100 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
-| Bloc 2 — Front-end | `████████████░░░░░░░░` 60 % | 24 / 40 |
-| Bloc 3 — Back-end | `█████████░░░░░░░░░░░` 46 % | 17 / 37 |
+| Bloc 2 — Front-end | `█████████████░░░░░░░` 63 % | 24 / 38 |
+| Bloc 3 — Back-end | `██████████░░░░░░░░░░` 49 % | 17 / 35 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -23,8 +23,8 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | --- | --- |
 | Front-end (React) | ✅ Fonctionnel : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, avis vendeurs, inscription / connexion. Données simulées dans le localStorage. |
 | Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, avis, favoris. ❌ Pas encore branchée au front, pas de paiement. |
-| Tests | ✅ Back : 42 tests, 97 % de couverture. ✅ Front : 56 tests, 92 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
-| CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. Dependabot configuré. |
+| Tests | ✅ Back : 42 tests, 96 % de couverture. ✅ Front : 56 tests, 91 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
 ### Les 5 priorités
@@ -76,37 +76,32 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 
 ### C14 — Charte graphique
 
-- [ ] Documenter la charte dans le dossier (couleurs, typographies, logo, formes « coins arrondis en biais »). Les couleurs sont centralisées dans `front/src/main.css` (`--color-primary`, `--color-accent`, `--color-surface`).
+- [ ] Documenter la charte dans le dossier (couleurs, typographies, logo, formes « coins arrondis en biais »). Les couleurs sont centralisées dans `front/src/index.css` (`--color-primary`, `--color-accent`, `--color-surface`).
 
 ### C16 — Qualité, sécurité, éco-conception
 
 - [x] Analyse statique : ESLint (`npm run lint`).
-- [ ] Ajouter **SonarCloud** (gratuit pour les dépôts publics) ou SonarQube pour un rapport de qualité à montrer au jury.
 - [x] **Prettier** (front et back) : `npm run format`, vérifié par la CI.
 - [ ] Sécurité (à configurer au déploiement) : HTTPS / certificat SSL, en-têtes HTTP de sécurité (CSP, `X-Content-Type-Options`, `Strict-Transport-Security`...), CORS côté API. Vérifier avec securityheaders.com et Mozilla Observatory.
-- [x] `npm audit` sans vulnérabilité (vérifié par la CI) ; **Dependabot** configuré (`.github/dependabot.yml`).
+- [x] `npm audit` sans vulnérabilité (vérifié par la CI).
 - [ ] Supprimer le stockage des mots de passe en clair dans le localStorage (disparaîtra avec le vrai back-end : le front ne doit garder qu'un jeton ou un cookie `httpOnly`).
-- [x] Éco-conception : pages chargées à la demande (`React.lazy`), bibliothèques en fichiers séparés mis en cache, Material UI retiré de la page d'accueil : JavaScript initial de 163 Ko → 97 Ko compressés (−40 %).
+- [x] Éco-conception : pages chargées à la demande (`React.lazy`), Material UI n'est plus chargé sur la page d'accueil : JavaScript initial de 163 Ko → 91 Ko compressés (−44 %).
 - [ ] Mesurer avec **EcoIndex** / GreenIT-Analysis et mettre le score dans le dossier.
-- [x] Images de démonstration redimensionnées (41 Mo → 2,3 Mo). À faire aussi : convertir en **WebP**, et redimensionner les images envoyées par les vendeurs (côté back).
+- [x] Images de démonstration redimensionnées (41 Mo → 2,3 Mo).
 - [ ] Tester sur Chrome, Firefox, Safari et sur mobile (compatibilité navigateurs).
 
-### C17 / E12 — Consommer une API tierce ⚠️ rien actuellement
+### C17 / E12 — Consommer une API
 
 - [ ] Consommer **votre propre API** (back-end) avec `fetch` + authentification (JWT ou cookie de session).
-- [x] Consommer **une API tierce** : autocomplétion de l'adresse de livraison dans le panier avec l'**API Adresse (Base Adresse Nationale)**, API officielle de l'État produite par l'IGN ([fiche data.gouv.fr](https://www.data.gouv.fr/dataservices/api-adresse-base-adresse-nationale-ban)), `services/addressApi.js` + `components/AddressAutocomplete/`. Gestion du délai de frappe, de l'annulation des requêtes, du chargement et des erreurs. Autres idées :
-  - **API Adresse** (api-adresse.data.gouv.fr, gratuite, sans clé) : autocomplétion de l'adresse de livraison au moment de la commande ;
-  - API de recherche par **code EAN** pour pré-remplir la fiche produit à la mise en vente ;
-  - **Stripe** (paiement) compte aussi comme service tiers.
+- [x] Consommer **une API tierce** : autocomplétion de l'adresse de livraison dans le panier avec l'**API Adresse (Base Adresse Nationale)**, API officielle de l'État produite par l'IGN ([fiche data.gouv.fr](https://www.data.gouv.fr/dataservices/api-adresse-base-adresse-nationale-ban)), `services/addressApi.js` + `components/AddressAutocomplete/`. Gestion du délai de frappe, de l'annulation des requêtes, du chargement et des erreurs.
 - [ ] Justifier dans le dossier le format choisi (REST + JSON) et la gestion des erreurs réseau (message à l'utilisateur, état de chargement).
 
 ### C18 / E13 — Tests front ⚠️ couverture ≥ 50 % obligatoire
 
-- [x] **Vitest** + **React Testing Library** + couverture (`npm test`, `npm run test:coverage`) : 56 tests, 92 % des lignes, seuil bloquant à 80 %.
+- [x] **Vitest** + **React Testing Library** + couverture (`npm test`, `npm run test:coverage`) : 56 tests, 91 % des lignes, seuil bloquant à 50 % (le minimum exigé).
 - [x] **Plan de tests** front et back : [docs/plan-de-tests.md](docs/plan-de-tests.md) (à relire et à compléter avec tes cas d'utilisation).
 - [x] Tests unitaires : utilitaires, hook `useLocalStorageState`, contextes, service d'adresses.
 - [x] Tests de composants et de pages : cartes, formulaires, barre de navigation, toutes les pages.
-- [ ] Optionnel mais apprécié : tests de bout en bout avec **Playwright** (parcours achat, mise en vente).
 - [ ] Capture du rapport de couverture (≥ 50 %) dans le dossier.
 
 ### C19 / E14 — Industrialisation front
@@ -114,7 +109,7 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 - [x] **GitHub Actions** : lint + build à chaque push (`.github/workflows/ci.yml`).
 - [x] Tests du front (avec couverture) et vérification du formatage dans la CI.
 - [x] Gestion des dépendances : `package.json` + `package-lock.json` (outils de build rangés dans `devDependencies`).
-- [x] Optimisation du build : découpage par page, fichiers de bibliothèques séparés, carte du bundle avec `npm run build:analyze` (`dist/stats.html`).
+- [x] Optimisation du build : chaque page est chargée à la demande (`React.lazy`).
 
 ### C20 — SEO ⚠️ ≥ 70 % des critères techniques
 
@@ -143,15 +138,14 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Validation de toutes les entrées avec **zod** ; requêtes SQL paramétrées (anti-injection).
 - [x] Authentification : JWT dans un cookie `httpOnly` + `SameSite=Lax` (+ `secure` en production).
 - [x] Contrôle d'accès : propriétaire ou admin pour modifier / supprimer (annonces, avis).
-- [x] Journalisation **pino** (sans cookies), route `/api/health` pour la supervision.
-- [x] Configuration validée au démarrage (`src/config.js`), `.env` ignoré par Git, `.env.example` fourni.
+- [x] Journal des requêtes avec **morgan**, route `/api/health` pour la supervision.
+- [x] Configuration validée au démarrage (`src/config/config.js`), `.env` ignoré par Git, `.env.example` fourni.
 - [ ] Stratégie de **sauvegarde / restauration** de la base (`pg_dump` planifié) à décrire et tester (C9, C32).
-- [ ] Optionnel : authentification forte (2FA), cache **Redis**, recherche plein texte PostgreSQL (`tsvector`) si le catalogue grossit.
 
 ### C22 / E16 — Développement de l'API
 
 - [x] Routes REST : auth, comptes, produits (filtres + pagination), licences, avis, favoris.
-- [x] Organisation : `routes` → `controller` → `schemas` / `repository`, un dossier par module.
+- [x] Organisation MVC : `routes/` → `controllers/` → `validators/` (données reçues) et `models/` (requêtes SQL).
 - [ ] **Brancher le front** : remplacer les fonctions `⚠️ TEMPORAIRE` de `front/src/context/` par des appels `fetch(..., { credentials: 'include' })`. Points à adapter côté front :
   - noms de champs de l'API : `owner_id` (au lieu de `owner_user_id`), `image_url` (au lieu de `img`), `has_box` (au lieu de `box`), `ean_code` (au lieu de `EAN_number`), `height_cm` / `width_cm` / `scale` (au lieu de l'objet `size`), `profile_image_url` ;
   - identifiants numériques (1, 2...) au lieu de "FIG001" ;
@@ -160,8 +154,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
   - favoris d'un visiteur non connecté : les garder dans le localStorage, ou demander la connexion ;
   - panier : peut rester dans le localStorage jusqu'à la création des commandes.
   - configurer un proxy Vite (`server.proxy` : `/api` → `http://localhost:3000`) pour appeler l'API sans souci de CORS en développement.
-- [ ] Upload d'images d'annonces (**multer** + redimensionnement **sharp**) au lieu d'une URL saisie à la main.
-- [ ] Ajouter un `Dockerfile` pour l'API (et l'ajouter à `docker-compose.yml`).
+- [ ] Upload d'images d'annonces (**multer**) au lieu d'une URL saisie à la main.
 
 ### C23 / E17 — Paiement et monétisation
 
@@ -181,14 +174,14 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 
 ### C25 / E19 — Tests back
 
-- [x] 42 tests d'intégration (Vitest + supertest) sur une vraie base PostgreSQL de test, **96 % de couverture** (seuil bloquant à 80 %).
+- [x] 42 tests d'intégration (Vitest + supertest) sur une vraie base PostgreSQL de test, **96 % de couverture** (seuil bloquant à 50 %, le minimum exigé).
 - [ ] Rédiger le **plan de tests** (tableau scénario / résultat attendu) à partir des fichiers `back/tests/*.test.js` et le mettre dans le dossier avec la capture du rapport de couverture.
 
 ### C26 / E20 — Industrialisation back
 
 - [x] CI GitHub Actions : lint, `npm audit`, tests avec couverture (base PostgreSQL fournie par la CI).
-- [ ] Image **Docker** de production (multi-stage) ; scan de sécurité de l'image (Trivy).
-- [x] **Dependabot** pour les mises à jour de dépendances. **Prettier** vérifié par la CI.
+- [ ] `Dockerfile` pour l'API (et l'ajouter à `docker-compose.yml`).
+- [x] **Prettier** vérifié par la CI.
 
 ### RGPD dans l'application (C11, à implémenter)
 

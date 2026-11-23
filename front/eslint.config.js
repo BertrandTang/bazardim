@@ -25,7 +25,7 @@ export default defineConfig([
   {
     // Les fichiers de contexte exportent volontairement un composant (Provider) ET un hook (useXxx) ;
     // les utilitaires de test exportent des composants et des fonctions.
-    files: ['src/context/**/*.jsx', 'src/test/**/*.jsx'],
+    files: ['src/context/**/*.jsx', 'tests/**/*.jsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

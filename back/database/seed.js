@@ -1,6 +1,6 @@
-import { insertProduct } from '../src/modules/products/products.repository.js';
-import { productSchema } from '../src/modules/products/products.schemas.js';
-import { insertUser } from '../src/modules/users/users.repository.js';
+import { insertProduct } from '../src/models/products.model.js';
+import { productSchema } from '../src/validators/products.validator.js';
+import { insertUser } from '../src/models/users.model.js';
 import { hashPassword } from '../src/utils/passwords.js';
 import figuresData from './seed-data/figures.json' with { type: 'json' };
 import profilesData from './seed-data/profiles.json' with { type: 'json' };

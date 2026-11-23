@@ -2,16 +2,15 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { pinoHttp } from 'pino-http';
-import { config } from './config.js';
-import { query } from './database.js';
-import { logger } from './logger.js';
+import morgan from 'morgan';
+import { config } from './config/config.js';
+import { query } from './config/database.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
-import authRoutes from './modules/auth/auth.routes.js';
-import likesRoutes from './modules/likes/likes.routes.js';
-import productsRoutes from './modules/products/products.routes.js';
-import reviewsRoutes from './modules/reviews/reviews.routes.js';
-import usersRoutes from './modules/users/users.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import likesRoutes from './routes/likes.routes.js';
+import productsRoutes from './routes/products.routes.js';
+import reviewsRoutes from './routes/reviews.routes.js';
+import usersRoutes from './routes/users.routes.js';
 
 // L'application est créée ici, sans démarrer le serveur : les tests peuvent ainsi
 // l'importer et lui envoyer des requêtes directement (voir server.js pour le démarrage).
@@ -26,18 +25,11 @@ app.use(helmet());
 // `credentials: true` autorise l'envoi du cookie de connexion.
 app.use(cors({ origin: config.FRONT_URL, credentials: true }));
 
-// Journal de chaque requête : méthode, adresse, code de réponse et durée.
-// On ne garde que l'essentiel (les noms `req` et `res` sont imposés par pino-http) :
-// pas d'en-têtes, donc jamais de cookie de connexion dans les logs.
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req: (request) => ({ method: request.method, url: request.url }),
-      res: (response) => ({ statusCode: response.statusCode }),
-    },
-  }),
-);
+// Journal de chaque requête dans le terminal, ex : "GET /api/products 200 4.2 ms".
+// Désactivé pendant les tests pour garder une sortie lisible.
+if (!config.isTest) {
+  app.use(morgan('dev'));
+}
 
 // Lit le corps JSON des requêtes (limité à 100 Ko pour éviter les envois géants).
 app.use(express.json({ limit: '100kb' }));

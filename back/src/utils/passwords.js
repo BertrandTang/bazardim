@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { config } from '../config.js';
+import { config } from '../config/config.js';
 
 // Coût du hachage : plus il est élevé, plus il est long de tester des millions de mots de passe
 // en cas de vol de la base. 12 est une valeur recommandée aujourd'hui (≈ 0,2 s par hachage).

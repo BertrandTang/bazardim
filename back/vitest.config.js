@@ -12,9 +12,9 @@ export default defineConfig({
       include: ['src/**/*.js'],
       exclude: ['src/server.js'],
       reporter: ['text', 'html'],
-      // La certification exige au moins 50 % de couverture. On vise plus haut (80 %) :
+      // La certification exige au moins 50 % de couverture des tests :
       // sous ce seuil, `npm run test:coverage` échoue, ce qui bloque aussi la CI.
-      thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
+      thresholds: { lines: 50, functions: 50, branches: 50, statements: 50 },
     },
   },
 });

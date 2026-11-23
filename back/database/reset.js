@@ -1,6 +1,6 @@
 // Script lancé par `npm run db:reset` : recrée toutes les tables puis insère les données de démo.
 // ⚠️ Toutes les données de la base de développement sont effacées.
-import { closeDatabase, query } from '../src/database.js';
+import { closeDatabase, query } from '../src/config/database.js';
 import { recreateSchema } from './recreateSchema.js';
 import { seedDatabase } from './seed.js';
 
