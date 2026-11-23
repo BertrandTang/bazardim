@@ -1,121 +1,116 @@
-// On renomme LINK en RouterLink pour éviter les conflits avec le composant du même nom dans MUI.
-import { useEffect, useMemo, useState } from 'react';
-import { Link as RouterLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
-import SearchIcon from "@mui/icons-material/Search";
-import "./NavBar.css";
-import { useCart } from "../../context/CartContext.jsx";
-import { useAuth } from "../../context/AuthContext.jsx";
-import figuresData from '../../data/figures.json';
-import { getCreatedProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useCart } from '../../context/CartContext.jsx';
+import { useProducts } from '../../context/ProductsContext.jsx';
+import { CATEGORIES } from '../../data/categories.js';
+import NavBarDropdown from './NavBarDropdown.jsx';
+import { CartIcon, SearchIcon } from './NavBarIcons.jsx';
+import './NavBar.css';
+
+// Pages qui affichent une liste de produits : la recherche reste sur ces pages,
+// sinon (ex : depuis le panier) on renvoie vers l'accueil.
+const PAGES_WITH_PRODUCT_LIST = ['/', '/licences', ...CATEGORIES.map((category) => category.path)];
 
 export default function NavBar() {
-    const { count } = useCart();
-    const { user, logout } = useAuth();
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const [searchValue, setSearchValue] = useState(searchParams.get('q') || '');
-    const [createdProducts, setCreatedProducts] = useState(() => getCreatedProducts());
+  const { currentUser, logout } = useAuth();
+  const { itemCount } = useCart();
+  const { licences } = useProducts();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-    const searchablePaths = useMemo(
-        () => ['/', '/licences', '/figurines', '/figurines-articulees', '/statue'],
-        []
-    );
+  // Recherche actuelle, lue dans l'URL (ex : /?q=luffy donne "luffy").
+  const currentSearch = searchParams.get('q') ?? '';
 
-    useEffect(() => {
-        setSearchValue(searchParams.get('q') || '');
-    }, [searchParams]);
+  function handleSearchSubmit(event) {
+    // Empêche le navigateur de recharger la page à l'envoi du formulaire.
+    event.preventDefault();
 
-    useEffect(() => {
-        return subscribeToProductStorage(() => {
-            setCreatedProducts(getCreatedProducts());
-        });
-    }, []);
+    // On lit la valeur saisie directement dans le formulaire au moment de l'envoi.
+    const formData = new FormData(event.currentTarget);
+    const searchText = formData.get('search').trim();
 
-    const handleSearchSubmit = (event) => {
-        event.preventDefault();
-        const nextParams = new URLSearchParams(location.search);
-        const normalized = searchValue.trim();
+    // On garde les autres filtres de l'URL (ex : la licence) et on remplace la recherche.
+    const nextParams = new URLSearchParams(location.search);
+    if (searchText) {
+      nextParams.set('q', searchText);
+    } else {
+      nextParams.delete('q');
+    }
 
-        if (normalized) nextParams.set('q', normalized);
-        else nextParams.delete('q');
+    const targetPath = PAGES_WITH_PRODUCT_LIST.includes(location.pathname) ? location.pathname : '/';
+    const queryString = nextParams.toString();
+    navigate(queryString ? `${targetPath}?${queryString}` : targetPath);
+  }
 
-        const targetPath = searchablePaths.includes(location.pathname) ? location.pathname : '/';
-        const query = nextParams.toString();
-        navigate(query ? `${targetPath}?${query}` : targetPath);
-    };
+  return (
+    <nav className="navbar-container" aria-label="Navigation principale">
+      <div className="navbar-left">
+        <Link to="/" className="logo-link">
+          <img src="/icons/bazardim_logo.ico" alt="Bazardim - retour à l'accueil" className="navbar-logo" />
+        </Link>
+        <form className="navbar-search" role="search" onSubmit={handleSearchSubmit}>
+          <SearchIcon />
+          {/* `key` force React à recréer le champ quand la recherche de l'URL change,
+              pour qu'il affiche toujours la bonne valeur (ex : après un retour arrière). */}
+          <input
+            key={currentSearch}
+            name="search"
+            type="search"
+            placeholder="SEARCH サーチ"
+            aria-label="Rechercher un produit"
+            defaultValue={currentSearch}
+          />
+        </form>
+      </div>
 
-    const licences = useMemo(() => {
-        const base = (figuresData.figures || []).map((item) => item.licence_name).filter(Boolean);
-        const created = createdProducts.map((item) => item.licence_name).filter(Boolean);
-        return Array.from(new Set([...base, ...created]));
-    }, [createdProducts]);
+      <div className="navbar-middle">
+        <Link to="/">ACCUEIL</Link>
 
-    return (
-        <nav className="navbar-container">
-            <div className="navbar-left">
-                <RouterLink to="/" className="logo-link">
-                    <img src="/icons/bazardim_logo.ico" alt="Logo" className="navbar-logo" />
-                </RouterLink>
-                <form className="navbar-search" onSubmit={handleSearchSubmit}>
-                    <SearchIcon />
-                    <input
-                        placeholder="SEARCH サーチ"
-                        value={searchValue}
-                        onChange={(event) => setSearchValue(event.target.value)}
-                    />
-                </form>
-            </div>
-            <div className="navbar-middle">
-                <RouterLink to="/">ACCUEIL</RouterLink>
-                <div className="navbar-categories-dropdown">
-                    <RouterLink to="/figurines" className="navbar-categories-trigger">CATEGORIES</RouterLink>
-                    <div className="navbar-categories-menu">
-                        <RouterLink to="/figurines">Figurines</RouterLink>
-                        <RouterLink to="/figurines-articulees">Figurines articulées</RouterLink>
-                        <RouterLink to="/statue">Statue</RouterLink>
-                    </div>
-                </div>
-                <div className="navbar-licences-dropdown">
-                    <RouterLink to="/licences" className="navbar-licences-trigger">LICENCES</RouterLink>
-                    <div className="navbar-licences-menu">
-                        {licences.map((licence) => (
-                            <RouterLink
-                                key={licence}
-                                to={`/licences?name=${encodeURIComponent(licence)}`}
-                            >
-                                {licence}
-                            </RouterLink>
-                        ))}
-                    </div>
-                </div>
-                <RouterLink to="/vendre" className="navbar-sell-btn">VENDRE</RouterLink>
-            </div>
-            <div className="navbar-right">
-                <div className="navbar-auth-block">
-                    <div className="navbar-auth">
-                        {!user && (
-                            <>
-                                <RouterLink to="/signup">INSCRIPTION</RouterLink>
-                                <RouterLink to="/auth">CONNEXION</RouterLink>
-                            </>
-                        )}
-                        {user && <RouterLink to="/profile">PROFIL</RouterLink>}
-                    </div>
-                    {user && (
-                        <button className="logout-button" onClick={logout}>
-                            Déconnexion
-                        </button>
-                    )}
-                    <RouterLink to="/cart" className="navbar-cart">
-                        <ShoppingCartOutlinedIcon />
-                        {count > 0 && (
-                            <span className="cart-badge">{count}</span>
-                        )}
-                    </RouterLink>
-                </div>
-            </div>
-        </nav>
-    );
+        <NavBarDropdown label="CATEGORIES">
+          {CATEGORIES.map((category) => (
+            <Link key={category.value} to={category.path}>
+              {category.label}
+            </Link>
+          ))}
+        </NavBarDropdown>
+
+        <NavBarDropdown label="LICENCES">
+          <Link to="/licences">Toutes les licences</Link>
+          {licences.map((licence) => (
+            <Link key={licence} to={`/licences?licence=${encodeURIComponent(licence)}`}>
+              {licence}
+            </Link>
+          ))}
+        </NavBarDropdown>
+
+        <Link to="/vendre" className="navbar-sell-button">
+          VENDRE
+        </Link>
+      </div>
+
+      <div className="navbar-right">
+        <div className="navbar-auth">
+          {currentUser ? (
+            <>
+              <Link to="/messages">MESSAGES</Link>
+              <Link to="/profile">PROFIL</Link>
+              <button type="button" className="logout-button" onClick={logout}>
+                Déconnexion
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/signup">INSCRIPTION</Link>
+              <Link to="/auth">CONNEXION</Link>
+            </>
+          )}
+        </div>
+        <Link to="/cart" className="navbar-cart" aria-label={`Panier (${itemCount} articles)`}>
+          <CartIcon />
+          {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
+        </Link>
+      </div>
+    </nav>
+  );
 }

@@ -1,0 +1,5 @@
+node_modules
+coverage
+# Le fichier .env contient des secrets : il ne doit jamais être commité (voir .env.example).
+.env
+.DS_Store

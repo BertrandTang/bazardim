@@ -3,54 +3,32 @@
   gap: 24px;
   padding: 24px;
 }
+
 .profile-sidebar {
   min-width: 160px;
 }
+
 .profile-content {
   flex: 1;
 }
 
 .profile-add-product {
   margin-bottom: 16px !important;
-  background: linear-gradient(135deg, #6d35ff, #ff006a) !important;
-  border-radius: 0 24px 0 24px !important;
-  color: #fff !important;
-  font-weight: 700 !important;
 }
 
-.profile-likes-empty {
-  text-align: center;
-  padding: 48px 0;
+.profile-empty {
+  padding: 16px 0;
   color: #555;
 }
 
-.profile-likes-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.profile-grid {
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
-  justify-items: center;
 }
 
-.profile-likes-grid .product-card {
-  width: 220px;
-  height: 500px;
-}
-
-.profile-likes-grid .product-image {
-  height: 140px;
-  min-height: 140px;
-  max-height: 140px;
-}
-
-.profile-likes-grid .product-desc {
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  max-height: calc(1.35em * 3);
-  overflow: hidden;
-  overflow-wrap: anywhere;
-}
-
-.profile-likes-grid .product-tags {
-  max-height: 52px;
-  overflow: hidden;
+@media (max-width: 768px) {
+  .profile-page {
+    flex-direction: column;
+  }
 }

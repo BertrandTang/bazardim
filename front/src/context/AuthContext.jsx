@@ -1,50 +1,68 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import profilesData from '../data/profiles.json';
+import { createContext, useContext, useEffect, useState } from 'react';
+import * as api from '../services/api.js';
 
+// Un "contexte" permet de partager des données avec TOUS les composants de l'application
+// sans devoir les passer de parent en enfant via les props.
 const AuthContext = createContext(null);
 
+/**
+ * Fournit l'utilisateur connecté et les fonctions de connexion à toute l'application.
+ * Tous les composants placés à l'intérieur de <AuthProvider> peuvent appeler useAuth().
+ *
+ * La connexion est gérée par l'API : elle dépose un cookie "httpOnly" dans le navigateur.
+ * Le front ne voit jamais ce cookie ni le mot de passe : il garde seulement l'utilisateur
+ * renvoyé par l'API ({ id, username, email, profile_image_url, role }).
+ */
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(() => {
-        try {
-            const raw = localStorage.getItem('authUser');
-            return raw ? JSON.parse(raw) : null;
-        } catch {
-            return null;
-        }
-    });
+  // Utilisateur connecté, ou null pour un visiteur.
+  const [currentUser, setCurrentUser] = useState(null);
+  // Vrai tant qu'on ne sait pas encore si quelqu'un est connecté (réponse de l'API en attente).
+  const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        try {
-            if (user) localStorage.setItem('authUser', JSON.stringify(user));
-            else localStorage.removeItem('authUser');
-        } catch {}
-    }, [user]);
+  // useEffect avec [] : exécuté une seule fois, après le premier affichage.
+  // On demande à l'API qui est connecté (le cookie a pu être déposé lors d'une visite précédente).
+  useEffect(() => {
+    api
+      .fetchCurrentUser()
+      .then((user) => setCurrentUser(user))
+      .catch(() => setCurrentUser(null))
+      .finally(() => setIsLoading(false));
+  }, []);
 
-    function login(email, password) {
-        const match = profilesData.profiles.find(
-            (p) => p.email === email && p.mdp === password
-        );
-        if (match) {
-            setUser({ ...match });
-            return true;
-        }
-        return false;
-    }
+  // Les fonctions suivantes sont "async" : elles attendent la réponse de l'API.
+  // En cas d'erreur (mauvais mot de passe, email déjà pris...), l'API renvoie un message
+  // et la fonction lance une erreur que la page attrape (try/catch) pour l'afficher.
 
-    function logout() {
-        setUser(null);
-    }
+  async function login(email, password) {
+    const user = await api.login(email, password);
+    setCurrentUser(user);
+  }
 
-    function updateProfile(changes) {
-        setUser((prev) => ({ ...prev, ...changes }));
-    }
+  async function register({ username, email, password }) {
+    const user = await api.register({ username, email, password });
+    setCurrentUser(user);
+  }
 
-    const value = { user, login, logout, updateProfile };
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  async function logout() {
+    await api.logout();
+    setCurrentUser(null);
+  }
+
+  /** Met à jour le compte connecté (pseudo, email, image, mot de passe). */
+  async function updateAccount(changes) {
+    const user = await api.updateAccount(changes);
+    setCurrentUser(user);
+  }
+
+  const contextValue = { currentUser, isLoading, login, logout, register, updateAccount };
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
+/** Hook à appeler dans un composant pour accéder à l'utilisateur connecté et aux fonctions d'authentification. */
 export function useAuth() {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
-    return ctx;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth doit être utilisé à l’intérieur de <AuthProvider>');
+  }
+  return context;
 }

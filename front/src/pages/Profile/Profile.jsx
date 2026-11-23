@@ -1,174 +1,213 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Avatar, Stack } from '@mui/material';
-import { useAuth } from '../../context/AuthContext.jsx';
-import figuresData from '../../data/figures.json';
-import ProductCardOwner from '../../components/ProductCard/ProductCardOwner.jsx';
+import { Alert, Avatar, Button, Stack, TextField, Typography } from '@mui/material';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
-import { addDeletedProductId, getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
+import { useProducts } from '../../context/ProductsContext.jsx';
 import './Profile.css';
 
-const sections = [
-    { id: 'profile', label: 'Profil' },
-    { id: 'products', label: 'Mes produits' },
-    { id: 'likes', label: 'Mes likes' },
+// Onglets du menu latéral. `component` est le composant affiché quand l'onglet est actif
+// (ils sont définis plus bas dans ce fichier).
+const SECTIONS = [
+  { id: 'settings', label: 'Profil', component: SettingsSection },
+  { id: 'products', label: 'Mes produits', component: MyProductsSection },
+  { id: 'likes', label: 'Mes likes', component: MyLikesSection },
 ];
 
+/** Page "Mon profil" (réservée aux utilisateurs connectés, voir RequireAuth). */
 export default function Profile() {
-    const navigate = useNavigate();
-    const { user, updateProfile, logout } = useAuth();
-    const { likedIds } = useLikes();
-    const [activeSection, setActiveSection] = useState('profile');
-    const [productsVersion, setProductsVersion] = useState(0);
-    const [editValues, setEditValues] = useState({
-        email: user?.email || '',
-        mdp: user?.mdp || '',
-        username: user?.username || '',
-        profile_img: user?.profile_img || '',
-    });
+  const { logout } = useAuth();
+  const [activeSectionId, setActiveSectionId] = useState('settings');
 
-    useEffect(() => {
-        return subscribeToProductStorage(() => {
-            setProductsVersion((prev) => prev + 1);
-        });
-    }, []);
+  const activeSection = SECTIONS.find((section) => section.id === activeSectionId);
+  // Une variable dont le nom commence par une majuscule peut être utilisée comme une balise JSX.
+  const ActiveSectionComponent = activeSection.component;
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setEditValues((prev) => ({ ...prev, [name]: value }));
+  return (
+    <div className="profile-page">
+      <PageMetadata title={`Mon profil - ${activeSection.label}`} noIndex />
+      <nav className="profile-sidebar" aria-label="Sections du profil">
+        <Stack spacing={1}>
+          {SECTIONS.map((section) => (
+            <Button
+              key={section.id}
+              variant={section.id === activeSectionId ? 'contained' : 'text'}
+              aria-current={section.id === activeSectionId ? 'page' : undefined}
+              onClick={() => setActiveSectionId(section.id)}
+            >
+              {section.label}
+            </Button>
+          ))}
+          <Button color="error" onClick={logout}>
+            Déconnexion
+          </Button>
+        </Stack>
+      </nav>
+
+      <section className="profile-content">
+        <Typography variant="h6" component="h1" gutterBottom>
+          {activeSection.label}
+        </Typography>
+        <ActiveSectionComponent />
+      </section>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Onglet "Profil" : modification des informations du compte           */
+/* ------------------------------------------------------------------ */
+function SettingsSection() {
+  const { currentUser, updateAccount } = useAuth();
+  // Les noms des champs sont ceux attendus par l'API (PATCH /api/users/me).
+  const [formValues, setFormValues] = useState({
+    username: currentUser.username,
+    email: currentUser.email,
+    profile_image_url: currentUser.profile_image_url ?? '',
+    current_password: '',
+    new_password: '',
+  });
+  const [isSaved, setIsSaved] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setFormValues((previousValues) => ({ ...previousValues, [name]: value }));
+    setIsSaved(false);
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const changes = {
+      username: formValues.username.trim(),
+      email: formValues.email.trim().toLowerCase(),
+      profile_image_url: formValues.profile_image_url.trim(),
     };
+    // Les mots de passe ne sont envoyés que s'ils ont été saisis.
+    // L'API exige le mot de passe actuel pour changer d'email ou de mot de passe.
+    if (formValues.current_password) {
+      changes.current_password = formValues.current_password;
+    }
+    if (formValues.new_password) {
+      changes.new_password = formValues.new_password;
+    }
 
-    const handleSave = () => {
-        updateProfile(editValues);
-    };
+    try {
+      await updateAccount(changes);
+      setErrorMessage('');
+      setIsSaved(true);
+      // On vide les champs de mot de passe après l'enregistrement.
+      setFormValues((previousValues) => ({ ...previousValues, current_password: '', new_password: '' }));
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
+  }
 
-    const handleDeleteProduct = (product) => {
-        const productId = String(product?.id ?? product?.product_id ?? '');
-        if (!productId) return;
-        const confirmed = window.confirm('Voulez-vous vraiment supprimer ce post ?');
-        if (!confirmed) return;
-        addDeletedProductId(productId);
-    };
+  return (
+    <Stack component="form" spacing={2} sx={{ maxWidth: 500 }} onSubmit={handleSubmit}>
+      <Avatar src={formValues.profile_image_url} alt="" sx={{ width: 80, height: 80 }} />
+      <TextField label="Pseudo" name="username" value={formValues.username} onChange={handleChange} />
+      <TextField label="Email" name="email" type="email" value={formValues.email} onChange={handleChange} />
+      <TextField
+        label="Image de profil (URL)"
+        name="profile_image_url"
+        value={formValues.profile_image_url}
+        onChange={handleChange}
+      />
+      <TextField
+        label="Nouveau mot de passe"
+        name="new_password"
+        type="password"
+        autoComplete="new-password"
+        helperText="Laisser vide pour conserver le mot de passe actuel"
+        value={formValues.new_password}
+        onChange={handleChange}
+      />
+      <TextField
+        label="Mot de passe actuel"
+        name="current_password"
+        type="password"
+        autoComplete="current-password"
+        helperText="Obligatoire pour changer d’email ou de mot de passe"
+        value={formValues.current_password}
+        onChange={handleChange}
+      />
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      {isSaved && <Alert severity="success">Profil mis à jour.</Alert>}
+      <Button type="submit" variant="contained">
+        Enregistrer
+      </Button>
+    </Stack>
+  );
+}
 
-    const availableProducts = useMemo(
-        () => getAllProducts(figuresData.figures || []),
-        [productsVersion]
-    );
+/* ------------------------------------------------------------------ */
+/* Onglet "Mes produits" : annonces publiées par l'utilisateur          */
+/* ------------------------------------------------------------------ */
+function MyProductsSection() {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const { products, deleteProduct } = useProducts();
+  const [deleteError, setDeleteError] = useState('');
 
-    const ownedProducts = useMemo(() => {
-        return availableProducts.filter((product) => String(product.owner_user_id ?? product.user_id) === String(user?.user_id));
-    }, [availableProducts, user?.user_id]);
+  const myProducts = products.filter((product) => product.owner_id === currentUser.id);
 
-    const likedProducts = useMemo(() => {
-        const likedSet = new Set(likedIds.map((id) => String(id)));
-        return availableProducts.filter((product) => likedSet.has(String(product.id ?? product.product_id)));
-    }, [likedIds, availableProducts]);
+  async function handleDelete(product) {
+    if (!window.confirm(`Supprimer l'annonce « ${product.title} » ?`)) {
+      return;
+    }
+    try {
+      await deleteProduct(product.id);
+      setDeleteError('');
+    } catch (error) {
+      setDeleteError(error.message);
+    }
+  }
 
-    if (!user) return null; // should never happen because route is protected
+  return (
+    <>
+      <Button className="button-gradient profile-add-product" variant="contained" onClick={() => navigate('/vendre')}>
+        Ajouter un produit en vente
+      </Button>
+      {deleteError && <Alert severity="error">{deleteError}</Alert>}
+      {myProducts.length === 0 ? (
+        <p className="profile-empty">Vous n’avez encore aucune annonce.</p>
+      ) : (
+        <div className="profile-grid">
+          {myProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={() => navigate(`/product/${product.id}?edit=1`)}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
 
-    return (
-        <Box className="profile-page">
-            <Box className="profile-sidebar">
-                <Stack spacing={1}>
-                    {sections.map((s) => (
-                        <Button
-                            key={s.id}
-                            variant={activeSection === s.id ? 'contained' : 'text'}
-                            onClick={() => setActiveSection(s.id)}
-                        >
-                            {s.label}
-                        </Button>
-                    ))}
-                    <Button color="error" onClick={logout}>
-                        Déconnexion
-                    </Button>
-                </Stack>
-            </Box>
-            <Box className="profile-content">
-                {activeSection === 'products' && (
-                    <Box>
-                        <Typography variant="h6" gutterBottom>Mes produits</Typography>
-                        <Button
-                            className="profile-add-product"
-                            variant="contained"
-                            onClick={() => navigate('/vendre')}
-                        >
-                            Ajouter un produit en vente
-                        </Button>
-                        <Stack spacing={2}>
-                            {ownedProducts.map(product => (
-                                <ProductCardOwner
-                                    key={product.id}
-                                    product={product}
-                                    onEdit={() => navigate(`/product/${product.id ?? product.product_id ?? ''}?edit=1`)}
-                                    onDelete={() => handleDeleteProduct(product)}
-                                />
-                            ))}
-                        </Stack>
-                    </Box>
-                )}
-                {activeSection === 'likes' && (
-                    <Box>
-                        <Typography variant="h6" gutterBottom>Mes likes</Typography>
-                        {likedProducts.length === 0 ? (
-                            <Box className="profile-likes-empty">Vous n'avez aucun like pour le moment.</Box>
-                        ) : (
-                            <Box className="profile-likes-grid">
-                                {likedProducts.map((product) => (
-                                    <ProductCard key={product.id} product={product} />
-                                ))}
-                            </Box>
-                        )}
-                    </Box>
-                )}
-                {activeSection === 'profile' && (
-                    <Box sx={{ maxWidth: 500 }}>
-                        <Typography variant="h6" gutterBottom>
-                            Profil
-                        </Typography>
-                        <Stack spacing={2}>
-                            <Avatar
-                                src={editValues.profile_img}
-                                sx={{ width: 80, height: 80 }}
-                            />
-                            <TextField
-                                label="Username"
-                                name="username"
-                                fullWidth
-                                value={editValues.username}
-                                onChange={handleChange}
-                            />
-                            <TextField
-                                label="Email"
-                                name="email"
-                                type="email"
-                                fullWidth
-                                value={editValues.email}
-                                onChange={handleChange}
-                            />
-                            <TextField
-                                label="Mot de passe"
-                                name="mdp"
-                                type="password"
-                                fullWidth
-                                value={editValues.mdp}
-                                onChange={handleChange}
-                            />
-                            <TextField
-                                label="Image URL"
-                                name="profile_img"
-                                fullWidth
-                                value={editValues.profile_img}
-                                onChange={handleChange}
-                            />
-                            <Button variant="contained" onClick={handleSave}>
-                                Enregistrer
-                            </Button>
-                        </Stack>
-                    </Box>
-                )}
-            </Box>
-        </Box>
-    );
+/* ------------------------------------------------------------------ */
+/* Onglet "Mes likes" : produits mis en favoris                         */
+/* ------------------------------------------------------------------ */
+function MyLikesSection() {
+  const { products } = useProducts();
+  const { likedProductIds } = useLikes();
+
+  const likedProducts = products.filter((product) => likedProductIds.includes(product.id));
+
+  if (likedProducts.length === 0) {
+    return <p className="profile-empty">Vous n’avez aucun like pour le moment.</p>;
+  }
+
+  return (
+    <div className="profile-grid">
+      {likedProducts.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
 }

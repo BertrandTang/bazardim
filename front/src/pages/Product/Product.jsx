@@ -1,477 +1,217 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link as RouterLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import Box from '@mui/material/Box';
+import { useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import productsData from '../../data/figures.json';
-import { useCart } from '../../context/CartContext.jsx';
+import AddToCartButton from '../../components/AddToCartButton/AddToCartButton.jsx';
+import MessageForm from '../../components/MessageForm/MessageForm.jsx';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
+import ProductForm from '../../components/ProductForm/ProductForm.jsx';
+import SellerLink from '../../components/SellerLink/SellerLink.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { addDeletedProductId, getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
+import { useProducts } from '../../context/ProductsContext.jsx';
+import { sendMessage } from '../../services/api.js';
+import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
 import './Product.css';
 
-function getImageIndexFromId(productId) {
-    const digits = String(productId || '').match(/\d+/)?.[0];
-    const numeric = Number(digits || 1);
-    const normalized = ((numeric - 1) % 11 + 11) % 11;
-    return normalized + 1;
+/** Transforme la taille du produit en texte lisible : "18 cm • 25 cm • 1/8". */
+function formatSize(product) {
+  const parts = [
+    product.height_cm && `${product.height_cm} cm`,
+    product.width_cm && `${product.width_cm} cm`,
+    product.scale,
+  ].filter(Boolean);
+  return parts.join(' • ');
 }
 
-function resolveImagePath(rawImage, productId) {
-    if (!rawImage || typeof rawImage !== 'string') return '/img/img_1.jpg';
-    if (rawImage.startsWith('http://') || rawImage.startsWith('https://')) return rawImage;
-    if (rawImage.startsWith('/img/')) return rawImage;
-    if (rawImage.startsWith('url_image/')) {
-        return `/img/img_${getImageIndexFromId(productId)}.jpg`;
-    }
-    if (rawImage.startsWith('/')) return rawImage;
-    return `/${rawImage}`;
+/**
+ * Données structurées (format JSON-LD, vocabulaire schema.org) décrivant le produit.
+ * Google les lit pour afficher le prix et l'état directement dans ses résultats de recherche.
+ * https://developers.google.com/search/docs/appearance/structured-data/product
+ */
+function buildStructuredData(product) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.description,
+    image: new URL(getProductImage(product), window.location.origin).href,
+    sku: String(product.id),
+    ...(product.ean_code && { gtin13: product.ean_code }),
+    ...(product.manufacturer && { brand: { '@type': 'Brand', name: product.manufacturer } }),
+    offers: {
+      '@type': 'Offer',
+      price: Number(product.price).toFixed(2),
+      priceCurrency: 'EUR',
+      availability: 'https://schema.org/InStock',
+      itemCondition:
+        product.state_of_wear === 'Neuf' ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
+      seller: { '@type': 'Person', name: product.owner_username },
+    },
+  };
 }
 
-function mapProduct(product) {
-    return {
-        ...product,
-        id: product.id ?? product.product_id,
-        title: product.title || product.product_title || 'TITRE',
-        description: product.description || product.product_description || '',
-        price: product.price ?? product.product_price ?? 0,
-        tags: product.tags || product.product_tags || [],
-        username: product.username || product.product_username || product.owner_username,
-        image: resolveImagePath(product.img || product.image || product.product_img, product.id ?? product.product_id),
-        category: product.category || product.product_category || '',
-        licenceName: product.licence_name || '',
-        characterName: product.character_name || '',
-        manufacturer: product.manufacturer || '',
-        version: product.version || '',
-        material: product.material || '',
-        yearOfAcquisition: product.year_of_acquisition ?? '',
-        stateOfWear: product.state_of_wear || '',
-        stateOfBox: product.state_of_box || '',
-        box: product.box,
-        eanNumber: product.EAN_number || '',
-        size: product.size || {},
-        ownerUserId: product.owner_user_id ?? product.product_user_id ?? product.user_id ?? '',
-    };
-}
-
+/**
+ * Page de détail d'un produit (adresse : /product/:id).
+ * Le vendeur peut y modifier ou supprimer son annonce ; les autres utilisateurs peuvent le contacter.
+ */
 export default function Product() {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const { user } = useAuth();
-    const { addItem } = useCart();
-    const [productsVersion, setProductsVersion] = useState(0);
-    const [productOverrides, setProductOverrides] = useState(() => {
-        try {
-            const raw = localStorage.getItem('productOverrides');
-            return raw ? JSON.parse(raw) : {};
-        } catch {
-            return {};
-        }
-    });
-    const [isEditing, setIsEditing] = useState(false);
-    const [showAddedMessage, setShowAddedMessage] = useState(false);
-    const [editValues, setEditValues] = useState({
-        title: '',
-        description: '',
-        price: '',
-        category: '',
-        licenceName: '',
-        characterName: '',
-        tags: '',
-        image: '',
-        yearOfAcquisition: '',
-        manufacturer: '',
-        version: '',
-        material: '',
-        stateOfWear: '',
-        box: '',
-        stateOfBox: '',
-        eanNumber: '',
-        sizeHeight: '',
-        sizeWidth: '',
-        sizeScale: '',
-    });
+  // useParams lit la partie variable de l'URL : pour /product/12, id vaut "12".
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const { findProductById, isLoading, updateProduct, deleteProduct } = useProducts();
 
-    useEffect(() => {
-        try {
-            localStorage.setItem('productOverrides', JSON.stringify(productOverrides));
-        } catch {
-        }
-    }, [productOverrides]);
+  // Le bouton "Modifier" de la page profil ouvre /product/:id?edit=1 :
+  // dans ce cas on démarre directement en mode édition.
+  const [isEditing, setIsEditing] = useState(searchParams.get('edit') === '1');
+  const [deleteError, setDeleteError] = useState('');
 
-    useEffect(() => {
-        return subscribeToProductStorage(() => {
-            setProductsVersion((prev) => prev + 1);
-        });
-    }, []);
+  const product = findProductById(id);
 
-    const products = useMemo(
-        () => {
-            return getAllProducts(productsData.figures || [])
-                .map(mapProduct)
-                .map((mappedProduct) => ({
-                    ...mappedProduct,
-                    ...(productOverrides[String(mappedProduct.id)] || {}),
-                }));
-        },
-        [productOverrides, productsVersion]
-    );
-    const product = products.find((p) => String(p.id) === String(id));
-    const shouldStartInEdit = searchParams.get('edit') === '1';
+  if (isLoading) {
+    return <p className="layout-loading">Chargement…</p>;
+  }
 
-    const isOwner = !!user && String(user.user_id) === String(product?.ownerUserId);
-
-    useEffect(() => {
-        if (!product) return;
-        if (isOwner && shouldStartInEdit) {
-            setIsEditing(true);
-            return;
-        }
-        setIsEditing(false);
-    }, [product?.id, isOwner, shouldStartInEdit]);
-
-    useEffect(() => {
-        if (!product) return;
-        setEditValues({
-            title: product.title || '',
-            description: product.description || '',
-            price: String(product.price ?? ''),
-            category: product.category || '',
-            licenceName: product.licenceName || '',
-            characterName: product.characterName || '',
-            tags: (product.tags || []).join(', '),
-            image: product.image || '',
-            yearOfAcquisition: String(product.yearOfAcquisition ?? ''),
-            manufacturer: product.manufacturer || '',
-            version: product.version || '',
-            material: product.material || '',
-            stateOfWear: product.stateOfWear || '',
-            box: typeof product.box === 'boolean' ? (product.box ? 'oui' : 'non') : '',
-            stateOfBox: product.stateOfBox || '',
-            eanNumber: product.eanNumber || '',
-            sizeHeight: String(product.size?.height ?? ''),
-            sizeWidth: String(product.size?.width ?? ''),
-            sizeScale: product.size?.scale || '',
-        });
-    }, [product?.id]);
-
-    useEffect(() => {
-        if (!showAddedMessage) return;
-        const timeoutId = window.setTimeout(() => {
-            setShowAddedMessage(false);
-        }, 1500);
-        return () => window.clearTimeout(timeoutId);
-    }, [showAddedMessage]);
-
-    const handleEditChange = (event) => {
-        const { name, value } = event.target;
-        setEditValues((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleSaveProduct = () => {
-        if (!product) return;
-        const parsedPrice = Number(editValues.price);
-        const parsedYear = Number(editValues.yearOfAcquisition);
-        const parsedSizeHeight = Number(editValues.sizeHeight);
-        const parsedSizeWidth = Number(editValues.sizeWidth);
-        const parsedTags = editValues.tags
-            .split(',')
-            .map((value) => value.trim())
-            .filter(Boolean);
-
-        const normalizedBox = editValues.box.trim().toLowerCase();
-        let nextBox = product.box;
-        if (['oui', 'true', '1', 'yes'].includes(normalizedBox)) nextBox = true;
-        if (['non', 'false', '0', 'no'].includes(normalizedBox)) nextBox = false;
-
-        setProductOverrides((prev) => ({
-            ...prev,
-            [String(product.id)]: {
-                title: editValues.title.trim() || product.title,
-                description: editValues.description.trim() || product.description,
-                price: Number.isFinite(parsedPrice) ? parsedPrice : product.price,
-                category: editValues.category.trim() || product.category,
-                licenceName: editValues.licenceName.trim() || product.licenceName,
-                characterName: editValues.characterName.trim() || product.characterName,
-                tags: parsedTags.length ? parsedTags : product.tags,
-                image: resolveImagePath(editValues.image.trim() || product.image, product.id),
-                yearOfAcquisition: Number.isFinite(parsedYear) ? parsedYear : product.yearOfAcquisition,
-                manufacturer: editValues.manufacturer.trim() || product.manufacturer,
-                version: editValues.version.trim() || product.version,
-                material: editValues.material.trim() || product.material,
-                stateOfWear: editValues.stateOfWear.trim() || product.stateOfWear,
-                box: nextBox,
-                stateOfBox: editValues.stateOfBox.trim() || product.stateOfBox,
-                eanNumber: editValues.eanNumber.trim() || product.eanNumber,
-                size: {
-                    height: Number.isFinite(parsedSizeHeight) ? parsedSizeHeight : product.size?.height,
-                    width: Number.isFinite(parsedSizeWidth) ? parsedSizeWidth : product.size?.width,
-                    scale: editValues.sizeScale.trim() || product.size?.scale || '',
-                },
-            },
-        }));
-        setIsEditing(false);
-    };
-
-    const handleDeleteProduct = () => {
-        if (!product) return;
-        const confirmed = window.confirm('Voulez-vous vraiment supprimer ce post ?');
-        if (!confirmed) return;
-
-        const productId = String(product.id);
-
-        addDeletedProductId(productId);
-
-        setProductOverrides((prev) => {
-            if (!prev[productId]) return prev;
-            const next = { ...prev };
-            delete next[productId];
-            return next;
-        });
-
-        navigate('/profile');
-    };
-
-    const handleAddToCart = () => {
-        if (!product) return;
-        addItem(product);
-        setShowAddedMessage(false);
-        window.requestAnimationFrame(() => setShowAddedMessage(true));
-    };
-
-    if (!product) {
-        return (
-            <Box className="product-page product-page--empty">
-                <h2>Produit introuvable</h2>
-            </Box>
-        );
-    }
-
+  if (!product) {
     return (
-        <Box className="product-page">
-            <Box className="product-full-view">
-                <h1 className="product-full-title">{product.title || 'TITRE'}</h1>
-
-                <Box className="product-full-view__media">
-                    <img
-                        className="product-detail-image"
-                        src={product.image}
-                        alt={product.title}
-                        onError={(event) => {
-                            event.currentTarget.src = '/img/img_1.jpg';
-                        }}
-                    />
-                </Box>
-
-                <Box className="product-full-view__content">
-                    <div className="product-full-user">
-                        <RouterLink to={`/user/${product.ownerUserId}`} className="avatar-link">
-                            <div className="avatar">U</div>
-                        </RouterLink>
-                        <div className="username">
-                            <RouterLink to={`/user/${product.ownerUserId}`}>{product.username || 'USERNAME'}</RouterLink>
-                        </div>
-                    </div>
-
-                    <div className="product-full-tags">
-                        {product.category ? <span className="product-tag category">{product.category}</span> : null}
-                        {product.licenceName ? <span className="product-tag licence">{product.licenceName}</span> : null}
-                        {product.characterName ? <span className="product-tag character">{product.characterName}</span> : null}
-                        {(product.tags || []).map((tag) => (
-                            <span key={tag} className="product-tag custom">{tag}</span>
-                        ))}
-                    </div>
-
-                    {isOwner && isEditing ? (
-                        <Box className="product-edit-form">
-                            <TextField
-                                label="Titre"
-                                name="title"
-                                fullWidth
-                                value={editValues.title}
-                                onChange={handleEditChange}
-                            />
-                            <TextField
-                                label="Description"
-                                name="description"
-                                multiline
-                                minRows={4}
-                                fullWidth
-                                value={editValues.description}
-                                onChange={handleEditChange}
-                            />
-                            <Box className="product-edit-grid">
-                                <TextField
-                                    label="Prix (€)"
-                                    name="price"
-                                    type="number"
-                                    fullWidth
-                                    value={editValues.price}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Catégorie"
-                                    name="category"
-                                    fullWidth
-                                    value={editValues.category}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Licence"
-                                    name="licenceName"
-                                    fullWidth
-                                    value={editValues.licenceName}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Personnage"
-                                    name="characterName"
-                                    fullWidth
-                                    value={editValues.characterName}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Tags (séparés par virgule)"
-                                    name="tags"
-                                    fullWidth
-                                    value={editValues.tags}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Image (URL ou /img/...)"
-                                    name="image"
-                                    fullWidth
-                                    value={editValues.image}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Année d'acquisition"
-                                    name="yearOfAcquisition"
-                                    type="number"
-                                    fullWidth
-                                    value={editValues.yearOfAcquisition}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Fabricant"
-                                    name="manufacturer"
-                                    fullWidth
-                                    value={editValues.manufacturer}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Version"
-                                    name="version"
-                                    fullWidth
-                                    value={editValues.version}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Matière"
-                                    name="material"
-                                    fullWidth
-                                    value={editValues.material}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="État figurine"
-                                    name="stateOfWear"
-                                    fullWidth
-                                    value={editValues.stateOfWear}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Boîte (oui/non)"
-                                    name="box"
-                                    fullWidth
-                                    value={editValues.box}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="État boîte"
-                                    name="stateOfBox"
-                                    fullWidth
-                                    value={editValues.stateOfBox}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="EAN"
-                                    name="eanNumber"
-                                    fullWidth
-                                    value={editValues.eanNumber}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Taille hauteur (cm)"
-                                    name="sizeHeight"
-                                    type="number"
-                                    fullWidth
-                                    value={editValues.sizeHeight}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Taille largeur (cm)"
-                                    name="sizeWidth"
-                                    type="number"
-                                    fullWidth
-                                    value={editValues.sizeWidth}
-                                    onChange={handleEditChange}
-                                />
-                                <TextField
-                                    label="Échelle"
-                                    name="sizeScale"
-                                    fullWidth
-                                    value={editValues.sizeScale}
-                                    onChange={handleEditChange}
-                                />
-                            </Box>
-                        </Box>
-                    ) : (
-                        <p className="product-full-desc">{product.description || 'Aucune description.'}</p>
-                    )}
-
-                    {!isEditing && (
-                        <div className="product-full-specs">
-                            <div><strong>Année:</strong> {product.yearOfAcquisition || 'N/C'}</div>
-                            <div><strong>Fabricant:</strong> {product.manufacturer || 'N/C'}</div>
-                            <div><strong>Version:</strong> {product.version || 'N/C'}</div>
-                            <div><strong>Matière:</strong> {product.material || 'N/C'}</div>
-                            <div><strong>État figurine:</strong> {product.stateOfWear || 'N/C'}</div>
-                            <div><strong>Boîte:</strong> {typeof product.box === 'boolean' ? (product.box ? 'Oui' : 'Non') : 'N/C'}</div>
-                            <div><strong>État boîte:</strong> {product.stateOfBox || 'N/C'}</div>
-                            <div><strong>EAN:</strong> {product.eanNumber || 'N/C'}</div>
-                            <div>
-                                <strong>Taille:</strong>{' '}
-                                {product.size?.height ? `${product.size.height} cm` : 'N/C'}
-                                {product.size?.width ? ` • ${product.size.width} cm` : ''}
-                                {product.size?.scale ? ` • ${product.size.scale}` : ''}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="product-full-bottom">
-                        <div className="product-price">{Number(product.price || 0).toFixed(2)}€</div>
-                        {isOwner ? (
-                            isEditing ? (
-                                <>
-                                    <Button variant="contained" className="product-full-add" onClick={handleSaveProduct}>ENREGISTRER</Button>
-                                    <Button variant="outlined" onClick={() => setIsEditing(false)}>ANNULER</Button>
-                                </>
-                            ) : (
-                                <>
-                                    <Button variant="contained" className="product-full-add" onClick={() => setIsEditing(true)}>MODIFIER</Button>
-                                    <Button variant="outlined" color="error" onClick={handleDeleteProduct}>SUPPRIMER</Button>
-                                </>
-                            )
-                        ) : (
-                            <div className="product-add-feedback-wrap">
-                                {showAddedMessage ? <span className="product-added-toast">ajoute au panier</span> : null}
-                                <Button variant="contained" className="product-full-add" onClick={handleAddToCart}>AJOUTER</Button>
-                            </div>
-                        )}
-                    </div>
-                </Box>
-            </Box>
-        </Box>
+      <section className="product-page">
+        <PageMetadata title="Produit introuvable" noIndex />
+        <h1>Produit introuvable</h1>
+      </section>
     );
+  }
+
+  const isOwner = currentUser !== null && currentUser.id === product.owner_id;
+
+  // En cas d'erreur de l'API, ProductForm affiche le message (voir son handleSubmit).
+  async function handleSave(productFields) {
+    await updateProduct(product.id, productFields);
+    setIsEditing(false);
+  }
+
+  async function handleDelete() {
+    if (!window.confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
+      return;
+    }
+    try {
+      await deleteProduct(product.id);
+      navigate('/profile');
+    } catch (error) {
+      setDeleteError(error.message);
+    }
+  }
+
+  /** Envoie un message au vendeur à propos de cette annonce. */
+  async function handleContactSeller(content) {
+    await sendMessage({ recipient_id: product.owner_id, product_id: product.id, content });
+  }
+
+  // Caractéristiques affichées sous la description ("N/C" = non communiqué).
+  const specifications = [
+    { label: 'Année', value: product.year_of_acquisition },
+    { label: 'Fabricant', value: product.manufacturer },
+    { label: 'Version', value: product.version },
+    { label: 'Matière', value: product.material },
+    { label: 'État figurine', value: product.state_of_wear },
+    { label: 'Boîte', value: product.has_box ? 'Oui' : 'Non' },
+    { label: 'État boîte', value: product.state_of_box },
+    { label: 'EAN', value: product.ean_code },
+    { label: 'Taille', value: formatSize(product) },
+  ];
+
+  return (
+    <section className="product-page">
+      <PageMetadata
+        title={product.title}
+        description={`${product.description.slice(0, 140)} - ${formatPrice(product.price)} sur Bazardim.`}
+        image={getProductImage(product)}
+      />
+      {/* JSON.stringify produit le texte ; on remplace "<" pour qu'un titre contenant
+          "</script>" ne puisse jamais fermer la balise (protection XSS). */}
+      <script type="application/ld+json">
+        {JSON.stringify(buildStructuredData(product)).replaceAll('<', '\\u003c')}
+      </script>
+      <article className="product-detail">
+        <h1 className="product-detail-title">{product.title}</h1>
+
+        <div className="product-detail-media">
+          <img src={getProductImage(product)} alt={product.title} />
+        </div>
+
+        <SellerLink userId={product.owner_id} username={product.owner_username} />
+
+        <div className="product-tags">
+          {product.category && <span className="product-tag category">{product.category}</span>}
+          {product.licence_name && <span className="product-tag licence">{product.licence_name}</span>}
+          {product.character_name && <span className="product-tag character">{product.character_name}</span>}
+          {product.tags?.map((tag) => (
+            <span key={tag} className="product-tag custom">
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {isOwner && isEditing ? (
+          <ProductForm
+            initialProduct={product}
+            submitLabel="Enregistrer"
+            onSubmit={handleSave}
+            onCancel={() => setIsEditing(false)}
+          />
+        ) : (
+          <>
+            <p className="product-detail-description">{product.description}</p>
+
+            <dl className="product-detail-specifications">
+              {specifications.map((specification) => (
+                <div key={specification.label}>
+                  <dt>{specification.label} :</dt>
+                  <dd>{specification.value || 'N/C'}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <div className="product-detail-bottom">
+              <span className="product-price">{formatPrice(product.price)}</span>
+              {isOwner ? (
+                <>
+                  <Button variant="contained" className="button-gradient" onClick={() => setIsEditing(true)}>
+                    Modifier
+                  </Button>
+                  <Button variant="outlined" color="error" onClick={handleDelete}>
+                    Supprimer
+                  </Button>
+                </>
+              ) : (
+                <AddToCartButton productId={product.id} />
+              )}
+            </div>
+            {deleteError && (
+              <p className="form-error" role="alert">
+                {deleteError}
+              </p>
+            )}
+          </>
+        )}
+
+        {/* Contacter le vendeur : uniquement pour les autres utilisateurs que le vendeur. */}
+        {!isOwner && (
+          <section className="product-contact" aria-labelledby="product-contact-title">
+            <h2 id="product-contact-title">Contacter le vendeur</h2>
+            {currentUser ? (
+              <MessageForm
+                label={`Votre message à ${product.owner_username}`}
+                submitLabel="Envoyer"
+                onSend={handleContactSeller}
+              />
+            ) : (
+              <p>
+                <Link to="/auth">Connectez-vous</Link> pour poser une question au vendeur.
+              </p>
+            )}
+          </section>
+        )}
+      </article>
+    </section>
+  );
 }

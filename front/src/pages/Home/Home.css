@@ -1,3 +1,42 @@
-h1 {
-    color: black
+.home-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+
+.home-grid {
+  margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+}
+
+.home-empty {
+  text-align: center;
+  color: #555;
+}
+
+.home-title {
+  margin: 0 0 8px;
+  text-align: center;
+  font-family: monospace;
+  font-size: 28px;
+  color: var(--color-primary);
+}
+
+.home-search-summary {
+  margin: 0 0 24px;
+  text-align: center;
+  color: #555;
+}
+
+@media (max-width: 600px) {
+  .home-page {
+    padding: 32px 16px;
+  }
+
+  .home-title {
+    font-size: 22px;
+  }
 }

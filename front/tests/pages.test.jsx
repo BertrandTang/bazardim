@@ -1,0 +1,315 @@
+import { screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { addFakeMessage, likeProduct } from './fakeApi.js';
+import { PRODUCTS, TEST_PASSWORD } from './fixtures.js';
+import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
+import Auth from '../src/pages/Auth/Auth.jsx';
+import Cart from '../src/pages/Cart/Cart.jsx';
+import Home from '../src/pages/Home/Home.jsx';
+import Messages from '../src/pages/Messages/Messages.jsx';
+import NotFound from '../src/pages/NotFound/NotFound.jsx';
+import Product from '../src/pages/Product/Product.jsx';
+import Profile from '../src/pages/Profile/Profile.jsx';
+import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
+import Sell from '../src/pages/Sell/Sell.jsx';
+import SignUp from '../src/pages/SignUp/SignUp.jsx';
+import UserProfile from '../src/pages/UserProfile/UserProfile.jsx';
+
+// Les nombres attendus sont calculés à partir des données de test (fixtures.js),
+// pour que les tests restent valables quand on ajoute ou retire des produits.
+const statues = PRODUCTS.filter((product) => product.category === 'STATUE');
+
+describe('Home', () => {
+  it('affiche tous les produits avec un titre principal', async () => {
+    await renderWithProviders(<Home />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Figurines et statues de collection');
+    expect(screen.getAllByRole('article')).toHaveLength(PRODUCTS.length);
+  });
+
+  it('filtre par catégorie', async () => {
+    await renderWithProviders(<Home category="STATUE" />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Statues d’occasion');
+    // Autant de cartes que de statues, et aucune figurine (Vegeta est une figurine).
+    expect(screen.getAllByRole('article')).toHaveLength(statues.length);
+    expect(screen.queryByText(/Vegeta/)).not.toBeInTheDocument();
+  });
+
+  it('affiche le nombre de résultats d’une recherche', async () => {
+    await renderWithProviders(<Home />, { route: '/?q=vegeta' });
+    expect(screen.getByRole('status')).toHaveTextContent('1 résultat(s) pour « vegeta »');
+  });
+
+  it('affiche un message quand rien ne correspond', async () => {
+    await renderWithProviders(<Home />, { route: '/licences?licence=Inconnue' });
+    expect(screen.getByText('Aucun produit ne correspond à votre recherche.')).toBeInTheDocument();
+  });
+});
+
+describe('Auth (connexion)', () => {
+  it('affiche le message d’erreur de l’API avec un mauvais mot de passe', async () => {
+    const { user } = await renderWithProviders(<Auth />, { route: '/auth', path: '/auth' });
+    await user.type(screen.getByLabelText(/Email/), 'collectionneurdu92@example.com');
+    await user.type(screen.getByLabelText(/Mot de passe/), 'mauvais');
+    await user.click(screen.getByRole('button', { name: 'Se connecter' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Email ou mot de passe incorrect.');
+  });
+
+  it('connecte puis redirige vers le profil', async () => {
+    const { user } = await renderWithProviders(<Auth />, { route: '/auth', path: '/auth' });
+    await user.type(screen.getByLabelText(/Email/), 'Collectionneurdu92@example.com ');
+    await user.type(screen.getByLabelText(/Mot de passe/), TEST_PASSWORD);
+    await user.click(screen.getByRole('button', { name: 'Se connecter' }));
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/profile');
+  });
+});
+
+describe('SignUp (inscription)', () => {
+  async function fillForm(
+    user,
+    { password = 'motdepasse', confirmPassword = password, email = 'nouveau@example.com' },
+  ) {
+    await user.type(screen.getByLabelText(/Pseudo/), 'Nouveau');
+    await user.type(screen.getByLabelText(/^Email/), email);
+    await user.type(screen.getByLabelText(/^Mot de passe/), password);
+    await user.type(screen.getByLabelText(/Confirme/), confirmPassword);
+    await user.click(screen.getByRole('button', { name: 'S’inscrire' }));
+  }
+
+  it('refuse un mot de passe trop court', async () => {
+    const { user } = await renderWithProviders(<SignUp />, { route: '/signup', path: '/signup' });
+    await fillForm(user, { password: 'court' });
+    expect(screen.getByRole('alert')).toHaveTextContent('au moins 8 caractères');
+  });
+
+  it('refuse deux mots de passe différents', async () => {
+    const { user } = await renderWithProviders(<SignUp />, { route: '/signup', path: '/signup' });
+    await fillForm(user, { password: 'motdepasse', confirmPassword: 'autrechose' });
+    expect(screen.getByRole('alert')).toHaveTextContent('ne correspondent pas');
+  });
+
+  it('affiche le refus de l’API pour un email déjà utilisé', async () => {
+    const { user } = await renderWithProviders(<SignUp />, { route: '/signup', path: '/signup' });
+    await fillForm(user, { email: 'admin@example.com' });
+    expect(screen.getByRole('alert')).toHaveTextContent('Un compte existe déjà avec cet email.');
+  });
+
+  it('crée le compte et redirige vers le profil', async () => {
+    const { user } = await renderWithProviders(<SignUp />, { route: '/signup', path: '/signup' });
+    await fillForm(user, {});
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/profile');
+  });
+});
+
+describe('Cart (panier)', () => {
+  it('indique un panier vide', async () => {
+    await renderWithProviders(<Cart />);
+    expect(screen.getByText('Votre panier est vide.')).toBeInTheDocument();
+  });
+
+  it('modifie les quantités, retire un article et vide le panier', async () => {
+    // Produits 1 (59.99 €) et 2 (74.99 €).
+    localStorage.setItem(
+      'cartItems',
+      JSON.stringify([
+        { productId: 1, quantity: 1 },
+        { productId: 2, quantity: 1 },
+      ]),
+    );
+    const { user } = await renderWithProviders(<Cart />);
+    expect(screen.getByText('134.98 €')).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: /Ajouter un exemplaire/ })[0]);
+    expect(screen.getByText('194.97 €')).toBeInTheDocument();
+    await user.click(screen.getAllByRole('button', { name: /Retirer un exemplaire/ })[0]);
+    expect(screen.getByText('134.98 €')).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: 'Retirer' })[0]);
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: 'Vider le panier' }));
+    expect(screen.getByText('Votre panier est vide.')).toBeInTheDocument();
+  });
+});
+
+describe('Product (fiche produit)', () => {
+  it('affiche le produit, ses caractéristiques et ses données structurées', async () => {
+    await renderWithProviders(<Product />, { route: '/product/1', path: '/product/:id' });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Vegeta');
+    expect(screen.getByText('4573102711298')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'AJOUTER' })).toBeInTheDocument();
+    const structuredData = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
+    expect(structuredData).toMatchObject({ '@type': 'Product', offers: { price: '59.99', priceCurrency: 'EUR' } });
+  });
+
+  it('indique un produit introuvable', async () => {
+    await renderWithProviders(<Product />, { route: '/product/999', path: '/product/:id' });
+    expect(screen.getByRole('heading', { name: 'Produit introuvable' })).toBeInTheDocument();
+  });
+
+  it('permet au propriétaire de modifier puis supprimer son annonce', async () => {
+    loginAs(1);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const { user } = await renderWithProviders(<Product />, { route: '/product/1', path: '/product/:id' });
+
+    // Le propriétaire ne peut pas s'écrire à lui-même.
+    expect(screen.queryByRole('heading', { name: 'Contacter le vendeur' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Modifier' }));
+    const titleInput = screen.getByLabelText(/Titre/);
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Vegeta modifié');
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Vegeta modifié');
+
+    await user.click(screen.getByRole('button', { name: 'Supprimer' }));
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/profile');
+  });
+
+  it('ouvre directement le formulaire avec ?edit=1 et permet d’annuler', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(<Product />, { route: '/product/1?edit=1', path: '/product/:id' });
+    await user.click(screen.getByRole('button', { name: 'Annuler' }));
+    expect(screen.getByRole('button', { name: 'Modifier' })).toBeInTheDocument();
+  });
+
+  it('permet à un autre utilisateur de contacter le vendeur', async () => {
+    loginAs(2);
+    const { user } = await renderWithProviders(<Product />, { route: '/product/1', path: '/product/:id' });
+
+    await user.click(screen.getByRole('button', { name: 'Envoyer' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Le message ne peut pas être vide.');
+
+    await user.type(screen.getByLabelText(/Votre message à CollectionneurDu92/), 'Toujours disponible ?');
+    await user.click(screen.getByRole('button', { name: 'Envoyer' }));
+    expect(screen.getByText('Message envoyé.')).toBeInTheDocument();
+  });
+
+  it('invite un visiteur à se connecter pour contacter le vendeur', async () => {
+    await renderWithProviders(<Product />, { route: '/product/1', path: '/product/:id' });
+    expect(screen.getByRole('link', { name: 'Connectez-vous' })).toHaveAttribute('href', '/auth');
+  });
+});
+
+describe('Sell (mise en vente)', () => {
+  it('crée l’annonce puis ouvre sa page', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(<Sell />, { route: '/vendre', path: '/vendre' });
+    await user.type(screen.getByLabelText(/Titre/), 'Statue Zoro');
+    await user.type(screen.getByLabelText(/Description/), 'Statue en résine');
+    await user.type(screen.getByLabelText(/Prix/), '120');
+    await user.click(screen.getByRole('button', { name: 'Publier le produit' }));
+
+    // La fausse API donne l'identifiant suivant : 12 (il y a 11 produits au départ).
+    expect(screen.getByTestId('current-location')).toHaveTextContent(`/product/${PRODUCTS.length + 1}`);
+  });
+});
+
+describe('Profile (mon profil)', () => {
+  // Comme dans App.jsx, la page est protégée par RequireAuth, qui attend de savoir qui est connecté.
+  const profilePage = (
+    <RequireAuth>
+      <Profile />
+    </RequireAuth>
+  );
+
+  it('met à jour le pseudo', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(profilePage);
+    const usernameInput = screen.getByLabelText('Pseudo');
+    await user.clear(usernameInput);
+    await user.type(usernameInput, 'Collec92');
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    expect(screen.getByText('Profil mis à jour.')).toBeInTheDocument();
+  });
+
+  it('refuse un changement d’email sans le mot de passe actuel', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(profilePage);
+    const emailInput = screen.getByLabelText('Email');
+    await user.clear(emailInput);
+    await user.type(emailInput, 'nouvel-email@example.com');
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Mot de passe actuel incorrect.');
+  });
+
+  it('liste mes produits et mes likes', async () => {
+    loginAs(1);
+    await likeProduct(2); // l'utilisateur 1 a mis le produit 2 (Luffy) en favori
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const { user } = await renderWithProviders(profilePage);
+
+    await user.click(screen.getByRole('button', { name: 'Mes produits' }));
+    const myProductsCount = screen.getAllByRole('article').length;
+    await user.click(screen.getAllByRole('button', { name: 'Supprimer' })[0]);
+    expect(screen.getAllByRole('article')).toHaveLength(myProductsCount - 1);
+
+    await user.click(screen.getByRole('button', { name: 'Mes likes' }));
+    expect(screen.getByRole('heading', { name: 'Figurine S.H. Figuarts Luffy' })).toBeInTheDocument();
+  });
+});
+
+describe('UserProfile (profil public)', () => {
+  it('affiche le pseudo et les annonces du vendeur, sans son email', async () => {
+    await renderWithProviders(<UserProfile />, { route: '/user/2', path: '/user/:id' });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('FigurineParadise');
+    expect(screen.getByRole('heading', { name: 'Annonces de FigurineParadise' })).toBeInTheDocument();
+    // L'email est une donnée personnelle (RGPD) : il ne doit pas apparaître sur le profil public.
+    expect(screen.queryByText(/@example.com/)).not.toBeInTheDocument();
+  });
+
+  it('indique un profil introuvable', async () => {
+    await renderWithProviders(<UserProfile />, { route: '/user/999', path: '/user/:id' });
+    expect(screen.getByRole('heading', { name: 'Profil introuvable' })).toBeInTheDocument();
+  });
+
+  it('redirige vers "Mon profil" quand on consulte son propre profil public', async () => {
+    loginAs(1);
+    await renderWithProviders(<UserProfile />, { route: '/user/1', path: '/user/:id' });
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/profile');
+  });
+});
+
+describe('Messages (messagerie)', () => {
+  it('affiche un message reçu, permet d’y répondre et le marque comme lu', async () => {
+    // L'utilisateur 2 a écrit à l'utilisateur 1 à propos du produit 1.
+    addFakeMessage({ sender_id: 2, recipient_id: 1, product_id: 1, content: 'Toujours disponible ?' });
+    loginAs(1);
+    const { user } = await renderWithProviders(<Messages />);
+
+    const message = screen.getByRole('listitem');
+    expect(within(message).getByText('Toujours disponible ?')).toBeInTheDocument();
+    expect(within(message).getByRole('link', { name: 'FigurineParadise' })).toHaveAttribute('href', '/user/2');
+    expect(within(message).getByText('Nouveau')).toBeInTheDocument();
+
+    await user.click(within(message).getByRole('button', { name: 'Répondre' }));
+    await user.type(within(message).getByLabelText(/Votre réponse/), 'Oui !');
+    await user.click(within(message).getByRole('button', { name: 'Envoyer' }));
+    expect(within(message).getByText('Message envoyé.')).toBeInTheDocument();
+    expect(within(message).queryByText('Nouveau')).not.toBeInTheDocument();
+
+    // La réponse apparaît dans l'onglet "Envoyés".
+    await user.click(screen.getByRole('button', { name: 'Envoyés' }));
+    expect(await screen.findByText('Oui !')).toBeInTheDocument();
+  });
+
+  it('indique une boîte vide et une annonce supprimée', async () => {
+    addFakeMessage({ sender_id: 2, recipient_id: 1, product_id: null, content: 'Bonjour' });
+    loginAs(1);
+    const { user } = await renderWithProviders(<Messages />);
+    expect(screen.getByText('annonce supprimée')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Marquer comme lu' }));
+    expect(screen.queryByText('Nouveau')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Envoyés' }));
+    expect(await screen.findByText('Aucun message.')).toBeInTheDocument();
+  });
+});
+
+describe('NotFound (404)', () => {
+  it('propose de revenir à l’accueil', async () => {
+    await renderWithProviders(<NotFound />, { route: '/nimporte-quoi' });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cette page n’existe pas');
+    expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+  });
+});

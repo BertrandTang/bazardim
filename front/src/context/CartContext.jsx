@@ -1,66 +1,80 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext } from 'react';
+import useLocalStorageState from '../hooks/useLocalStorageState.js';
+import { useProducts } from './ProductsContext.jsx';
 
 const CartContext = createContext(null);
 
+/**
+ * Fournit le panier à toute l'application.
+ *
+ * Le panier reste enregistré dans le navigateur (localStorage) : un visiteur peut le remplir
+ * sans être connecté. Il ne stocke que l'identifiant du produit et la quantité : { productId, quantity }.
+ * Les informations du produit (titre, prix...) sont relues dans ProductsContext, ce qui évite
+ * d'afficher un prix périmé si le vendeur modifie son annonce.
+ */
 export function CartProvider({ children }) {
-    const [items, setItems] = useState(() => {
-        try {
-            const raw = localStorage.getItem('cart');
-            return raw ? JSON.parse(raw) : [];
-        } catch {
-            return [];
-        }
+  const { findProductById } = useProducts();
+  const [cartItems, setCartItems] = useLocalStorageState('cartItems', []);
+
+  // On associe chaque ligne du panier à son produit complet.
+  // Si un produit a été supprimé entre-temps, on l'ignore.
+  const cartLines = cartItems
+    .map((cartItem) => ({ product: findProductById(cartItem.productId), quantity: cartItem.quantity }))
+    .filter((cartLine) => cartLine.product !== null);
+
+  // Nombre total d'articles (affiché dans la pastille de la barre de navigation).
+  const itemCount = cartLines.reduce((total, cartLine) => total + cartLine.quantity, 0);
+  const totalPrice = cartLines.reduce((total, cartLine) => total + cartLine.product.price * cartLine.quantity, 0);
+
+  /** Ajoute un exemplaire du produit (ou augmente sa quantité s'il est déjà dans le panier). */
+  function addToCart(productId) {
+    setCartItems((previousItems) => {
+      const isAlreadyInCart = previousItems.some((cartItem) => cartItem.productId === productId);
+      if (!isAlreadyInCart) {
+        return [...previousItems, { productId, quantity: 1 }];
+      }
+      return previousItems.map((cartItem) =>
+        cartItem.productId === productId ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem,
+      );
     });
+  }
 
-    useEffect(() => {
-        try { localStorage.setItem('cart', JSON.stringify(items)); } catch { }
-    }, [items]);
+  /** Ajoute (+1) ou retire (-1) des exemplaires. Une ligne qui tombe à 0 est supprimée. */
+  function changeQuantity(productId, quantityChange) {
+    setCartItems((previousItems) =>
+      previousItems
+        .map((cartItem) =>
+          cartItem.productId === productId ? { ...cartItem, quantity: cartItem.quantity + quantityChange } : cartItem,
+        )
+        .filter((cartItem) => cartItem.quantity > 0),
+    );
+  }
 
-    const addItem = (product, qty = 1) => {
-        setItems(prev => {
-            const idx = prev.findIndex(item => item.id === product.id);
-            if (idx >= 0) {
-                const copy = [...prev];
-                const current = copy[idx].quantity || 1;
-                const next = current + qty;
-                if (next <= 0) {
-                    return copy.filter((_, i) => i !== idx);
-                }
-                copy[idx] = { ...copy[idx], quantity: next };
-                return copy;
-            }
-            if (qty <= 0) return prev;
-            return [...prev, { ...product, quantity: qty }];
-        });
-    };
+  function removeFromCart(productId) {
+    setCartItems((previousItems) => previousItems.filter((cartItem) => cartItem.productId !== productId));
+  }
 
-    const changeQuantity = (id, delta) => {
-        setItems(prev => {
-            const idx = prev.findIndex(item => item.id === id);
-            if (idx < 0) return prev;
-            const copy = [...prev];
-            const current = copy[idx].quantity || 1;
-            const next = current + delta;
-            if (next <= 0) {
-                return copy.filter((_, i) => i !== idx);
-            }
-            copy[idx] = { ...copy[idx], quantity: next };
-            return copy;
-        });
-    };
+  function clearCart() {
+    setCartItems([]);
+  }
 
-    const removeItem = (id) => setItems(prev => prev.filter(i => i.id !== id));
-    const clear = () => setItems([]);
-
-    const count = useMemo(() => items.reduce((n, it) => n + (it.quantity || 1), 0), [items]);
-    const total = useMemo(() => items.reduce((sum, it) => sum + Number(it.price || 0) * (it.quantity || 1), 0), [items]);
-
-    const value = { items, addItem, changeQuantity, removeItem, clear, count, total };
-    return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  const contextValue = {
+    cartLines,
+    itemCount,
+    totalPrice,
+    addToCart,
+    changeQuantity,
+    removeFromCart,
+    clearCart,
+  };
+  return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>;
 }
 
+/** Hook à appeler dans un composant pour accéder au panier. */
 export function useCart() {
-    const ctx = useContext(CartContext);
-    if (!ctx) throw new Error('useCart must be used within a CartProvider');
-    return ctx;
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart doit être utilisé à l’intérieur de <CartProvider>');
+  }
+  return context;
 }

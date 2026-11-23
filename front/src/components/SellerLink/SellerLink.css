@@ -1,0 +1,20 @@
+.seller-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-primary);
+}
+
+.seller-link-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

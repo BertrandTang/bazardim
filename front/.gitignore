@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rapport de couverture des tests (généré par npm run test:coverage)
+coverage

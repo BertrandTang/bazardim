@@ -1,61 +1,66 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import * as api from '../services/api.js';
 import { useAuth } from './AuthContext.jsx';
 
 const LikesContext = createContext(null);
 
+/**
+ * Fournit les produits "likés" (favoris) de l'utilisateur connecté.
+ * Les favoris sont enregistrés par l'API : il faut donc être connecté pour en ajouter.
+ */
 export function LikesProvider({ children }) {
-    const { user } = useAuth();
+  const { currentUser } = useAuth();
+  const currentUserId = currentUser?.id ?? null;
 
-    const [likesByUser, setLikesByUser] = useState(() => {
-        try {
-            const raw = localStorage.getItem('likesByUser');
-            return raw ? JSON.parse(raw) : {};
-        } catch {
-            return {};
-        }
-    });
+  // On retient à quel utilisateur appartient la liste : { userId: 3, productIds: [1, 4] }.
+  // Ainsi, après une déconnexion ou un changement de compte, on n'affiche jamais
+  // les favoris de la personne précédente.
+  const [likes, setLikes] = useState({ userId: null, productIds: [] });
 
-    useEffect(() => {
-        try {
-            localStorage.setItem('likesByUser', JSON.stringify(likesByUser));
-        } catch {
-        }
-    }, [likesByUser]);
+  // Recharge les favoris à chaque fois que l'utilisateur connecté change
+  // (c'est le rôle du tableau [currentUserId] : relancer l'effet quand cette valeur change).
+  useEffect(() => {
+    if (currentUserId === null) {
+      return;
+    }
+    api
+      .fetchLikedProducts()
+      .then((likedProducts) =>
+        setLikes({ userId: currentUserId, productIds: likedProducts.map((product) => product.id) }),
+      )
+      .catch(() => setLikes({ userId: currentUserId, productIds: [] }));
+  }, [currentUserId]);
 
-    const userKey = String(user?.user_id ?? 'guest');
+  // Valeur calculée : une liste vide si la liste chargée appartient à quelqu'un d'autre.
+  const likedProductIds = likes.userId === currentUserId ? likes.productIds : [];
 
-    const likedIds = useMemo(
-        () => (Array.isArray(likesByUser[userKey]) ? likesByUser[userKey] : []).map((id) => String(id)),
-        [likesByUser, userKey]
-    );
+  function isLiked(productId) {
+    return likedProductIds.includes(productId);
+  }
 
-    const isLiked = (id) => likedIds.includes(String(id));
+  /** Ajoute le produit aux favoris s'il n'y est pas, sinon le retire. */
+  async function toggleLike(productId) {
+    if (isLiked(productId)) {
+      await api.unlikeProduct(productId);
+      setLikes((previousLikes) => ({
+        ...previousLikes,
+        productIds: previousLikes.productIds.filter((likedProductId) => likedProductId !== productId),
+      }));
+    } else {
+      await api.likeProduct(productId);
+      setLikes((previousLikes) => ({ ...previousLikes, productIds: [...previousLikes.productIds, productId] }));
+    }
+  }
 
-    const toggleLike = (productOrId) => {
-        const id = String(productOrId?.id ?? productOrId ?? '');
-        if (!id) return;
-
-        setLikesByUser((prev) => {
-            const current = Array.isArray(prev[userKey]) ? prev[userKey].map((value) => String(value)) : [];
-            const exists = current.includes(id);
-            const nextUserLikes = exists
-                ? current.filter((value) => value !== id)
-                : [...current, id];
-
-            return {
-                ...prev,
-                [userKey]: nextUserLikes,
-            };
-        });
-    };
-
-    const value = { likedIds, isLiked, toggleLike };
-
-    return <LikesContext.Provider value={value}>{children}</LikesContext.Provider>;
+  const contextValue = { likedProductIds, isLiked, toggleLike };
+  return <LikesContext.Provider value={contextValue}>{children}</LikesContext.Provider>;
 }
 
+/** Hook à appeler dans un composant pour accéder aux favoris. */
 export function useLikes() {
-    const ctx = useContext(LikesContext);
-    if (!ctx) throw new Error('useLikes must be used within a LikesProvider');
-    return ctx;
+  const context = useContext(LikesContext);
+  if (!context) {
+    throw new Error('useLikes doit être utilisé à l’intérieur de <LikesProvider>');
+  }
+  return context;
 }

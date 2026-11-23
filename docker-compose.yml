@@ -1,0 +1,34 @@
+# Base de données PostgreSQL pour le développement et les tests.
+#
+#   docker compose up -d     -> démarre la base en arrière-plan
+#   docker compose down      -> l'arrête (les données sont conservées dans le volume)
+#   docker compose down -v   -> l'arrête ET supprime les données
+#
+# Le mot de passe n'est PAS écrit ici : Docker Compose le lit dans le fichier .env
+# placé à côté de ce fichier (ignoré par Git). Voir .env.example.
+services:
+  database:
+    image: postgres:17-alpine
+    container_name: bazardim_database
+    environment:
+      POSTGRES_USER: bazardim
+      # ":?" arrête Docker Compose avec ce message si la variable n'est pas définie.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Définissez POSTGRES_PASSWORD dans le fichier .env (voir .env.example)}
+      POSTGRES_DB: bazardim
+    ports:
+      # 127.0.0.1 : la base n'est joignable que depuis cet ordinateur,
+      # pas depuis les autres appareils du même réseau (Wi-Fi partagé...).
+      - '127.0.0.1:5432:5432'
+    volumes:
+      # Les données survivent à l'arrêt du conteneur grâce à ce volume.
+      - database_data:/var/lib/postgresql/data
+      # Scripts exécutés une seule fois, à la création de la base (ici : base de test).
+      - ./back/database/docker-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bazardim']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  database_data:

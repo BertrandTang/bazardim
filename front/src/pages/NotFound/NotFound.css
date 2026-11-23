@@ -1,0 +1,35 @@
+.not-found-page {
+  max-width: 600px;
+  margin: 48px auto;
+  padding: 32px 24px;
+  text-align: center;
+  background: var(--color-surface);
+  border-radius: 0 40px 0 40px;
+}
+
+.not-found-code {
+  margin: 0;
+  font-family: monospace;
+  font-size: 72px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.not-found-page h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.not-found-link {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: 0 24px 0 24px;
+  background: var(--gradient-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.not-found-link:hover {
+  color: #fff;
+}

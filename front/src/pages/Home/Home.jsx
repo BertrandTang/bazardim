@@ -1,113 +1,88 @@
-import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import figuresData from '../../data/figures.json';
+import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
-import { getAllProducts, subscribeToProductStorage } from '../../utils/productStorage.js';
+import { useProducts } from '../../context/ProductsContext.jsx';
+import { CATEGORIES } from '../../data/categories.js';
+import './Home.css';
 
-const imagePool = [
-  '/img/img_1.jpg',
-  '/img/img_2.jpg',
-  '/img/img_3.jpg',
-  '/img/img_4.jpg',
-  '/img/img_5.jpg',
-  '/img/img_6.jpg',
-  '/img/img_7.jpg',
-  '/img/img_8.jpg',
-  '/img/img_9.jpg',
-  '/img/img_10.jpg',
-  '/img/img_11.jpg',
-];
+/** Regroupe en un seul texte (en minuscules) tous les champs d'un produit sur lesquels on peut chercher. */
+function getSearchableText(product) {
+  return [
+    product.title,
+    product.description,
+    product.category,
+    product.licence_name,
+    product.character_name,
+    product.manufacturer,
+    product.owner_username,
+    ...(product.tags ?? []),
+  ]
+    .join(' ')
+    .toLowerCase();
+}
 
-export default function Home({ forcedCategory }) {
+/**
+ * Liste des produits, filtrée selon :
+ * - la catégorie (prop `category`, fournie par la route, ex : /figurines) ;
+ * - la licence (paramètre d'URL ?licence=One%20Piece) ;
+ * - la recherche (paramètre d'URL ?q=luffy).
+ */
+export default function Home({ category }) {
+  const { products, isLoading, loadingError } = useProducts();
   const [searchParams] = useSearchParams();
-  const [categoryIndex, setCategoryIndex] = useState(0);
-  const [productsVersion, setProductsVersion] = useState(0);
 
-  useEffect(() => {
-    return subscribeToProductStorage(() => {
-      setProductsVersion((prev) => prev + 1);
-    });
-  }, []);
+  const licenceFilter = searchParams.get('licence') ?? '';
+  const rawSearchText = (searchParams.get('q') ?? '').trim();
+  const searchText = rawSearchText.toLowerCase();
 
-  const products = useMemo(() => {
-    const list = getAllProducts(figuresData.figures || []);
-    return list
-      .map((p, idx) => ({
-        ...p,
-        id: p.id ?? p.product_id,
-        title: p.title || p.product_title,
-        description: p.description || p.product_description,
-        price: p.price ?? p.product_price,
-        tags: p.tags || p.product_tags,
-        username: p.owner_username || p.product_username,
-        image: imagePool[idx % imagePool.length],
-      }));
-  }, [productsVersion]);
+  // Pas besoin de useState : la liste filtrée est recalculée à chaque affichage
+  // à partir des produits et de l'URL.
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory = !category || product.category === category;
+    const matchesLicence = !licenceFilter || product.licence_name === licenceFilter;
+    const matchesSearch = !searchText || getSearchableText(product).includes(searchText);
+    return matchesCategory && matchesLicence && matchesSearch;
+  });
 
-  const categories = useMemo(
-    () => ['TOUT', ...Array.from(new Set(products.map((p) => p.category)))],
-    [products]
-  );
-
-  const selectedCategory = categories[categoryIndex] || categories[0] || '';
-  const activeCategory = forcedCategory || selectedCategory;
-  const activeLicence = searchParams.get('name') || '';
-  const activeSearch = (searchParams.get('q') || '').trim().toLowerCase();
-
-  const licenceOptions = useMemo(() => {
-    const list = products.filter((p) => activeCategory === 'TOUT' || p.category === activeCategory);
-    return Array.from(new Set(list.map((p) => p.licence_name))).filter(Boolean);
-  }, [products, activeCategory]);
-
-  const [licence, setLicence] = useState(() => licenceOptions[0] || '');
-
-  useEffect(() => {
-    if (!licenceOptions.includes(licence)) {
-      setLicence(licenceOptions[0] || '');
-    }
-  }, [selectedCategory, licenceOptions.join('|')]);
-
-  const characterOptions = useMemo(() => {
-    const list = products.filter(
-      (p) => (activeCategory === 'TOUT' || p.category === activeCategory) && (!licence || p.licence_name === licence)
-    );
-    return Array.from(new Set(list.map((p) => p.character_name))).filter(Boolean);
-  }, [products, activeCategory, licence]);
-
-  const [character, setCharacter] = useState(() => characterOptions[0] || '');
-
-  useEffect(() => {
-    if (!characterOptions.includes(character)) {
-      setCharacter(characterOptions[0] || '');
-    }
-  }, [selectedCategory, licence, characterOptions.join('|')]);
+  // Titre principal de la page (<h1>), important pour le référencement et les lecteurs d'écran.
+  const categoryLabel = CATEGORIES.find((categoryItem) => categoryItem.value === category)?.label;
+  let pageTitle = '';
+  if (categoryLabel) {
+    pageTitle = `${categoryLabel} d’occasion`;
+  } else if (licenceFilter) {
+    pageTitle = `Figurines ${licenceFilter}`;
+  }
+  const heading = pageTitle || 'Figurines et statues de collection d’occasion';
 
   return (
-    <Box sx={{ px: 4, py: 6, maxWidth: 1200, mx: 'auto' }}>
-      <Grid container spacing={5} justifyContent="center">
-        {products
-          .filter(
-            (p) => (activeCategory === 'TOUT' || !activeCategory || p.category === activeCategory)
-              && (!activeLicence || p.licence_name === activeLicence)
-              && (!activeSearch || [
-                p.title,
-                p.description,
-                p.category,
-                p.licence_name,
-                p.character_name,
-                p.manufacturer,
-                p.owner_username,
-                ...(Array.isArray(p.tags) ? p.tags : []),
-              ].join(' ').toLowerCase().includes(activeSearch))
-          )
-          .map((p) => (
-            <Grid key={p.id}>
-              <ProductCard product={p} />
-            </Grid>
+    <section className="home-page">
+      <PageMetadata
+        title={pageTitle}
+        description={`${heading} vendues par des collectionneurs sur Bazardim. ${products.length} annonces à découvrir.`}
+      />
+      <h1 className="home-title">{heading}</h1>
+      {rawSearchText && (
+        <p className="home-search-summary" role="status">
+          {filteredProducts.length} résultat(s) pour « {rawSearchText} »
+        </p>
+      )}
+
+      {isLoading && <p className="home-empty">Chargement des produits…</p>}
+      {loadingError && (
+        <p className="home-empty" role="alert">
+          {loadingError}
+        </p>
+      )}
+      {!isLoading && !loadingError && filteredProducts.length === 0 && (
+        <p className="home-empty">Aucun produit ne correspond à votre recherche.</p>
+      )}
+      {filteredProducts.length > 0 && (
+        <div className="home-grid">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
-      </Grid>
-    </Box>
+        </div>
+      )}
+    </section>
   );
 }
