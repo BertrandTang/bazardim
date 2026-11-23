@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Avatar, Button, Stack, TextField, Typography } from '@mui/material';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
+import PasswordField from '../../components/PasswordField/PasswordField.jsx';
 import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
@@ -116,19 +117,17 @@ function SettingsSection() {
         value={formValues.profile_image_url}
         onChange={handleChange}
       />
-      <TextField
+      <PasswordField
         label="Nouveau mot de passe"
         name="new_password"
-        type="password"
         autoComplete="new-password"
         helperText="Laisser vide pour conserver le mot de passe actuel"
         value={formValues.new_password}
         onChange={handleChange}
       />
-      <TextField
+      <PasswordField
         label="Mot de passe actuel"
         name="current_password"
-        type="password"
         autoComplete="current-password"
         helperText="Obligatoire pour changer d’email ou de mot de passe"
         value={formValues.current_password}

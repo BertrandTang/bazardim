@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
+import PasswordField from '../../components/PasswordField/PasswordField.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 /** Page de connexion. */
@@ -53,9 +54,8 @@ export default function Auth() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
             />
-            <TextField
+            <PasswordField
               label="Mot de passe"
-              type="password"
               autoComplete="current-password"
               required
               fullWidth
