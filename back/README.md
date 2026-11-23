@@ -30,6 +30,19 @@ npm run dev        # http://localhost:3000/api/health
 | `npm run test:coverage` | tests + rapport de couverture (`coverage/index.html`), échoue sous 50 %                    |
 | `npm run lint`          | analyse statique (ESLint)                                                                  |
 
+### Lancer l'API dans un conteneur Docker (comme en production)
+
+Le `Dockerfile` construit une image de l'API : Node.js 22 Alpine, dépendances de production seulement, utilisateur non administrateur, vérification de santé sur `/api/health`. Aucun secret n'est copié dans l'image (voir `.dockerignore`) : ils sont fournis au lancement.
+
+```bash
+# Depuis la racine du projet, après avoir arrêté `npm run dev` (même port 3000) :
+docker compose --profile api up -d --build   # base + API en conteneurs
+docker compose logs -f api                   # journal de l'API
+docker compose --profile api down            # tout arrêter
+```
+
+L'API lit `back/.env`, mais se connecte à la base via le réseau Docker (`database:5432`) et passe en `NODE_ENV=production`.
+
 Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@example.com`. Mot de passe : la valeur de `SEED_DEMO_PASSWORD` dans `back/.env` (jamais écrite dans le dépôt).
 
 ## Choix techniques
