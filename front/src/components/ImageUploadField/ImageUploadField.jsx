@@ -64,7 +64,11 @@ export default function ImageUploadField({ label, imageUrl, onChange, isRound = 
       <span className="image-upload-label">{label}</span>
 
       <div className={isRound ? 'image-upload-preview round' : 'image-upload-preview'}>
-        {imageUrl ? <img src={imageUrl} alt={`Aperçu : ${label}`} /> : <span>Aucune image</span>}
+        {imageUrl ? (
+          <img src={imageUrl} alt={`Aperçu : ${label}`} />
+        ) : (
+          <span className="image-upload-empty">Aucune image</span>
+        )}
       </div>
 
       {/* Le bouton est un <label> qui contient le vrai champ fichier (caché visuellement) :
