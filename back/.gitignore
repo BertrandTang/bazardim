@@ -2,6 +2,8 @@ node_modules
 coverage
 # Images envoyées par les utilisateurs (données, pas du code).
 uploads/
+# Fichiers de log écrits par winston (voir src/config/logger.js).
+logs/
 # Le fichier .env contient des secrets : il ne doit jamais être commité (voir .env.example).
 .env
 .DS_Store

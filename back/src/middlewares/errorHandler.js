@@ -1,5 +1,6 @@
 import multer from 'multer';
 import { z } from 'zod';
+import { logger } from '../config/logger.js';
 import { HttpError } from '../utils/errors.js';
 
 // Codes d'erreur renvoyés par PostgreSQL (https://www.postgresql.org/docs/current/errcodes-appendix.html)
@@ -52,8 +53,9 @@ export function errorHandler(error, request, response, next) {
     return response.status(409).json({ error: message });
   }
 
-  // Erreur inattendue : on la journalise en détail, mais on ne renvoie au client
-  // qu'un message générique (ne jamais exposer la pile d'appels ou le SQL).
-  console.error(error);
+  // Erreur inattendue : on la journalise en détail (message + pile d'appels, dans le terminal
+  // et dans logs/errors.log), mais on ne renvoie au client qu'un message générique
+  // (ne jamais exposer la pile d'appels ou le SQL).
+  logger.error(error);
   return response.status(500).json({ error: 'Erreur interne du serveur.' });
 }
