@@ -32,14 +32,13 @@ export default function OrderSummary({ order }) {
           // L'annonce a pu être supprimée depuis (product_id vide) : on garde le titre copié à l'achat.
           <li key={item.product_id ?? `deleted-${index}`}>
             <span>
-              {item.quantity} ×{' '}
               {item.product_id ? (
                 <Link to={`/product/${item.product_id}`}>{item.product_title}</Link>
               ) : (
                 item.product_title
               )}
             </span>
-            <span>{formatPrice(item.unit_price * item.quantity)}</span>
+            <span>{formatPrice(item.price)}</span>
           </li>
         ))}
       </ul>

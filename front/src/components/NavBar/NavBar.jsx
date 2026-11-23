@@ -13,7 +13,8 @@ const PAGES_WITH_PRODUCT_LIST = ['/', '/licences', ...CATEGORIES.map((category) 
 
 export default function NavBar() {
   const { currentUser, logout } = useAuth();
-  const { itemCount } = useCart();
+  const { cartProducts } = useCart();
+  const itemCount = cartProducts.length;
   const { licences } = useProducts();
   const location = useLocation();
   const navigate = useNavigate();

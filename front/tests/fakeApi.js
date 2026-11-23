@@ -214,22 +214,22 @@ export function markFakeProductAsSold(productId) {
   findProduct(productId).sold_at = new Date().toISOString();
 }
 
-export async function createOrder({ items, shipping_address: shippingAddress }) {
+export async function createOrder({ product_ids: productIds, shipping_address: shippingAddress }) {
   const user = getLoggedInUser();
-  if (items.length === 0) {
+  if (productIds.length === 0) {
     throw new ApiError(400, 'Le panier est vide.');
   }
-  const orderItems = items.map((item) => {
-    const product = findProduct(item.product_id);
+  const orderItems = productIds.map((productId) => {
+    const product = findProduct(productId);
     if (product.sold_at) {
       throw new ApiError(409, `« ${product.title} » vient d’être vendu, retirez-le de votre panier.`);
     }
     if (product.owner_id === user.id) {
       throw new ApiError(400, `Vous ne pouvez pas acheter votre propre annonce (« ${product.title} »).`);
     }
-    return { product_id: product.id, product_title: product.title, unit_price: product.price, quantity: item.quantity };
+    return { product_id: product.id, product_title: product.title, price: product.price };
   });
-  const totalInCents = orderItems.reduce((total, item) => total + Math.round(item.unit_price * 100) * item.quantity, 0);
+  const totalInCents = orderItems.reduce((total, item) => total + Math.round(item.price * 100), 0);
   const order = {
     id: nextId(database.orders),
     buyer_id: user.id,

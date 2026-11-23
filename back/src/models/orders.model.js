@@ -1,6 +1,6 @@
 import { query, withTransaction } from '../config/database.js';
 
-// Une commande avec ses lignes. json_agg regroupe les lignes (order_items) de chaque commande
+// Une commande avec ses articles. json_agg regroupe les articles (order_items) de chaque commande
 // dans un tableau JSON "items" ; FILTER ignore la ligne vide d'une commande sans article.
 const ORDER_SELECT = `
   SELECT
@@ -17,8 +17,7 @@ const ORDER_SELECT = `
         json_build_object(
           'product_id', order_items.product_id,
           'product_title', order_items.product_title,
-          'unit_price', order_items.unit_price,
-          'quantity', order_items.quantity
+          'price', order_items.price
         )
         ORDER BY order_items.id
       ) FILTER (WHERE order_items.id IS NOT NULL),
@@ -28,7 +27,7 @@ const ORDER_SELECT = `
   LEFT JOIN order_items ON order_items.order_id = orders.id`;
 
 /**
- * Crée une commande "en attente de paiement" et ses lignes, dans une transaction
+ * Crée une commande "en attente de paiement" et ses articles, dans une transaction
  * (soit tout est enregistré, soit rien). Retourne l'id de la commande.
  */
 export async function insertOrder({ buyerId, shippingAddress, totalPrice, lines }) {
@@ -43,9 +42,9 @@ export async function insertOrder({ buyerId, shippingAddress, totalPrice, lines 
 
     for (const line of lines) {
       await transactionQuery(
-        `INSERT INTO order_items (order_id, product_id, product_title, unit_price, quantity)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [orderId, line.productId, line.productTitle, line.unitPrice, line.quantity],
+        `INSERT INTO order_items (order_id, product_id, product_title, price)
+         VALUES ($1, $2, $3, $4)`,
+        [orderId, line.productId, line.productTitle, line.price],
       );
     }
     return orderId;

@@ -13,7 +13,7 @@ import './Cart.css';
 /** Page panier : liste des articles, modification des quantités et total de la commande. */
 export default function Cart() {
   const { currentUser } = useAuth();
-  const { cartLines, totalPrice, changeQuantity, removeFromCart, clearCart } = useCart();
+  const { cartProducts, totalPrice, removeFromCart, clearCart } = useCart();
   // Adresse de livraison choisie, gardée d'une visite à l'autre (null tant qu'aucune n'est choisie).
   const [shippingAddress, setShippingAddress] = useLocalStorageState('shippingAddress', null);
   const [orderError, setOrderError] = useState('');
@@ -30,8 +30,8 @@ export default function Cart() {
     setIsOrdering(true);
     try {
       const { checkout_url: checkoutUrl } = await createOrder({
-        // On n'envoie que les identifiants et les quantités : le back relit les prix.
-        items: cartLines.map(({ product, quantity }) => ({ product_id: product.id, quantity })),
+        // On n'envoie que les identifiants des annonces : le back relit les prix.
+        product_ids: cartProducts.map((product) => product.id),
         shipping_address: shippingAddress.label,
       });
       redirectTo(checkoutUrl);
@@ -41,7 +41,7 @@ export default function Cart() {
     }
   }
 
-  if (cartLines.length === 0) {
+  if (cartProducts.length === 0) {
     return (
       <section className="cart-page">
         <PageMetadata title="Panier" noIndex />
@@ -62,42 +62,26 @@ export default function Cart() {
       </div>
 
       <ul className="cart-list">
-        {cartLines.map(({ product, quantity }) => (
+        {cartProducts.map((product) => (
           <li key={product.id} className="cart-item">
             <div className="cart-item-left">
               <div className="cart-item-thumbnail">
-                {quantity > 1 && <span className="cart-quantity-badge">x{quantity}</span>}
                 <img src={getProductImage(product)} alt="" />
               </div>
               <div className="cart-item-info">
                 <span className="cart-item-title">{product.title}</span>
-                <span className="cart-item-unit-price">{formatPrice(product.price)} / unité</span>
+                <span className="cart-item-seller">Vendu par {product.owner_username}</span>
               </div>
             </div>
 
             <div className="cart-item-right">
-              <div className="cart-quantity-controls">
-                <button
-                  type="button"
-                  className="cart-quantity-button"
-                  aria-label={`Retirer un exemplaire de ${product.title}`}
-                  onClick={() => changeQuantity(product.id, -1)}
-                  disabled={quantity <= 1}
-                >
-                  −
-                </button>
-                <span className="cart-quantity-value">{quantity}</span>
-                <button
-                  type="button"
-                  className="cart-quantity-button"
-                  aria-label={`Ajouter un exemplaire de ${product.title}`}
-                  onClick={() => changeQuantity(product.id, +1)}
-                >
-                  +
-                </button>
-              </div>
-              <span className="cart-item-total">{formatPrice(product.price * quantity)}</span>
-              <button type="button" className="cart-remove-button" onClick={() => removeFromCart(product.id)}>
+              <span className="cart-item-total">{formatPrice(product.price)}</span>
+              <button
+                type="button"
+                className="cart-remove-button"
+                aria-label={`Retirer ${product.title} du panier`}
+                onClick={() => removeFromCart(product.id)}
+              >
                 Retirer
               </button>
             </div>

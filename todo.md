@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `██████████░░░░░░░░░░` 48 % (50 / 104 tâches)**
+**Progression globale : `██████████░░░░░░░░░░` 49 % (51 / 105 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
 | Bloc 2 — Front-end | `██████████████░░░░░░` 68 % | 26 / 38 |
-| Bloc 3 — Back-end | `████████████░░░░░░░░` 59 % | 23 / 39 |
+| Bloc 3 — Back-end | `████████████░░░░░░░░` 60 % | 24 / 40 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -158,6 +158,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Tables `orders` / `order_items` (titre et prix copiés à l'achat) + routes `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`.
 - [x] **Stripe Checkout** en mode test : bouton « Commander et payer » du panier, page de confirmation, onglet « Mes commandes » du profil. Total recalculé côté back (le front n'envoie aucun prix).
 - [x] Webhook Stripe (`POST /api/stripe/webhook`, signature vérifiée) + vérification du paiement à l'affichage de la confirmation.
+- [x] Modèle « pièce unique » (comme Vinted) : chaque annonce est ajoutée une seule fois au panier, sans quantité ; une commande = une liste d'annonces.
 - [x] Annonce **vendue** après paiement (`products.sold_at`) : retirée de l'accueil, du profil public et des paniers, badge « Vendu » sur sa page et dans « Mes produits » ; une annonce vendue ne peut plus être commandée (409).
 - [ ] Faire un vrai paiement de test à la main (carte `4242 4242 4242 4242`) et garder des captures pour le dossier.
 - [ ] Marketplace entre particuliers → étudier **Stripe Connect** (reversement aux vendeurs).

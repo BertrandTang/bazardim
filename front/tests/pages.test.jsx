@@ -24,9 +24,9 @@ vi.mock('../src/utils/redirect.js', () => ({ redirectTo: vi.fn() }));
 /** Adresse de livraison telle que l'enregistre le champ d'adresse du panier. */
 const SHIPPING_ADDRESS = { id: 'A1', label: '10 Rue de Rivoli 75004 Paris', postcode: '75004', city: 'Paris' };
 
-/** Met des produits dans le panier (localStorage), avant d'afficher la page. */
-function fillCart(cartItems) {
-  localStorage.setItem('cartItems', JSON.stringify(cartItems));
+/** Met des annonces dans le panier (localStorage), avant d'afficher la page. Ex : fillCart([1, 2]). */
+function fillCart(productIds) {
+  localStorage.setItem('cartProductIds', JSON.stringify(productIds));
 }
 
 // Les nombres attendus sont calculés à partir des données de test (fixtures.js),
@@ -127,39 +127,30 @@ describe('Cart (panier)', () => {
     expect(screen.getByText('Votre panier est vide.')).toBeInTheDocument();
   });
 
-  it('modifie les quantités, retire un article et vide le panier', async () => {
-    // Produits 1 (59.99 €) et 2 (74.99 €).
-    localStorage.setItem(
-      'cartItems',
-      JSON.stringify([
-        { productId: 1, quantity: 1 },
-        { productId: 2, quantity: 1 },
-      ]),
-    );
+  it('affiche les annonces et le total, retire une annonce et vide le panier', async () => {
+    fillCart([1, 2]); // produits 1 (59.99 €) et 2 (74.99 €)
     const { user } = await renderWithProviders(<Cart />);
     expect(screen.getByText('134.98 €')).toBeInTheDocument();
+    // Pièces uniques : pas de boutons de quantité.
+    expect(screen.queryByRole('button', { name: '+' })).not.toBeInTheDocument();
 
-    await user.click(screen.getAllByRole('button', { name: /Ajouter un exemplaire/ })[0]);
-    expect(screen.getByText('194.97 €')).toBeInTheDocument();
-    await user.click(screen.getAllByRole('button', { name: /Retirer un exemplaire/ })[0]);
-    expect(screen.getByText('134.98 €')).toBeInTheDocument();
-
-    await user.click(screen.getAllByRole('button', { name: 'Retirer' })[0]);
+    await user.click(screen.getByRole('button', { name: /Retirer Figurine S.H. Figuarts Vegeta/ }));
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
+    expect(screen.getByText('74.99 €', { selector: '.cart-summary-value' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Vider le panier' }));
     expect(screen.getByText('Votre panier est vide.')).toBeInTheDocument();
   });
 
   it('demande à un visiteur de se connecter pour commander', async () => {
-    fillCart([{ productId: 2, quantity: 1 }]);
+    fillCart([2]);
     await renderWithProviders(<Cart />);
     expect(screen.getByRole('link', { name: 'Se connecter pour commander' })).toHaveAttribute('href', '/auth');
   });
 
   it('demande une adresse, puis crée la commande et envoie vers la page de paiement Stripe', async () => {
     loginAs(1);
-    fillCart([{ productId: 2, quantity: 1 }]); // produit 2 : vendu par l'utilisateur 2
+    fillCart([2]); // produit 2 : vendu par l'utilisateur 2
     const { user, unmount } = await renderWithProviders(<Cart />);
     expect(screen.getByRole('button', { name: 'Commander et payer' })).toBeDisabled();
     unmount();
@@ -172,7 +163,7 @@ describe('Cart (panier)', () => {
 
   it('affiche le refus de l’API (achat de sa propre annonce)', async () => {
     loginAs(1);
-    fillCart([{ productId: 1, quantity: 1 }]); // produit 1 : vendu par l'utilisateur 1 lui-même
+    fillCart([1]); // produit 1 : vendu par l'utilisateur 1 lui-même
     localStorage.setItem('shippingAddress', JSON.stringify(SHIPPING_ADDRESS));
     const { user } = await renderWithProviders(<Cart />);
     await user.click(screen.getByRole('button', { name: 'Commander et payer' }));
@@ -180,10 +171,7 @@ describe('Cart (panier)', () => {
   });
 
   it('retire du panier une annonce vendue entre-temps', async () => {
-    fillCart([
-      { productId: 1, quantity: 1 },
-      { productId: 2, quantity: 1 },
-    ]);
+    fillCart([1, 2]);
     markFakeProductAsSold(1);
     await renderWithProviders(<Cart />);
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
@@ -194,9 +182,9 @@ describe('Cart (panier)', () => {
 describe('OrderConfirmation (retour du paiement)', () => {
   it('attend la confirmation du paiement, puis remercie et vide le panier', async () => {
     loginAs(1);
-    fillCart([{ productId: 2, quantity: 1 }]);
+    fillCart([2]);
     const { order_id: orderId } = await createOrder({
-      items: [{ product_id: 2, quantity: 1 }],
+      product_ids: [2],
       shipping_address: SHIPPING_ADDRESS.label,
     });
     const { user } = await renderWithProviders(<OrderConfirmation />, {
@@ -211,7 +199,7 @@ describe('OrderConfirmation (retour du paiement)', () => {
     expect(await screen.findByText('Merci pour votre commande !')).toBeInTheDocument();
     expect(screen.getByText('Payée')).toBeInTheDocument();
     expect(screen.getByText('10 Rue de Rivoli 75004 Paris', { exact: false })).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('cartItems'))).toEqual([]);
+    expect(JSON.parse(localStorage.getItem('cartProductIds'))).toEqual([]);
   });
 
   it('indique une commande introuvable', async () => {
@@ -350,11 +338,11 @@ describe('Profile (mon profil)', () => {
     await user.click(screen.getByRole('button', { name: 'Mes commandes' }));
     expect(await screen.findByText('Vous n’avez pas encore passé de commande.')).toBeInTheDocument();
 
-    await createOrder({ items: [{ product_id: 2, quantity: 2 }], shipping_address: SHIPPING_ADDRESS.label });
+    await createOrder({ product_ids: [2, 3], shipping_address: SHIPPING_ADDRESS.label });
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
     await user.click(screen.getByRole('button', { name: 'Mes commandes' }));
     expect(await screen.findByRole('heading', { name: /Commande n° 1/ })).toBeInTheDocument();
-    expect(screen.getByText(/^Total/)).toHaveTextContent('149.98 €'); // 2 × 74.99 €
+    expect(screen.getByText(/^Total/)).toHaveTextContent('174.98 €'); // 74.99 € + 99.99 €
   });
 });
 

@@ -32,8 +32,10 @@ describe('ProductCard', () => {
     await user.click(likeButton);
     expect(screen.getByRole('button', { name: 'Retirer des favoris' })).toHaveAttribute('aria-pressed', 'true');
 
+    // Pièce unique : une fois ajoutée, le bouton indique qu'elle est déjà dans le panier.
     await user.click(screen.getByRole('button', { name: 'AJOUTER' }));
-    expect(screen.getByText('Ajouté au panier')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'DANS LE PANIER' })).toBeDisabled();
+    expect(screen.getByText('Ajouté au panier')).toBeInTheDocument(); // annoncé aux lecteurs d'écran
   });
 
   it('affiche le badge "Vendu" et pas de bouton AJOUTER pour une annonce vendue', async () => {

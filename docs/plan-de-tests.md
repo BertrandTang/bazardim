@@ -67,7 +67,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Paiement | Retour de Stripe : en attente puis payé | « Vérifier à nouveau », puis « Merci », panier vidé | Intégration | `pages.test.jsx` |
 | Commande | Commande inconnue / onglet « Mes commandes » | « Commande introuvable » / liste avec le total | Intégration | `pages.test.jsx` |
 | Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur (401) | Message lisible, pas de plantage | Unitaire | `api.test.js` |
-| Panier | Ajouter, +, −, retirer, vider | Quantités et total recalculés | Intégration | `pages.test.jsx` |
+| Panier | Ajouter deux fois la même annonce | Ajoutée une seule fois, bouton « DANS LE PANIER » (pièce unique) | Unitaire / Composant | `contexts.test.jsx`, `components.test.jsx` |
+| Panier | Afficher, retirer une annonce, vider | Total recalculé, pas de boutons de quantité | Intégration | `pages.test.jsx` |
 | Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `contexts.test.jsx` |
 | Livraison (API tierce) | Taper une adresse | Suggestions de l'API Adresse (BAN), adresse choisie enregistrée | Composant | `AddressAutocomplete.test.jsx` |
 | Livraison (API tierce) | API indisponible | Message d'erreur, saisie libre possible | Composant | `AddressAutocomplete.test.jsx` |
@@ -100,7 +101,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Messagerie | Annonce supprimée | Le message est conservé (`product_id` vide) | `messages.test.js` |
 | Commande | Créer une commande | 201, total calculé avec les prix de la base, montants en centimes envoyés à Stripe | `orders.test.js` |
 | Commande | Prix envoyé par le navigateur | Ignoré : le total vient de la base | `orders.test.js` |
-| Commande | Panier vide, adresse manquante, produit inexistant, sa propre annonce | 400 / 400 / 404 / 400, Stripe jamais appelé | `orders.test.js` |
+| Commande | Panier vide, adresse manquante, même annonce deux fois, produit inexistant, sa propre annonce | 400 / 400 / 400 / 404 / 400, Stripe jamais appelé | `orders.test.js` |
 | Commande | Stripe indisponible | 502 et commande supprimée | `orders.test.js` |
 | Paiement | Relire une commande en attente | Payée si Stripe confirme le paiement | `orders.test.js` |
 | Paiement | Webhook avec une signature invalide / valide | 400 / commande payée et produits marqués vendus | `orders.test.js` |

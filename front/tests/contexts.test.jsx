@@ -100,20 +100,19 @@ describe('ProductsContext', () => {
 });
 
 describe('CartContext', () => {
-  it('ajoute des produits, change les quantités et calcule le total', async () => {
+  it('ajoute des annonces (une seule fois chacune), calcule le total et en retire', async () => {
     const { result } = await renderAllHooks();
 
     act(() => result.current.cart.addToCart(1)); // 59.99 €
-    act(() => result.current.cart.addToCart(1));
+    act(() => result.current.cart.addToCart(1)); // déjà dans le panier : sans effet (pièce unique)
     act(() => result.current.cart.addToCart(2)); // 74.99 €
-    expect(result.current.cart.itemCount).toBe(3);
-    expect(result.current.cart.totalPrice).toBeCloseTo(59.99 * 2 + 74.99);
+    expect(result.current.cart.cartProducts.map((product) => product.id)).toEqual([1, 2]);
+    expect(result.current.cart.isInCart(1)).toBe(true);
+    expect(result.current.cart.totalPrice).toBeCloseTo(59.99 + 74.99);
 
-    act(() => result.current.cart.changeQuantity(1, -2));
-    expect(result.current.cart.cartLines.map((cartLine) => cartLine.product.id)).toEqual([2]);
-
-    act(() => result.current.cart.removeFromCart(2));
-    expect(result.current.cart.itemCount).toBe(0);
+    act(() => result.current.cart.removeFromCart(1));
+    expect(result.current.cart.cartProducts.map((product) => product.id)).toEqual([2]);
+    expect(result.current.cart.isInCart(1)).toBe(false);
   });
 
   it('ignore les produits supprimés entre-temps et peut être vidé', async () => {
@@ -124,10 +123,10 @@ describe('CartContext', () => {
 
     // Le produit 1 appartient à l'utilisateur 1, qui le supprime.
     await act(() => result.current.products.deleteProduct(1));
-    expect(result.current.cart.cartLines).toHaveLength(1);
+    expect(result.current.cart.cartProducts).toHaveLength(1);
 
     act(() => result.current.cart.clearCart());
-    expect(result.current.cart.cartLines).toHaveLength(0);
+    expect(result.current.cart.cartProducts).toHaveLength(0);
   });
 });
 
