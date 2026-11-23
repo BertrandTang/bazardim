@@ -20,6 +20,9 @@ import OrderConfirmation from '../src/pages/OrderConfirmation/OrderConfirmation.
 import Product from '../src/pages/Product/Product.jsx';
 import Profile from '../src/pages/Profile/Profile.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
+import Footer from '../src/components/Footer/Footer.jsx';
+import LegalNotice from '../src/pages/Legal/LegalNotice.jsx';
+import PrivacyPolicy from '../src/pages/Legal/PrivacyPolicy.jsx';
 import Sell from '../src/pages/Sell/Sell.jsx';
 import SignUp from '../src/pages/SignUp/SignUp.jsx';
 import UserProfile from '../src/pages/UserProfile/UserProfile.jsx';
@@ -510,5 +513,32 @@ describe('NotFound (404)', () => {
     await renderWithProviders(<NotFound />, { route: '/nimporte-quoi' });
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cette page n’existe pas');
     expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+  });
+});
+
+describe('Pages légales', () => {
+  it('le pied de page donne accès aux mentions légales et à la politique de confidentialité', async () => {
+    await renderWithProviders(<Footer />);
+    expect(screen.getByRole('link', { name: 'Mentions légales' })).toHaveAttribute('href', '/mentions-legales');
+    expect(screen.getByRole('link', { name: 'Politique de confidentialité' })).toHaveAttribute(
+      'href',
+      '/confidentialite',
+    );
+  });
+
+  it('affiche les mentions légales : éditeur et hébergeur', async () => {
+    await renderWithProviders(<LegalNotice />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Mentions légales');
+    expect(screen.getByRole('heading', { name: 'Éditeur du site' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Hébergeur' })).toBeInTheDocument();
+  });
+
+  it('explique les données collectées, les cookies et les droits RGPD', async () => {
+    await renderWithProviders(<PrivacyPolicy />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Politique de confidentialité');
+    // Une ligne du tableau par usage des données.
+    expect(screen.getByRole('rowheader', { name: 'Passer et suivre une commande' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Cookies et stockage dans le navigateur' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'votre profil' })).toHaveAttribute('href', '/profile');
   });
 });
