@@ -50,19 +50,27 @@ describe('Commandes et paiement Stripe', () => {
     const response = await placeOrder(context).expect(201);
     expect(response.body.checkout_url).toBe('https://checkout.stripe.com/c/pay/cs_test_123');
 
-    // Stripe a reçu les bons montants, en centimes.
+    // Stripe a reçu les bons montants, en centimes, et une dernière ligne pour les frais de service :
+    // 0,70 € + 5 % de 55,50 € (2,775 €, arrondi à 2,78 €) = 3,48 €.
     const stripeRequest = stripe.checkout.sessions.create.mock.calls[0][0];
     expect(stripeRequest.line_items.map((line) => [line.price_data.unit_amount, line.quantity])).toEqual([
       [2000, 1],
       [3550, 1],
+      [348, 1],
     ]);
+    expect(stripeRequest.line_items[2].price_data.product_data.name).toBe('Frais de service Bazardim');
     expect(stripeRequest.success_url).toBe(
       `http://localhost:5173/commande/confirmation?order_id=${response.body.order_id}`,
     );
 
     // La commande est enregistrée "en attente", avec un total calculé par le serveur.
     const order = await context.buyer.agent.get(`/api/orders/${response.body.order_id}`).expect(200);
-    expect(order.body).toMatchObject({ status: 'pending', total_price: 55.5, shipping_address: SHIPPING_ADDRESS });
+    expect(order.body).toMatchObject({
+      status: 'pending',
+      total_price: 58.98, // 55,50 € d'articles + 3,48 € de frais
+      service_fee: 3.48,
+      shipping_address: SHIPPING_ADDRESS,
+    });
     expect(order.body.items).toEqual([
       { product_id: context.firstProduct.id, product_title: 'A', price: 20 },
       { product_id: context.secondProduct.id, product_title: 'B', price: 35.5 },
@@ -70,14 +78,16 @@ describe('Commandes et paiement Stripe', () => {
     expect(order.body).not.toHaveProperty('stripe_session_id');
   });
 
-  it('ignore un prix envoyé par le navigateur', async () => {
+  it('ignore un prix ou des frais envoyés par le navigateur', async () => {
     const { buyer, firstProduct } = await createSellerAndBuyer();
     const response = await buyer.agent
       .post('/api/orders')
-      .send({ product_ids: [firstProduct.id], price: 0.01, shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: [firstProduct.id], price: 0.01, service_fee: 0, shipping_address: SHIPPING_ADDRESS })
       .expect(201);
     const order = await buyer.agent.get(`/api/orders/${response.body.order_id}`);
-    expect(order.body.total_price).toBe(20);
+    // 20 € d'articles + frais calculés par le serveur (0,70 € + 5 % de 20 € = 1,70 €).
+    expect(order.body.service_fee).toBe(1.7);
+    expect(order.body.total_price).toBe(21.7);
   });
 
   it('refuse un panier vide, une adresse manquante, une annonce en double, inexistante ou à soi', async () => {
@@ -151,6 +161,35 @@ describe('Commandes et paiement Stripe', () => {
       .send({ product_ids: [context.firstProduct.id], shipping_address: SHIPPING_ADDRESS })
       .expect(409);
     expect(response.body.error).toContain('vient d’être vendu');
+  });
+
+  it('une fois vendue, le vendeur voit l’acheteur et ne peut plus modifier l’annonce', async () => {
+    const context = await createSellerAndBuyer();
+    const { order_id: orderId } = (await placeOrder(context)).body;
+
+    // Avant le paiement : aucune vente.
+    expect((await context.seller.agent.get('/api/orders/sales').expect(200)).body).toEqual([]);
+
+    stripe.checkout.sessions.retrieve.mockResolvedValue({ payment_status: 'paid' });
+    await context.buyer.agent.get(`/api/orders/${orderId}`).expect(200);
+
+    // Le vendeur voit le pseudo de l'acheteur pour ses deux annonces.
+    const sales = (await context.seller.agent.get('/api/orders/sales').expect(200)).body;
+    expect(sales).toHaveLength(2);
+    expect(sales[0]).toMatchObject({ buyer_id: context.buyer.user.id, buyer_username: context.buyer.user.username });
+    expect(sales.map((sale) => sale.product_id).sort()).toEqual(
+      [context.firstProduct.id, context.secondProduct.id].sort(),
+    );
+
+    // L'acheteur, lui, n'a rien vendu.
+    expect((await context.buyer.agent.get('/api/orders/sales')).body).toEqual([]);
+
+    // L'annonce vendue ne peut plus être modifiée.
+    const response = await context.seller.agent
+      .put(`/api/products/${context.firstProduct.id}`)
+      .send(buildProduct({ title: 'Nouveau titre' }))
+      .expect(409);
+    expect(response.body.error).toContain('ne peut plus être modifiée');
   });
 
   it('une commande n’est visible que par son acheteur', async () => {

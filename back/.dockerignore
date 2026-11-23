@@ -1,0 +1,10 @@
+# Fichiers à NE PAS envoyer à Docker pendant la construction de l'image.
+# Les secrets (.env) ne doivent jamais se retrouver dans une image.
+.env
+node_modules
+coverage
+tests
+uploads
+logs
+database
+*.md

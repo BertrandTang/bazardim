@@ -30,6 +30,19 @@ npm run dev        # http://localhost:3000/api/health
 | `npm run test:coverage` | tests + rapport de couverture (`coverage/index.html`), échoue sous 50 %                    |
 | `npm run lint`          | analyse statique (ESLint)                                                                  |
 
+### Lancer l'API dans un conteneur Docker (comme en production)
+
+Le `Dockerfile` construit une image de l'API : Node.js 22 Alpine, dépendances de production seulement, utilisateur non administrateur, vérification de santé sur `/api/health`. Aucun secret n'est copié dans l'image (voir `.dockerignore`) : ils sont fournis au lancement.
+
+```bash
+# Depuis la racine du projet, après avoir arrêté `npm run dev` (même port 3000) :
+docker compose --profile api up -d --build   # base + API en conteneurs
+docker compose logs -f api                   # journal de l'API
+docker compose --profile api down            # tout arrêter
+```
+
+L'API lit `back/.env`, mais se connecte à la base via le réseau Docker (`database:5432`) et passe en `NODE_ENV=production`.
+
 Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@example.com`. Mot de passe : la valeur de `SEED_DEMO_PASSWORD` dans `back/.env` (jamais écrite dans le dépôt).
 
 ## Choix techniques
@@ -39,7 +52,7 @@ Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@exa
 - **zod** : validation de tout ce qui entre dans l'API (corps, paramètres d'URL, configuration).
 - **Authentification** : mot de passe haché avec **bcrypt**, jeton **JWT** rangé dans un cookie `httpOnly` + `SameSite=Lax` (inaccessible au JavaScript de la page).
 - **Sécurité** : `helmet` (en-têtes HTTP), CORS limité au front, limitation du nombre de tentatives de connexion, contrôle du propriétaire sur chaque modification, contraintes en base (`CHECK`, `UNIQUE`, clés étrangères).
-- **Journalisation** : un middleware maison (`middlewares/requestLogger.js`) affiche chaque requête dans le terminal (méthode, adresse, code de réponse, durée) ; les erreurs inattendues sont affichées par `errorHandler`.
+- **Journalisation (winston)** : le journal est configuré dans `config/logger.js`, avec trois niveaux (`info`, `warn`, `error`) et la date sur chaque ligne. Le middleware `middlewares/requestLogger.js` écrit une ligne par requête (méthode, adresse, code de réponse, durée) : `info` si tout va bien, `warn` pour un 4xx, `error` pour un 5xx. Les erreurs inattendues sont journalisées par `errorHandler` avec leur pile d'appels. Tout s'affiche dans le terminal, et les erreurs sont aussi écrites dans `back/logs/errors.log` (ignoré par git). Aucun log pendant les tests.
 - **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test. Stripe est simulé (`vi.mock`) : les tests ne l'appellent jamais.
 
 ## Images (multer)
@@ -57,7 +70,7 @@ Les annonces n'acceptent que des images du site (`/uploads/...` ou les images de
 Le trajet d'une commande :
 
 1. Le front envoie `POST /api/orders` avec les identifiants des annonces du panier (pièces uniques : pas de quantité, **jamais de prix**) et l'adresse de livraison.
-2. Le back relit les prix dans la base, calcule le total, enregistre la commande « en attente » (`pending`) et crée une **session Stripe Checkout**. Il renvoie l'adresse de la page de paiement (`checkout_url`).
+2. Le back relit les prix dans la base, calcule les **frais de service** (0,70 € + 5 % du prix des articles, `src/utils/serviceFee.js`) et le total, enregistre la commande « en attente » (`pending`) et crée une **session Stripe Checkout**. Il renvoie l'adresse de la page de paiement (`checkout_url`).
 3. Le front redirige l'acheteur vers cette page, hébergée par Stripe : la carte bancaire ne passe jamais par notre serveur.
 4. Après le paiement, Stripe renvoie l'acheteur sur `/commande/confirmation?order_id=...`. La commande passe à `paid`, et ses produits sont marqués **vendus** (`sold_at`, ils ne peuvent plus être commandés). Cela se fait de deux façons :
    - **webhook** : Stripe appelle `POST /api/stripe/webhook` (signature vérifiée avec `STRIPE_WEBHOOK_SECRET`). C'est la méthode fiable, même si l'acheteur ferme son navigateur ;
@@ -65,6 +78,8 @@ Le trajet d'une commande :
 
 En local, pour recevoir aussi le webhook, installer la [Stripe CLI](https://docs.stripe.com/stripe-cli) puis lancer
 `stripe listen --forward-to localhost:3000/api/stripe/webhook` : elle affiche un secret `whsec_...` à copier dans `STRIPE_WEBHOOK_SECRET`.
+
+**Monétisation** : Bazardim gagne de l'argent grâce aux frais de service payés par l'acheteur. Ils sont affichés dans le panier avant le paiement, envoyés à Stripe comme une ligne à part (« Frais de service Bazardim ») et enregistrés dans `orders.service_fee`. Évolution prévue pour une vraie marketplace : **Stripe Connect**, qui reverse automatiquement le prix de l'annonce au vendeur et garde la commission (`application_fee_amount`).
 
 Carte de test : `4242 4242 4242 4242`, n'importe quelle date future et n'importe quel CVC. Seules les clés `sk_test_` sont acceptées par la configuration.
 
@@ -80,11 +95,12 @@ back/
 ├── src/
 │   ├── server.js           Démarre le serveur HTTP
 │   ├── app.js              Middlewares (sécurité, logs, JSON) + branchement des routes
-│   ├── config/             Variables d'environnement (config.js), connexion PostgreSQL (database.js)
+│   ├── config/             Variables d'environnement (config.js), connexion PostgreSQL (database.js), journal winston (logger.js)
 │   ├── routes/             URL → fonction du contrôleur (ex : products.routes.js)
 │   ├── controllers/        Règles métier : droits, codes HTTP (ex : products.controller.js)
 │   ├── models/             Requêtes SQL vers la base (ex : products.model.js)
 │   ├── validators/         Validation des données reçues avec zod (ex : products.validator.js)
+│   ├── docs/               Documentation OpenAPI de l'API (affichée par Swagger UI sur /api/docs)
 │   ├── middlewares/        Authentification (requireAuth), journal des requêtes, gestion des erreurs
 │   └── utils/              Hachage des mots de passe, classe HttpError
 └── tests/                  Un fichier de test par ressource (auth, users, products...)
@@ -95,39 +111,43 @@ Organisation **MVC** classique (la « vue » est le JSON renvoyé). Le trajet d'
 
 ## Routes de l'API
 
+**Documentation interactive (Swagger)** : [http://localhost:3000/api/docs](http://localhost:3000/api/docs), API lancée. Chaque route y est décrite (paramètres, corps, réponses) et peut être essayée avec « Try it out ». La même description au format standard OpenAPI 3 (JSON) est disponible sur `/api/docs.json`, pour d'autres outils (Postman, Insomnia, générateurs de clients…). Elle est écrite dans `src/docs/openapi.js`.
+
 Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+ `details` par champ pour une erreur de validation 400).
 🔒 = connexion requise (cookie envoyé avec `credentials: 'include'` côté front).
 
-| Méthode   | Route                        | Description                                                                                           |
-| --------- | ---------------------------- | ----------------------------------------------------------------------------------------------------- |
-| GET       | `/api/health`                | État de l'API et de la base                                                                           |
-| POST      | `/api/auth/register`         | Inscription `{ username, email, password }` → 201 + cookie                                            |
-| POST      | `/api/auth/login`            | Connexion `{ email, password }` → cookie                                                              |
-| POST      | `/api/auth/logout`           | Déconnexion → 204                                                                                     |
-| GET 🔒    | `/api/auth/me`               | Utilisateur connecté                                                                                  |
-| GET       | `/api/users/:id`             | Profil public (pseudo, image — pas d'email)                                                           |
-| PATCH 🔒  | `/api/users/me`              | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)               |
-| DELETE 🔒 | `/api/users/me`              | Supprimer son compte `{ current_password }` (RGPD)                                                    |
-| GET       | `/api/products`              | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset`              |
-| GET       | `/api/products/:id`          | Détail d'un produit                                                                                   |
-| POST 🔒   | `/api/products`              | Créer une annonce                                                                                     |
-| PUT 🔒    | `/api/products/:id`          | Modifier son annonce (propriétaire ou admin)                                                          |
-| DELETE 🔒 | `/api/products/:id`          | Supprimer son annonce (propriétaire ou admin)                                                         |
-| GET       | `/api/licences`              | Licences utilisées par au moins une annonce                                                           |
-| GET 🔒    | `/api/likes`                 | Produits mis en favoris                                                                               |
-| PUT 🔒    | `/api/likes/:productId`      | Ajouter aux favoris (sans effet si déjà présent)                                                      |
-| DELETE 🔒 | `/api/likes/:productId`      | Retirer des favoris                                                                                   |
-| GET 🔒    | `/api/messages/received`     | Messages reçus (boîte de réception)                                                                   |
-| GET 🔒    | `/api/messages/sent`         | Messages envoyés                                                                                      |
-| GET 🔒    | `/api/messages/unread-count` | Nombre de messages non lus `{ count }` (pastille de la barre de navigation)                           |
-| POST 🔒   | `/api/uploads`               | Envoyer une image (formulaire `multipart/form-data`, champ `image`) → `{ image_url: "/uploads/..." }` |
-| GET       | `/uploads/:fichier`          | Image envoyée (fichier statique)                                                                      |
-| POST 🔒   | `/api/messages`              | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                             |
-| PATCH 🔒  | `/api/messages/:id/read`     | Marquer un message reçu comme lu (destinataire uniquement)                                            |
-| POST 🔒   | `/api/orders`                | Commander `{ product_ids: [3, 8], shipping_address }` → `{ order_id, checkout_url }`                  |
-| GET 🔒    | `/api/orders`                | Mes commandes (avec leurs articles)                                                                   |
-| GET 🔒    | `/api/orders/:id`            | Une de mes commandes (vérifie le paiement auprès de Stripe si elle est en attente)                    |
-| POST      | `/api/stripe/webhook`        | Réservée à Stripe (signature vérifiée) : confirme un paiement                                         |
+| Méthode   | Route                        | Description                                                                                                  |
+| --------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| GET       | `/api/health`                | État de l'API et de la base                                                                                  |
+| POST      | `/api/auth/register`         | Inscription `{ username, email, password }` → 201 + cookie                                                   |
+| POST      | `/api/auth/login`            | Connexion `{ email, password }` → cookie                                                                     |
+| POST      | `/api/auth/logout`           | Déconnexion → 204                                                                                            |
+| GET 🔒    | `/api/auth/me`               | Utilisateur connecté                                                                                         |
+| GET       | `/api/users/:id`             | Profil public (pseudo, image — pas d'email)                                                                  |
+| PATCH 🔒  | `/api/users/me`              | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)                      |
+| DELETE 🔒 | `/api/users/me`              | Supprimer son compte `{ current_password }` (RGPD)                                                           |
+| GET       | `/api/products`              | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset`                     |
+| GET       | `/api/products/:id`          | Détail d'un produit                                                                                          |
+| POST 🔒   | `/api/products`              | Créer une annonce                                                                                            |
+| PUT 🔒    | `/api/products/:id`          | Modifier son annonce (propriétaire ou admin)                                                                 |
+| DELETE 🔒 | `/api/products/:id`          | Supprimer son annonce (propriétaire ou admin)                                                                |
+| GET       | `/api/licences`              | Licences utilisées par au moins une annonce                                                                  |
+| GET 🔒    | `/api/likes`                 | Produits mis en favoris                                                                                      |
+| PUT 🔒    | `/api/likes/:productId`      | Ajouter aux favoris (sans effet si déjà présent)                                                             |
+| DELETE 🔒 | `/api/likes/:productId`      | Retirer des favoris                                                                                          |
+| GET 🔒    | `/api/messages/received`     | Messages reçus (boîte de réception)                                                                          |
+| GET 🔒    | `/api/messages/sent`         | Messages envoyés                                                                                             |
+| GET 🔒    | `/api/messages/unread-count` | Nombre de messages non lus `{ count }` (pastille de la barre de navigation)                                  |
+| POST 🔒   | `/api/uploads`               | Envoyer une image (formulaire `multipart/form-data`, champ `image`) → `{ image_url: "/uploads/..." }`        |
+| GET       | `/uploads/:fichier`          | Image envoyée (fichier statique)                                                                             |
+| GET       | `/sitemap.xml`               | Plan du site pour les moteurs de recherche : pages fixes + annonces en vente (adresse du site : `FRONT_URL`) |
+| POST 🔒   | `/api/messages`              | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                                    |
+| PATCH 🔒  | `/api/messages/:id/read`     | Marquer un message reçu comme lu (destinataire uniquement)                                                   |
+| POST 🔒   | `/api/orders`                | Commander `{ product_ids: [3, 8], shipping_address }` → `{ order_id, checkout_url }`                         |
+| GET 🔒    | `/api/orders`                | Mes commandes (avec leurs articles)                                                                          |
+| GET 🔒    | `/api/orders/sales`          | Mes ventes : pour chaque annonce vendue, l'acheteur (`buyer_id`, `buyer_username`) et la date                |
+| GET 🔒    | `/api/orders/:id`            | Une de mes commandes (vérifie le paiement auprès de Stripe si elle est en attente)                           |
+| POST      | `/api/stripe/webhook`        | Réservée à Stripe (signature vérifiée) : confirme un paiement                                                |
 
 Exemple de produit envoyé à `POST /api/products` :
 

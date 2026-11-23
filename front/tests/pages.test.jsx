@@ -20,6 +20,9 @@ import OrderConfirmation from '../src/pages/OrderConfirmation/OrderConfirmation.
 import Product from '../src/pages/Product/Product.jsx';
 import Profile from '../src/pages/Profile/Profile.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
+import Footer from '../src/components/Footer/Footer.jsx';
+import LegalNotice from '../src/pages/Legal/LegalNotice.jsx';
+import PrivacyPolicy from '../src/pages/Legal/PrivacyPolicy.jsx';
 import Sell from '../src/pages/Sell/Sell.jsx';
 import SignUp from '../src/pages/SignUp/SignUp.jsx';
 import UserProfile from '../src/pages/UserProfile/UserProfile.jsx';
@@ -138,13 +141,18 @@ describe('Cart (panier)', () => {
   it('affiche les annonces et le total, retire une annonce et vide le panier', async () => {
     fillCart([1, 2]); // produits 1 (59.99 €) et 2 (74.99 €)
     const { user } = await renderWithProviders(<Cart />);
-    expect(screen.getByText('134.98 €')).toBeInTheDocument();
+    // Ligne du récapitulatif (libellé + montant) : le <div> qui contient le libellé <dt>.
+    const summaryLine = (label) => screen.getByText(label, { selector: 'dt' }).parentElement;
+    expect(summaryLine('Articles')).toHaveTextContent('134.98 €');
+    // Frais de service affichés avant le paiement : 0.70 € + 5 % de 134.98 € (6.75 €) = 7.45 €.
+    expect(summaryLine('Frais de service')).toHaveTextContent('7.45 €');
+    expect(summaryLine('Total')).toHaveTextContent('142.43 €');
     // Pièces uniques : pas de boutons de quantité.
     expect(screen.queryByRole('button', { name: '+' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Retirer Figurine S.H. Figuarts Vegeta/ }));
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
-    expect(screen.getByText('74.99 €', { selector: '.cart-summary-value' })).toBeInTheDocument();
+    expect(summaryLine('Total')).toHaveTextContent('79.44 €'); // 74.99 € + 4.45 € de frais
 
     await user.click(screen.getByRole('button', { name: 'Vider le panier' }));
     expect(screen.getByText('Votre panier est vide.')).toBeInTheDocument();
@@ -232,6 +240,15 @@ describe('Product (fiche produit)', () => {
     await renderWithProviders(<Product />, { route: '/product/1', path: '/product/:id' });
     expect(screen.getByText('Vendu')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'AJOUTER' })).not.toBeInTheDocument();
+  });
+
+  it('n’ouvre pas le formulaire de modification d’une annonce vendue', async () => {
+    markFakeProductAsSold(1);
+    loginAs(1); // propriétaire du produit 1
+    await renderWithProviders(<Product />, { route: '/product/1?edit=1', path: '/product/:id' });
+    expect(screen.queryByRole('button', { name: 'Enregistrer' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
+    expect(screen.getByText('Vendu')).toBeInTheDocument();
   });
 
   it('indique un produit introuvable', async () => {
@@ -357,6 +374,23 @@ describe('Profile (mon profil)', () => {
     expect(screen.getByRole('heading', { name: 'Figurine S.H. Figuarts Luffy' })).toBeInTheDocument();
   });
 
+  it('une annonce vendue affiche son acheteur et ne peut plus être modifiée', async () => {
+    // L'utilisateur 2 achète et paie le produit 1 (Vegeta), qui appartient à l'utilisateur 1.
+    loginAs(2);
+    const { order_id: orderId } = await createOrder({ product_ids: [1], shipping_address: '1 rue de Paris' });
+    markFakeOrderAsPaid(orderId);
+
+    loginAs(1);
+    const { user } = await renderWithProviders(profilePage);
+    await user.click(screen.getByRole('button', { name: 'Mes produits' }));
+
+    const soldCard = screen.getByRole('heading', { name: PRODUCTS[0].title }).closest('article');
+    expect(within(soldCard).getByText('Vendu')).toBeInTheDocument();
+    expect(within(soldCard).getByRole('link', { name: 'FigurineParadise' })).toHaveAttribute('href', '/user/2');
+    expect(within(soldCard).queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
+    expect(within(soldCard).getByRole('button', { name: 'Supprimer' })).toBeInTheDocument();
+  });
+
   it('supprime le compte après avoir écrit SUPPRIMER et donné son mot de passe', async () => {
     loginAs(1);
     const { user } = await renderWithProviders(profilePage, { route: '/profile', path: '/profile' });
@@ -368,9 +402,11 @@ describe('Profile (mon profil)', () => {
     await user.type(within(dialog).getByLabelText('Mot de passe actuel'), 'mauvais');
     await user.type(within(dialog).getByLabelText(/Écrivez SUPPRIMER/), 'supprimer');
     expect(deleteButton).toBeDisabled();
+    expect(within(dialog).getByText('Écrivez exactement SUPPRIMER, en majuscules.')).toBeInTheDocument();
 
+    // Un espace tapé en trop après le mot est accepté.
     await user.clear(within(dialog).getByLabelText(/Écrivez SUPPRIMER/));
-    await user.type(within(dialog).getByLabelText(/Écrivez SUPPRIMER/), 'SUPPRIMER');
+    await user.type(within(dialog).getByLabelText(/Écrivez SUPPRIMER/), 'SUPPRIMER ');
     expect(deleteButton).toBeEnabled();
 
     // Mauvais mot de passe : refus de l'API, le compte existe toujours.
@@ -406,7 +442,9 @@ describe('Profile (mon profil)', () => {
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
     await user.click(screen.getByRole('button', { name: 'Mes commandes' }));
     expect(await screen.findByRole('heading', { name: /Commande n° 1/ })).toBeInTheDocument();
-    expect(screen.getByText(/^Total/)).toHaveTextContent('174.98 €'); // 74.99 € + 99.99 €
+    // Articles : 74.99 € + 99.99 € = 174.98 € ; frais : 0.70 € + 5 % (8.75 €) = 9.45 €.
+    expect(screen.getByText(/^Frais de service/)).toHaveTextContent('9.45 €');
+    expect(screen.getByText(/^Total/)).toHaveTextContent('184.43 €');
   });
 });
 
@@ -475,5 +513,32 @@ describe('NotFound (404)', () => {
     await renderWithProviders(<NotFound />, { route: '/nimporte-quoi' });
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cette page n’existe pas');
     expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+  });
+});
+
+describe('Pages légales', () => {
+  it('le pied de page donne accès aux mentions légales et à la politique de confidentialité', async () => {
+    await renderWithProviders(<Footer />);
+    expect(screen.getByRole('link', { name: 'Mentions légales' })).toHaveAttribute('href', '/mentions-legales');
+    expect(screen.getByRole('link', { name: 'Politique de confidentialité' })).toHaveAttribute(
+      'href',
+      '/confidentialite',
+    );
+  });
+
+  it('affiche les mentions légales : éditeur et hébergeur', async () => {
+    await renderWithProviders(<LegalNotice />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Mentions légales');
+    expect(screen.getByRole('heading', { name: 'Éditeur du site' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Hébergeur' })).toBeInTheDocument();
+  });
+
+  it('explique les données collectées, les cookies et les droits RGPD', async () => {
+    await renderWithProviders(<PrivacyPolicy />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Politique de confidentialité');
+    // Une ligne du tableau par usage des données.
+    expect(screen.getByRole('rowheader', { name: 'Passer et suivre une commande' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Cookies et stockage dans le navigateur' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'votre profil' })).toHaveAttribute('href', '/profile');
   });
 });

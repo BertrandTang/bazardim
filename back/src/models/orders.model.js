@@ -8,6 +8,7 @@ const ORDER_SELECT = `
     orders.buyer_id,
     orders.status,
     orders.total_price,
+    orders.service_fee,
     orders.shipping_address,
     orders.stripe_session_id,
     orders.created_at,
@@ -30,13 +31,13 @@ const ORDER_SELECT = `
  * Crée une commande "en attente de paiement" et ses articles, dans une transaction
  * (soit tout est enregistré, soit rien). Retourne l'id de la commande.
  */
-export async function insertOrder({ buyerId, shippingAddress, totalPrice, lines }) {
+export async function insertOrder({ buyerId, shippingAddress, totalPrice, serviceFee, lines }) {
   return withTransaction(async (transactionQuery) => {
     const rows = await transactionQuery(
-      `INSERT INTO orders (buyer_id, shipping_address, total_price)
-       VALUES ($1, $2, $3)
+      `INSERT INTO orders (buyer_id, shipping_address, total_price, service_fee)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [buyerId, shippingAddress, totalPrice],
+      [buyerId, shippingAddress, totalPrice, serviceFee],
     );
     const orderId = rows[0].id;
 
@@ -96,5 +97,27 @@ export async function findOrdersByBuyer(buyerId) {
   return query(
     `${ORDER_SELECT} WHERE orders.buyer_id = $1 GROUP BY orders.id ORDER BY orders.created_at DESC, orders.id DESC`,
     [buyerId],
+  );
+}
+
+/**
+ * Ventes d'un vendeur : pour chacune de ses annonces vendues (commande payée), qui l'a achetée et quand.
+ * LEFT JOIN sur users : si l'acheteur a supprimé son compte (buyer_id vide), la vente reste listée,
+ * avec un pseudo vide.
+ */
+export async function findSalesBySeller(sellerId) {
+  return query(
+    `SELECT
+       order_items.product_id,
+       orders.buyer_id,
+       users.username AS buyer_username,
+       orders.paid_at
+     FROM order_items
+     JOIN orders ON orders.id = order_items.order_id
+     JOIN products ON products.id = order_items.product_id
+     LEFT JOIN users ON users.id = orders.buyer_id
+     WHERE products.owner_id = $1 AND orders.status = 'paid'
+     ORDER BY orders.paid_at DESC`,
+    [sellerId],
   );
 }

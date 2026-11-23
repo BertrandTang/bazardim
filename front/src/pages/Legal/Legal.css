@@ -1,0 +1,42 @@
+/* Pages « Mentions légales » et « Politique de confidentialité » : texte long, facile à lire. */
+.legal-page {
+  max-width: 820px;
+  margin: 32px auto;
+  padding: 0 16px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.legal-page h2 {
+  margin-top: 32px;
+  font-size: 1.25rem;
+}
+
+.legal-update {
+  color: #666;
+  font-size: 14px;
+}
+
+/* Le tableau défile horizontalement sur téléphone au lieu de déborder de l'écran. */
+.legal-table-wrapper {
+  overflow-x: auto;
+}
+
+.legal-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.legal-table th,
+.legal-table td {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-table thead th {
+  background: var(--color-surface);
+}

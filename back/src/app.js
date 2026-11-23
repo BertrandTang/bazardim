@@ -2,9 +2,12 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
 import { config } from './config/config.js';
 import { query } from './config/database.js';
 import { handleStripeWebhook } from './controllers/orders.controller.js';
+import { openApiDocument } from './docs/openapi.js';
+import { getSitemap } from './controllers/sitemap.controller.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { requestLogger } from './middlewares/requestLogger.js';
 import authRoutes from './routes/auth.routes.js';
@@ -28,11 +31,9 @@ app.use(helmet());
 // `credentials: true` autorise l'envoi du cookie de connexion.
 app.use(cors({ origin: config.FRONT_URL, credentials: true }));
 
-// Journal de chaque requête dans le terminal (voir middlewares/requestLogger.js).
-// Désactivé pendant les tests pour garder une sortie lisible.
-if (!config.isTest) {
-  app.use(requestLogger);
-}
+// Journal de chaque requête (voir middlewares/requestLogger.js et config/logger.js).
+// Pendant les tests, winston est réglé en mode silencieux : rien n'est affiché.
+app.use(requestLogger);
 
 // Webhook Stripe : déclaré AVANT express.json, car il a besoin du corps brut (non transformé)
 // de la requête pour vérifier la signature de Stripe.
@@ -51,6 +52,16 @@ app.get('/api/health', async (request, response) => {
   await query('SELECT 1');
   response.json({ status: 'ok' });
 });
+
+// Plan du site pour les moteurs de recherche, avec les annonces en vente (voir sitemap.controller.js).
+// En production, le serveur web transmet /sitemap.xml à l'API (en local : proxy de Vite).
+app.get('/sitemap.xml', getSitemap);
+
+// Documentation de l'API (OpenAPI / Swagger, voir docs/openapi.js) :
+// - /api/docs      : page interactive pour lire et essayer chaque route ;
+// - /api/docs.json : la même description au format JSON, lisible par d'autres outils.
+app.get('/api/docs.json', (request, response) => response.json(openApiDocument));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument, { customSiteTitle: 'API Bazardim' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);

@@ -47,9 +47,15 @@ export async function createProduct(request, response) {
   response.status(201).json(await findProductById(productId));
 }
 
-/** PUT /api/products/:id — réservé au propriétaire (ou à un administrateur). */
+/**
+ * PUT /api/products/:id — réservé au propriétaire (ou à un administrateur).
+ * Une annonce vendue ne peut plus être modifiée : l'acheteur a payé pour ce qu'elle décrivait.
+ */
 export async function updateProduct(request, response) {
   const product = await findEditableProduct(request);
+  if (product.sold_at) {
+    throw new HttpError(409, 'Cette annonce est vendue : elle ne peut plus être modifiée.');
+  }
   const fields = productSchema.parse(request.body);
   await updateProductById(product.id, fields);
   response.json(await findProductById(product.id));

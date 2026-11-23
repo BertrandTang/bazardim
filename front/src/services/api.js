@@ -176,6 +176,11 @@ export function fetchOrders() {
   return request('/orders');
 }
 
+/** Ventes de l'utilisateur connecté : qui a acheté chacune de ses annonces. */
+export function fetchSales() {
+  return request('/orders/sales');
+}
+
 /** Une commande (le back vérifie auprès de Stripe si elle a été payée). */
 export function fetchOrder(orderId) {
   return request(`/orders/${orderId}`);

@@ -144,3 +144,8 @@ export async function updateProductById(productId, fields) {
 export async function deleteProductById(productId) {
   await query('DELETE FROM products WHERE id = $1', [productId]);
 }
+
+/** Annonces encore en vente, avec leur date de dernière modification (pour le plan du site). */
+export async function findAvailableProductsForSitemap() {
+  return query('SELECT id, updated_at FROM products WHERE sold_at IS NULL ORDER BY id');
+}

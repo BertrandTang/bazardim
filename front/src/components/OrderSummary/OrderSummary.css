@@ -50,9 +50,19 @@
   gap: 12px;
 }
 
+/* Le prix reste sur une ligne, c'est le titre qui passe à la ligne s'il est long. */
+.order-summary-items li > :last-child {
+  white-space: nowrap;
+}
+
+.order-summary-fee,
 .order-summary-address,
 .order-summary-total {
   margin: 0;
+}
+
+.order-summary-fee {
+  color: #555;
 }
 
 .order-summary-total {

@@ -37,3 +37,10 @@
 .image-upload-hint {
   color: #555;
 }
+
+/* Texte "Aucune image" : centré, même quand il passe sur deux lignes,
+   avec une petite marge pour ne pas toucher le bord de l'aperçu rond. */
+.image-upload-empty {
+  text-align: center;
+  padding: 0 8px;
+}

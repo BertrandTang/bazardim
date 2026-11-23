@@ -95,8 +95,6 @@
   border-radius: 8px;
 }
 
-/* ----- Boutons + / − ----- */
-
 /* ----- Total ----- */
 .cart-summary {
   margin-top: 20px;
@@ -109,14 +107,36 @@
   gap: 16px;
 }
 
-.cart-summary-label {
-  font-weight: 600;
+/* Détail du prix : chaque ligne aligne le libellé à gauche et le montant à droite. */
+.cart-summary-lines {
+  flex: 1;
+  max-width: 320px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cart-summary-lines div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
   color: #555;
 }
 
-.cart-summary-value {
+.cart-summary-lines dd {
+  margin: 0;
+  white-space: nowrap; /* "149.99 €" reste sur une ligne */
+}
+
+.cart-summary-total {
+  padding-top: 4px;
+  border-top: 1px solid #ddd;
   font-size: 20px;
   font-weight: 700;
+}
+
+.cart-summary-total dd {
   color: var(--color-primary);
 }
 
@@ -145,6 +165,17 @@
     align-items: flex-start;
     gap: 12px;
   }
+
+  /* Total et bouton "Commander et payer" l'un sous l'autre, le bouton sur toute la largeur. */
+  .cart-summary {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .cart-summary-lines {
+    max-width: none;
+  }
 }
 
 /* ----- Adresse de livraison ----- */
@@ -166,4 +197,11 @@
   text-align: right;
   color: #444;
   font-size: 14px;
+}
+
+/* Placé après .cart-hint : à priorité égale, c'est la dernière règle du fichier qui s'applique. */
+@media (max-width: 640px) {
+  .cart-hint {
+    text-align: center;
+  }
 }

@@ -12,8 +12,10 @@ import './ProductCard.css';
  * Deux versions :
  * - par défaut : bouton favori + bouton "AJOUTER" au panier ;
  * - si `onEdit` et `onDelete` sont fournis (page "Mes produits") : boutons Modifier / Supprimer.
+ *   Une annonce vendue ne peut plus être modifiée : à la place du bouton Modifier, on affiche
+ *   l'acheteur (`sale` : { buyer_id, buyer_username }, voir GET /api/orders/sales).
  */
-export default function ProductCard({ product, onEdit, onDelete }) {
+export default function ProductCard({ product, onEdit, onDelete, sale }) {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
   const { isLiked, toggleLike } = useLikes();
   const navigate = useNavigate();
@@ -86,9 +88,13 @@ export default function ProductCard({ product, onEdit, onDelete }) {
         <span className="product-price">{formatPrice(product.price)}</span>
         {isOwnerView ? (
           <div className="product-owner-actions">
-            <button type="button" className="product-edit-button" onClick={() => onEdit(product)}>
-              Modifier
-            </button>
+            {product.sold_at ? (
+              <SoldTo sale={sale} />
+            ) : (
+              <button type="button" className="product-edit-button" onClick={() => onEdit(product)}>
+                Modifier
+              </button>
+            )}
             <button type="button" className="product-delete-button" onClick={() => onDelete(product)}>
               Supprimer
             </button>
@@ -99,5 +105,22 @@ export default function ProductCard({ product, onEdit, onDelete }) {
         )}
       </div>
     </article>
+  );
+}
+
+/** "Vendu à <pseudo>", avec un lien vers le profil public de l'acheteur. */
+function SoldTo({ sale }) {
+  // Les ventes sont encore en cours de chargement.
+  if (!sale) {
+    return null;
+  }
+  // L'acheteur a supprimé son compte depuis l'achat.
+  if (!sale.buyer_username) {
+    return <p className="product-sold-to">Vendu à un compte supprimé</p>;
+  }
+  return (
+    <p className="product-sold-to">
+      Vendu à <Link to={`/user/${sale.buyer_id}`}>{sale.buyer_username}</Link>
+    </p>
   );
 }

@@ -1,8 +1,12 @@
-# Base de données PostgreSQL pour le développement et les tests.
+# Base de données PostgreSQL pour le développement et les tests (+ l'API en conteneur, en option).
 #
 #   docker compose up -d     -> démarre la base en arrière-plan
 #   docker compose down      -> l'arrête (les données sont conservées dans le volume)
 #   docker compose down -v   -> l'arrête ET supprime les données
+#
+#   docker compose --profile api up -d --build
+#                            -> démarre AUSSI l'API dans un conteneur (image construite avec back/Dockerfile).
+#                               ⚠️ Arrêter d'abord `npm run dev` dans back/ : les deux utilisent le port 3000.
 #
 # Le mot de passe n'est PAS écrit ici : Docker Compose le lit dans le fichier .env
 # placé à côté de ce fichier (ignoré par Git). Voir .env.example.
@@ -30,5 +34,29 @@ services:
       timeout: 3s
       retries: 10
 
+  # API Bazardim dans un conteneur, comme en production.
+  # "profiles" : ce service ne démarre QUE si on le demande (--profile api). Un simple
+  # `docker compose up -d` lance seulement la base, pour développer avec `npm run dev`.
+  api:
+    build: ./back
+    container_name: bazardim_api
+    profiles: ['api']
+    # On attend que la base soit prête (healthcheck ci-dessus) avant de démarrer l'API.
+    depends_on:
+      database:
+        condition: service_healthy
+    # Secrets et réglages (JWT_SECRET, clés Stripe, FRONT_URL...) lus dans back/.env.
+    env_file: ./back/.env
+    environment:
+      NODE_ENV: production
+      # Dans le réseau Docker, la base s'appelle "database" (nom du service), pas "localhost".
+      DATABASE_URL: postgres://bazardim:${POSTGRES_PASSWORD}@database:5432/bazardim
+    ports:
+      - '127.0.0.1:3000:3000'
+    volumes:
+      # Les images envoyées par les utilisateurs survivent à la reconstruction du conteneur.
+      - uploads_data:/app/uploads
+
 volumes:
   database_data:
+  uploads_data:

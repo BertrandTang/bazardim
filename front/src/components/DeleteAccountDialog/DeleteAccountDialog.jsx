@@ -33,8 +33,14 @@ export default function DeleteAccountDialog() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Le bouton de suppression n'est actif que si le mot est EXACTEMENT recopié et le mot de passe saisi.
-  const canDelete = confirmationText === CONFIRMATION_WORD && currentPassword !== '' && !isDeleting;
+  // Le mot doit être recopié en majuscules. trim() retire les espaces au début et à la fin :
+  // un espace tapé par erreur (ou ajouté par le correcteur du clavier) ne bloque pas la suppression.
+  const isConfirmationWordTyped = confirmationText.trim() === CONFIRMATION_WORD;
+  // Message sous le champ quand quelque chose est écrit mais ne correspond pas (ex : "supprimer" en minuscules).
+  const showConfirmationError = confirmationText !== '' && !isConfirmationWordTyped;
+
+  // Le bouton de suppression n'est actif que si le mot est recopié et le mot de passe saisi.
+  const canDelete = isConfirmationWordTyped && currentPassword !== '' && !isDeleting;
 
   /** Ferme la fenêtre et efface ce qui a été saisi. */
   function handleClose() {
@@ -81,6 +87,8 @@ export default function DeleteAccountDialog() {
                 label={`Écrivez ${CONFIRMATION_WORD} pour confirmer`}
                 value={confirmationText}
                 onChange={(event) => setConfirmationText(event.target.value)}
+                error={showConfirmationError}
+                helperText={showConfirmationError ? `Écrivez exactement ${CONFIRMATION_WORD}, en majuscules.` : ' '}
                 autoComplete="off"
                 fullWidth
                 autoFocus
