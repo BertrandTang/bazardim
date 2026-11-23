@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████░░░░░░░░░░░░` 42 % (42 / 100 tâches)**
+**Progression globale : `████████░░░░░░░░░░░░` 42 % (42 / 101 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
 | Bloc 2 — Front-end | `█████████████░░░░░░░` 63 % | 24 / 38 |
-| Bloc 3 — Back-end | `██████████░░░░░░░░░░` 49 % | 17 / 35 |
+| Bloc 3 — Back-end | `█████████░░░░░░░░░░░` 47 % | 17 / 36 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -141,6 +141,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Journal des requêtes avec **morgan**, route `/api/health` pour la supervision.
 - [x] Configuration validée au démarrage (`src/config/config.js`), `.env` ignoré par Git, `.env.example` fourni.
 - [ ] Stratégie de **sauvegarde / restauration** de la base (`pg_dump` planifié) à décrire et tester (C9, C32).
+- [ ] **Authentification forte** (citée dans la C21) : au minimum, savoir l'expliquer au jury (2FA par code e-mail ou application TOTP) ; idéalement, l'implémenter pour les administrateurs.
 
 ### C22 / E16 — Développement de l'API
 
