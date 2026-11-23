@@ -164,6 +164,17 @@ export function fakeUserExists(userId) {
   return database.users.some((user) => user.id === userId);
 }
 
+// ----- Images -----
+
+let uploadedImageCount = 0;
+
+/** Simule l'envoi d'une image : renvoie une fausse adresse "/uploads/...". */
+export async function uploadImage(imageFile) {
+  getLoggedInUser();
+  uploadedImageCount += 1;
+  return { image_url: `/uploads/fausse-image-${uploadedImageCount}-${imageFile.name}` };
+}
+
 // ----- Annonces -----
 
 export async function fetchProducts() {

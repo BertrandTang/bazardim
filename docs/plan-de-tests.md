@@ -8,7 +8,7 @@ qui échoue si un test échoue ou si la couverture du code passe sous 50 % (le m
 | --- | --- | --- |
 | Outils | Vitest + React Testing Library (navigateur simulé : jsdom) | Vitest + supertest, sur une vraie base PostgreSQL de test |
 | Lancer | `cd front && npm run test:coverage` | `cd back && npm run test:coverage` |
-| Nombre de tests | 81 | 54 |
+| Nombre de tests | 85 | 59 |
 | Couverture des lignes | 89 % | 95 % |
 | Emplacement | `front/tests/*.test.js(x)` | `back/tests/*.test.js` |
 
@@ -48,7 +48,9 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Inscription | Formulaire valide | Compte créé, redirection vers le profil | Intégration | `pages.test.jsx` |
 | Fiche produit | Ouvrir `/product/1` | Caractéristiques + données structurées schema.org | Intégration | `pages.test.jsx` |
 | Fiche produit | Identifiant inconnu | « Produit introuvable » | Intégration | `pages.test.jsx` |
-| Vente | Formulaire vide / prix nul | Message d'erreur, rien n'est envoyé | Composant | `components.test.jsx` |
+| Vente | Formulaire vide / prix nul / sans photo | Message d'erreur, rien n'est envoyé | Composant | `components.test.jsx` |
+| Images | Fichier PDF, image de plus de 2 Mo, visiteur non connecté | Message d'erreur, rien n'est enregistré | Composant | `components.test.jsx` |
+| Images | Choisir une photo (annonce, profil) | Aperçu affiché, adresse `/uploads/...` enregistrée | Composant / Intégration | `components.test.jsx`, `pages.test.jsx` |
 | Vente | Formulaire valide | Annonce créée, ouverture de sa page | Intégration | `pages.test.jsx` |
 | Vente / modification | L'API refuse les données | Message de l'API affiché, bouton réactivé | Composant | `components.test.jsx` |
 | Modification | Le propriétaire modifie le titre | Nouveau titre affiché | Intégration | `pages.test.jsx` |
@@ -100,6 +102,9 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Messagerie | Écrire au vendeur d'une annonce | 201, visible dans ses reçus et dans les envoyés de l'expéditeur | `messages.test.js` |
 | Messagerie | Message vide, à soi-même, à un inconnu, produit inexistant | 400 / 400 / 404 / 404 | `messages.test.js` |
 | Messagerie | Marquer comme lu un message qui ne nous est pas destiné | 403 | `messages.test.js` |
+| Images | Envoyer une image PNG | 201, nom aléatoire, image servie avec le bon type | `uploads.test.js` |
+| Images | Fichier HTML, image > 2 Mo, envoi vide, visiteur | 400 / 400 / 400 / 401 | `uploads.test.js` |
+| Annonce | Sans photo, ou avec un lien vers un autre site | 400 | `uploads.test.js` |
 | Messagerie | Nombre de messages non lus | Compte exact, baisse après lecture, 401 sans connexion | `messages.test.js` |
 | Messagerie (confidentialité) | Un autre utilisateur, même administrateur, consulte ses messages | Il ne voit pas les messages des autres (403 s'il tente d'agir dessus) | `messages.test.js` |
 | Messagerie | Annonce supprimée | Le message est conservé (`product_id` vide) | `messages.test.js` |

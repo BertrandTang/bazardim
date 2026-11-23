@@ -20,11 +20,14 @@ export class ApiError extends Error {
  * @param {string} path - Chemin de la route, ex : '/products'.
  * @param {object} [options]
  * @param {string} [options.method] - GET (par défaut), POST, PUT, PATCH ou DELETE.
- * @param {object} [options.body] - Données à envoyer (converties en JSON).
+ * @param {object|FormData} [options.body] - Données à envoyer : un objet (converti en JSON)
+ *   ou un FormData (formulaire avec fichier, pour envoyer une image).
  * @returns {Promise<*>} Les données renvoyées par l'API (null pour une réponse vide).
  * @throws {ApiError} Si le serveur est injoignable ou répond avec une erreur.
  */
 async function request(path, { method = 'GET', body } = {}) {
+  // Un FormData (fichier) est envoyé tel quel : le navigateur choisit lui-même le bon format.
+  const isFormData = body instanceof FormData;
   let response;
   try {
     response = await fetch(`${API_URL}${path}`, {
@@ -32,8 +35,8 @@ async function request(path, { method = 'GET', body } = {}) {
       // Envoie le cookie de connexion avec la requête (il est géré par le navigateur,
       // le JavaScript de la page ne peut pas le lire : voir back/src/middlewares/authentication.js).
       credentials: 'include',
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
+      headers: body && !isFormData ? { 'Content-Type': 'application/json' } : undefined,
+      body: isFormData ? body : body ? JSON.stringify(body) : undefined,
     });
   } catch {
     // fetch échoue seulement quand le serveur ne répond pas du tout (réseau coupé, API arrêtée).
@@ -107,6 +110,19 @@ export function updateAccount(changes) {
 /** Supprime définitivement le compte connecté (le mot de passe actuel est exigé par l'API). */
 export function deleteAccount(currentPassword) {
   return request('/users/me', { method: 'DELETE', body: { current_password: currentPassword } });
+}
+
+// ----- Images -----
+
+/**
+ * Envoie une image (fichier choisi par l'utilisateur) et retourne son adresse sur le site.
+ * @param {File} imageFile - Le fichier, ex : celui d'un <input type="file">.
+ * @returns {Promise<{image_url: string}>} Ex : { image_url: "/uploads/abc.jpg" }.
+ */
+export function uploadImage(imageFile) {
+  const formData = new FormData();
+  formData.append('image', imageFile); // "image" : nom du champ attendu par l'API (multer)
+  return request('/uploads', { method: 'POST', body: formData });
 }
 
 // ----- Annonces -----

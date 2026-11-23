@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import ImageUploadField from '../ImageUploadField/ImageUploadField.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
 import { CATEGORIES } from '../../data/categories.js';
 import './ProductForm.css';
@@ -27,7 +28,6 @@ const DETAIL_FIELDS = [
   { name: 'version', label: 'Version' },
   { name: 'material', label: 'Matière' },
   { name: 'tags', label: 'Tags (séparés par des virgules)' },
-  { name: 'image_url', label: 'Image (URL ou /img/...)' },
   { name: 'year_of_acquisition', label: "Année d'acquisition", type: 'number' },
   { name: 'state_of_wear', label: 'État de la figurine' },
   { name: 'state_of_box', label: 'État de la boîte' },
@@ -86,7 +86,7 @@ function formValuesToProduct(formValues) {
       .split(',')
       .map((tag) => tag.trim())
       .filter(Boolean),
-    image_url: formValues.image_url.trim(),
+    image_url: formValues.image_url,
     year_of_acquisition: Number(formValues.year_of_acquisition) || null,
     state_of_wear: formValues.state_of_wear.trim(),
     has_box: formValues.has_box === 'yes',
@@ -105,6 +105,9 @@ function validateFormValues(formValues) {
   }
   if (!(Number(formValues.price) > 0)) {
     return 'Le prix doit être supérieur à 0.';
+  }
+  if (!formValues.image_url) {
+    return 'Ajoutez une photo de votre annonce.';
   }
   return '';
 }
@@ -159,6 +162,12 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
 
   return (
     <Box component="form" className="product-form" onSubmit={handleSubmit} noValidate>
+      {/* Photo obligatoire : envoyée à l'API dès qu'elle est choisie, puis on garde son adresse. */}
+      <ImageUploadField
+        label="Photo de l’annonce *"
+        imageUrl={formValues.image_url}
+        onChange={(imageUrl) => setFormValues((previousValues) => ({ ...previousValues, image_url: imageUrl }))}
+      />
       <TextField label="Titre" name="title" required fullWidth value={formValues.title} onChange={handleChange} />
       <TextField
         label="Description"

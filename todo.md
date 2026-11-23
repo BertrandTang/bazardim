@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `██████████░░░░░░░░░░` 50 % (52 / 105 tâches)**
+**Progression globale : `██████████░░░░░░░░░░` 50 % (53 / 106 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
 | Bloc 2 — Front-end | `██████████████░░░░░░` 68 % | 26 / 38 |
-| Bloc 3 — Back-end | `█████████████░░░░░░░` 63 % | 25 / 40 |
+| Bloc 3 — Back-end | `█████████████░░░░░░░` 63 % | 26 / 41 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -23,7 +23,7 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | --- | --- |
 | Front-end (React) | ✅ Branché sur l'API : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion, messagerie. |
 | Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris, messagerie. commandes et paiement Stripe (mode test). |
-| Tests | ✅ Back : 54 tests, 95 % de couverture. ✅ Front : 81 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Tests | ✅ Back : 59 tests, 95 % de couverture. ✅ Front : 85 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
@@ -151,7 +151,8 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Organisation MVC : `routes/` → `controllers/` → `validators/` (données reçues) et `models/` (requêtes SQL).
 - [x] **Front branché sur l'API** (`front/src/services/api.js`, proxy Vite `/api` → `http://localhost:3000`). Le panier reste dans le localStorage jusqu'à la création des commandes.
 - [x] **Messagerie** : contacter le vendeur depuis la fiche produit, boîte de réception / messages envoyés, réponse, marquer comme lu (`/api/messages`, page `/messages`), pastille du nombre de messages non lus dans la barre de navigation.
-- [ ] Upload d'images d'annonces (**multer**) au lieu d'une URL saisie à la main.
+- [x] Envoi d'images avec **multer** (`POST /api/uploads`, JPEG/PNG/WebP, 2 Mo max, nom de fichier aléatoire) : photo d'annonce obligatoire et photo de profil, choisies sur l'appareil au lieu d'un lien. Les liens vers d'autres sites sont refusés.
+- [ ] En production : stocker les images hors du serveur de l'API (stockage objet type S3 / OVH Object Storage) et supprimer les images qui ne sont plus utilisées.
 
 ### C23 / E17 — Paiement et monétisation
 

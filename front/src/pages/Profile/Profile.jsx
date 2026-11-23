@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Avatar, Button, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import DeleteAccountDialog from '../../components/DeleteAccountDialog/DeleteAccountDialog.jsx';
+import ImageUploadField from '../../components/ImageUploadField/ImageUploadField.jsx';
 import OrderSummary from '../../components/OrderSummary/OrderSummary.jsx';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import PasswordField from '../../components/PasswordField/PasswordField.jsx';
@@ -88,8 +89,11 @@ function SettingsSection() {
     const changes = {
       username: formValues.username.trim(),
       email: formValues.email.trim().toLowerCase(),
-      profile_image_url: formValues.profile_image_url.trim(),
     };
+    // La photo n'est envoyée que si l'utilisateur en a une (l'API n'accepte que des images du site).
+    if (formValues.profile_image_url) {
+      changes.profile_image_url = formValues.profile_image_url;
+    }
     // Les mots de passe ne sont envoyés que s'ils ont été saisis.
     // L'API exige le mot de passe actuel pour changer d'email ou de mot de passe.
     if (formValues.current_password) {
@@ -113,15 +117,18 @@ function SettingsSection() {
   return (
     <>
       <Stack component="form" spacing={2} sx={{ maxWidth: 500 }} onSubmit={handleSubmit}>
-        <Avatar src={formValues.profile_image_url} alt="" sx={{ width: 80, height: 80 }} />
+        {/* La nouvelle photo est enregistrée sur le compte au clic sur "Enregistrer". */}
+        <ImageUploadField
+          label="Photo de profil"
+          imageUrl={formValues.profile_image_url}
+          isRound
+          onChange={(imageUrl) => {
+            setFormValues((previousValues) => ({ ...previousValues, profile_image_url: imageUrl }));
+            setIsSaved(false);
+          }}
+        />
         <TextField label="Pseudo" name="username" value={formValues.username} onChange={handleChange} />
         <TextField label="Email" name="email" type="email" value={formValues.email} onChange={handleChange} />
-        <TextField
-          label="Image de profil (URL)"
-          name="profile_image_url"
-          value={formValues.profile_image_url}
-          onChange={handleChange}
-        />
         <PasswordField
           label="Nouveau mot de passe"
           name="new_password"

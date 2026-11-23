@@ -1,4 +1,6 @@
 import { randomBytes } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 
@@ -26,6 +28,8 @@ export const TEST_ENVIRONMENT = {
   DATABASE_URL: testDatabaseUrl,
   JWT_SECRET: randomBytes(32).toString('hex'),
   FRONT_URL: 'http://localhost:5173',
+  // Les images envoyées pendant les tests vont dans un dossier temporaire, pas dans back/uploads/.
+  UPLOAD_DIRECTORY: join(tmpdir(), 'bazardim-tests-uploads'),
   // Fausses clés : pendant les tests, Stripe est simulé (voir tests/orders.test.js).
   STRIPE_SECRET_KEY: 'sk_test_fausse_cle_pour_les_tests',
   STRIPE_WEBHOOK_SECRET: 'whsec_faux_secret_pour_les_tests',

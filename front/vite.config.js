@@ -12,6 +12,8 @@ export default defineConfig({
     // pour le navigateur, tout vient de la même adresse (pas de souci de CORS ni de cookie).
     proxy: {
       '/api': 'http://localhost:3000',
+      // Images envoyées par les utilisateurs, enregistrées par l'API (dossier back/uploads/).
+      '/uploads': 'http://localhost:3000',
     },
   },
   // Configuration des tests (Vitest réutilise la configuration de Vite).

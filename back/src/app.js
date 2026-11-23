@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.routes.js';
 import likesRoutes from './routes/likes.routes.js';
 import messagesRoutes from './routes/messages.routes.js';
 import ordersRoutes from './routes/orders.routes.js';
+import uploadsRoutes from './routes/uploads.routes.js';
 import productsRoutes from './routes/products.routes.js';
 import usersRoutes from './routes/users.routes.js';
 
@@ -56,6 +57,11 @@ app.use('/api/users', usersRoutes);
 app.use('/api/likes', likesRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/orders', ordersRoutes);
+app.use('/api/uploads', uploadsRoutes);
+
+// Sert les images envoyées par les utilisateurs : /uploads/abc.jpg → fichier back/uploads/abc.jpg.
+// (helmet ajoute "X-Content-Type-Options: nosniff" : un faux fichier image ne peut pas être exécuté.)
+app.use('/uploads', express.static(config.UPLOAD_DIRECTORY));
 app.use('/api', productsRoutes);
 
 // ----- Gestion des erreurs (toujours en dernier) -----
