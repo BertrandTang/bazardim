@@ -24,8 +24,8 @@ Types de tests :
 
 | Fonctionnalité | Scénario | Résultat attendu | Type | Fichier |
 | --- | --- | --- | --- | --- |
-| Catalogue | Ouvrir l'accueil | 11 produits et un titre `<h1>` | Intégration | `pages/pages.test.jsx` |
-| Catalogue | Ouvrir une catégorie (Statues) | Seuls les produits de la catégorie | Intégration | `pages/pages.test.jsx` |
+| Catalogue | Ouvrir l'accueil | Tous les produits du catalogue et un titre `<h1>` | Intégration | `pages/pages.test.jsx` |
+| Catalogue | Ouvrir une catégorie (Statues) | Toutes les statues, et seulement elles | Intégration | `pages/pages.test.jsx` |
 | Recherche | Taper « luffy » + Entrée dans la barre | Adresse `/?q=luffy` | Composant | `components/components.test.jsx` |
 | Recherche | Ouvrir `/?q=vegeta` | « 1 résultat(s) pour « vegeta » » | Intégration | `pages/pages.test.jsx` |
 | Recherche | Licence inconnue | Message « Aucun produit ne correspond » | Intégration | `pages/pages.test.jsx` |

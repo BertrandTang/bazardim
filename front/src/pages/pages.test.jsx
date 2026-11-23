@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import figuresData from '../data/figures.json';
 import { loginAs, renderWithProviders } from '../test/renderWithProviders.jsx';
 import Auth from './Auth/Auth.jsx';
 import Cart from './Cart/Cart.jsx';
@@ -11,18 +12,24 @@ import Sell from './Sell/Sell.jsx';
 import SignUp from './SignUp/SignUp.jsx';
 import UserProfile from './UserProfile/UserProfile.jsx';
 
+// Les nombres attendus sont calculés à partir des données de démonstration,
+// pour que les tests restent valables quand on ajoute ou retire des produits.
+const allProducts = figuresData.figures;
+const statues = allProducts.filter((product) => product.category === 'STATUE');
+
 describe('Home', () => {
   it('affiche tous les produits avec un titre principal', () => {
     renderWithProviders(<Home />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Figurines et statues de collection');
-    expect(screen.getAllByRole('article')).toHaveLength(11);
+    expect(screen.getAllByRole('article')).toHaveLength(allProducts.length);
   });
 
   it('filtre par catégorie', () => {
     renderWithProviders(<Home category="STATUE" />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Statues d’occasion');
-    const statueCount = screen.getAllByRole('article').length;
-    expect(statueCount).toBeLessThan(11);
+    // Autant de cartes que de statues, et aucune figurine (Vegeta est une figurine).
+    expect(screen.getAllByRole('article')).toHaveLength(statues.length);
+    expect(screen.queryByText(/Vegeta/)).not.toBeInTheDocument();
   });
 
   it('affiche le nombre de résultats d’une recherche', () => {
