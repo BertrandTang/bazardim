@@ -170,6 +170,11 @@ export function fetchSentMessages() {
   return request('/messages/sent');
 }
 
+/** Nombre de messages reçus non lus : { count: 2 }. */
+export function fetchUnreadMessageCount() {
+  return request('/messages/unread-count');
+}
+
 /** Envoie un message. `message` : { recipient_id, product_id, content }. */
 export function sendMessage(message) {
   return request('/messages', { method: 'POST', body: message });

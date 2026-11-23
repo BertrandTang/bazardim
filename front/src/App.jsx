@@ -5,6 +5,7 @@ import RequireAuth from './components/RequireAuth/RequireAuth.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { LikesProvider } from './context/LikesContext.jsx';
+import { MessagesProvider } from './context/MessagesContext.jsx';
 import { ProductsProvider } from './context/ProductsContext.jsx';
 import { CATEGORIES } from './data/categories.js';
 import Home from './pages/Home/Home.jsx';
@@ -32,60 +33,62 @@ export default function App() {
       <ProductsProvider>
         <CartProvider>
           <LikesProvider>
-            <BrowserRouter>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/licences" element={<Home />} />
-                  {/* Une page par catégorie, générée à partir de la liste CATEGORIES */}
-                  {CATEGORIES.map((category) => (
-                    <Route key={category.value} path={category.path} element={<Home category={category.value} />} />
-                  ))}
-                  <Route path="/product/:id" element={<Product />} />
-                  <Route path="/user/:id" element={<UserProfile />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/signup" element={<SignUp />} />
+            <MessagesProvider>
+              <BrowserRouter>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/licences" element={<Home />} />
+                    {/* Une page par catégorie, générée à partir de la liste CATEGORIES */}
+                    {CATEGORIES.map((category) => (
+                      <Route key={category.value} path={category.path} element={<Home category={category.value} />} />
+                    ))}
+                    <Route path="/product/:id" element={<Product />} />
+                    <Route path="/user/:id" element={<UserProfile />} />
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/signup" element={<SignUp />} />
 
-                  {/* Pages réservées aux utilisateurs connectés */}
-                  <Route
-                    path="/vendre"
-                    element={
-                      <RequireAuth>
-                        <Sell />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <RequireAuth>
-                        <Profile />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/commande/confirmation"
-                    element={
-                      <RequireAuth>
-                        <OrderConfirmation />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/messages"
-                    element={
-                      <RequireAuth>
-                        <Messages />
-                      </RequireAuth>
-                    }
-                  />
+                    {/* Pages réservées aux utilisateurs connectés */}
+                    <Route
+                      path="/vendre"
+                      element={
+                        <RequireAuth>
+                          <Sell />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <RequireAuth>
+                          <Profile />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/commande/confirmation"
+                      element={
+                        <RequireAuth>
+                          <OrderConfirmation />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/messages"
+                      element={
+                        <RequireAuth>
+                          <Messages />
+                        </RequireAuth>
+                      }
+                    />
 
-                  {/* "*" correspond à toutes les adresses qui n'ont pas de route : page 404 */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Layout>
-            </BrowserRouter>
+                    {/* "*" correspond à toutes les adresses qui n'ont pas de route : page 404 */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Layout>
+              </BrowserRouter>
+            </MessagesProvider>
           </LikesProvider>
         </CartProvider>
       </ProductsProvider>

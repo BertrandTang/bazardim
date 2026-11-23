@@ -35,6 +35,14 @@ export async function findSentMessages(userId) {
   ]);
 }
 
+/** Nombre de messages reçus et pas encore lus (pour la pastille de la barre de navigation). */
+export async function countUnreadMessages(userId) {
+  const rows = await query('SELECT COUNT(*)::int AS count FROM messages WHERE recipient_id = $1 AND is_read = FALSE', [
+    userId,
+  ]);
+  return rows[0].count;
+}
+
 export async function findMessageById(messageId) {
   const rows = await query(`${MESSAGE_SELECT} WHERE messages.id = $1`, [messageId]);
   return rows[0] ?? null;

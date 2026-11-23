@@ -1,6 +1,13 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { addFakeMessage, createOrder, likeProduct, markFakeOrderAsPaid, markFakeProductAsSold } from './fakeApi.js';
+import {
+  addFakeMessage,
+  createOrder,
+  fetchUnreadMessageCount,
+  likeProduct,
+  markFakeOrderAsPaid,
+  markFakeProductAsSold,
+} from './fakeApi.js';
 import { PRODUCTS, TEST_PASSWORD } from './fixtures.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
 import Auth from '../src/pages/Auth/Auth.jsx';
@@ -384,6 +391,8 @@ describe('Messages (messagerie)', () => {
     await user.click(within(message).getByRole('button', { name: 'Envoyer' }));
     expect(within(message).getByText('Message envoyé.')).toBeInTheDocument();
     expect(within(message).queryByText('Nouveau')).not.toBeInTheDocument();
+    // Le message est bien enregistré comme lu (la pastille de la barre de navigation se base dessus).
+    expect(await fetchUnreadMessageCount()).toEqual({ count: 0 });
 
     // La réponse apparaît dans l'onglet "Envoyés".
     await user.click(screen.getByRole('button', { name: 'Envoyés' }));

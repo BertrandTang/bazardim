@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { PRODUCTS } from './fixtures.js';
+import { addFakeMessage } from './fakeApi.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
 import NavBar from '../src/components/NavBar/NavBar.jsx';
 import PasswordField from '../src/components/PasswordField/PasswordField.jsx';
@@ -141,10 +142,20 @@ describe('NavBar', () => {
     expect(categoriesButton).toHaveFocus();
   });
 
+  it('affiche une pastille avec le nombre de messages non lus', async () => {
+    addFakeMessage({ sender_id: 2, recipient_id: 1, product_id: 1, content: 'Bonjour' });
+    addFakeMessage({ sender_id: 2, recipient_id: 1, product_id: 1, content: 'Toujours là ?' });
+    loginAs(1);
+    await renderWithProviders(<NavBar />);
+    const messagesLink = screen.getByRole('link', { name: 'Messages (2 non lus)' });
+    expect(messagesLink).toHaveTextContent('2');
+  });
+
   it('affiche Messages, Profil et Déconnexion quand l’utilisateur est connecté', async () => {
     loginAs(1);
     const { user } = await renderWithProviders(<NavBar />);
-    expect(screen.getByRole('link', { name: 'MESSAGES' })).toHaveAttribute('href', '/messages');
+    // Sans message non lu : pas de pastille.
+    expect(screen.getByRole('link', { name: 'Messages' })).toHaveAttribute('href', '/messages');
     expect(screen.getByRole('link', { name: 'PROFIL' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Déconnexion' }));
     expect(screen.getByRole('link', { name: 'CONNEXION' })).toBeInTheDocument();

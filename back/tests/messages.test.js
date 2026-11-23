@@ -86,6 +86,23 @@ describe('Messagerie', () => {
     await anonymous().post('/api/messages').send({ recipient_id: 1, content: 'Anonyme' }).expect(401);
   });
 
+  it('compte les messages non lus du destinataire', async () => {
+    const { seller, buyer, product } = await createSellerAndBuyer();
+    const send = (content) =>
+      buyer.agent.post('/api/messages').send({ recipient_id: seller.user.id, product_id: product.id, content });
+    const firstMessage = (await send('Premier')).body;
+    await send('Second');
+
+    expect((await seller.agent.get('/api/messages/unread-count').expect(200)).body).toEqual({ count: 2 });
+    // L'expéditeur n'a rien reçu.
+    expect((await buyer.agent.get('/api/messages/unread-count')).body).toEqual({ count: 0 });
+
+    await seller.agent.patch(`/api/messages/${firstMessage.id}/read`).expect(204);
+    expect((await seller.agent.get('/api/messages/unread-count')).body).toEqual({ count: 1 });
+
+    await anonymous().get('/api/messages/unread-count').expect(401);
+  });
+
   it('seul le destinataire peut marquer un message comme lu', async () => {
     const { seller, buyer, product } = await createSellerAndBuyer();
     const message = (

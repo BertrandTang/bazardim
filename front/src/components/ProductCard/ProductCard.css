@@ -3,8 +3,10 @@
   border-radius: 0 40px 0 40px;
   padding: 16px;
   width: 260px;
-  height: 500px;
-  overflow: hidden;
+  /* Hauteur MINIMALE (et non fixe) : si le titre ou les étiquettes prennent plus de place,
+     la carte grandit au lieu de couper le texte. Les cartes d'une même rangée gardent la même
+     hauteur, car le conteneur (flex-wrap) étire chaque carte à la hauteur de la plus grande. */
+  min-height: 500px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -35,11 +37,15 @@
   position: absolute;
   bottom: 8px;
   right: 12px;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: none;
-  background: transparent;
+  /* Pastille blanche derrière le cœur : il reste visible sur n'importe quelle photo
+     (contraste suffisant pour l'accessibilité, au moins 3:1 pour une icône). */
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   color: var(--color-primary);
   font-size: 20px;
   line-height: 1;
@@ -49,11 +55,11 @@
 }
 
 .like-button:hover {
-  transform: scale(2);
+  transform: scale(1.2);
 }
 
 .like-button.active {
-  color: #ff40d3;
+  color: var(--color-accent);
 }
 
 /* ----- Textes ----- */
@@ -75,21 +81,23 @@
 }
 
 .product-description {
-  flex: 1 1 auto;
+  /* Ne jamais rétrécir la description : c'est ce qui la coupait au milieu d'une ligne. */
+  flex-shrink: 0;
   margin: 0;
   font-size: 13px;
   line-height: 1.35;
   font-family: monospace;
   color: #444;
-  /* Coupe le texte après 6 lignes avec "..." */
+  /* Coupe le texte après 3 lignes complètes, avec "..." (le texte entier est sur la page du produit). */
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 6;
-  line-clamp: 6;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .product-manufacturer {
+  flex-shrink: 0;
   margin: 0;
   font-size: 12px;
   font-family: monospace;

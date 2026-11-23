@@ -23,7 +23,7 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | --- | --- |
 | Front-end (React) | ✅ Branché sur l'API : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion, messagerie. |
 | Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris, messagerie. commandes et paiement Stripe (mode test). |
-| Tests | ✅ Back : 53 tests, 95 % de couverture. ✅ Front : 78 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Tests | ✅ Back : 54 tests, 95 % de couverture. ✅ Front : 79 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
@@ -150,7 +150,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Routes REST : auth, comptes, produits (filtres + pagination), licences, favoris, messagerie.
 - [x] Organisation MVC : `routes/` → `controllers/` → `validators/` (données reçues) et `models/` (requêtes SQL).
 - [x] **Front branché sur l'API** (`front/src/services/api.js`, proxy Vite `/api` → `http://localhost:3000`). Le panier reste dans le localStorage jusqu'à la création des commandes.
-- [x] **Messagerie** : contacter le vendeur depuis la fiche produit, boîte de réception / messages envoyés, réponse, marquer comme lu (`/api/messages`, page `/messages`).
+- [x] **Messagerie** : contacter le vendeur depuis la fiche produit, boîte de réception / messages envoyés, réponse, marquer comme lu (`/api/messages`, page `/messages`), pastille du nombre de messages non lus dans la barre de navigation.
 - [ ] Upload d'images d'annonces (**multer**) au lieu d'une URL saisie à la main.
 
 ### C23 / E17 — Paiement et monétisation

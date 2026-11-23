@@ -8,7 +8,7 @@ qui échoue si un test échoue ou si la couverture du code passe sous 50 % (le m
 | --- | --- | --- |
 | Outils | Vitest + React Testing Library (navigateur simulé : jsdom) | Vitest + supertest, sur une vraie base PostgreSQL de test |
 | Lancer | `cd front && npm run test:coverage` | `cd back && npm run test:coverage` |
-| Nombre de tests | 78 | 53 |
+| Nombre de tests | 79 | 54 |
 | Couverture des lignes | 89 % | 95 % |
 | Emplacement | `front/tests/*.test.js(x)` | `back/tests/*.test.js` |
 
@@ -59,6 +59,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Favoris | Changement d'utilisateur | Chaque utilisateur retrouve ses propres favoris | Unitaire | `contexts.test.jsx` |
 | Messagerie | Contacter le vendeur depuis la fiche produit (vide puis rempli) | Erreur « message vide », puis « Message envoyé. » | Intégration | `pages.test.jsx` |
 | Messagerie | Visiteur sur la fiche produit | Lien « Connectez-vous » | Intégration | `pages.test.jsx` |
+| Messagerie | 2 messages non lus | Pastille « 2 » à côté de MESSAGES, lue « Messages (2 non lus) » | Composant | `components.test.jsx` |
 | Messagerie | Répondre à un message reçu | Réponse envoyée, message marqué lu, visible dans « Envoyés » | Intégration | `pages.test.jsx` |
 | Messagerie | Annonce supprimée, boîte vide | « annonce supprimée », « Aucun message. » | Intégration | `pages.test.jsx` |
 | Commande | Visiteur dans le panier | Lien « Se connecter pour commander » | Intégration | `pages.test.jsx` |
@@ -97,6 +98,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Messagerie | Écrire au vendeur d'une annonce | 201, visible dans ses reçus et dans les envoyés de l'expéditeur | `messages.test.js` |
 | Messagerie | Message vide, à soi-même, à un inconnu, produit inexistant | 400 / 400 / 404 / 404 | `messages.test.js` |
 | Messagerie | Marquer comme lu un message qui ne nous est pas destiné | 403 | `messages.test.js` |
+| Messagerie | Nombre de messages non lus | Compte exact, baisse après lecture, 401 sans connexion | `messages.test.js` |
 | Messagerie (confidentialité) | Un autre utilisateur, même administrateur, consulte ses messages | Il ne voit pas les messages des autres (403 s'il tente d'agir dessus) | `messages.test.js` |
 | Messagerie | Annonce supprimée | Le message est conservé (`product_id` vide) | `messages.test.js` |
 | Commande | Créer une commande | 201, total calculé avec les prix de la base, montants en centimes envoyés à Stripe | `orders.test.js` |

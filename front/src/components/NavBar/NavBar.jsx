@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
+import { useMessages } from '../../context/MessagesContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
 import { CATEGORIES } from '../../data/categories.js';
 import NavBarDropdown from './NavBarDropdown.jsx';
@@ -16,7 +18,14 @@ export default function NavBar() {
   const { cartProducts } = useCart();
   const itemCount = cartProducts.length;
   const { licences } = useProducts();
+  const { unreadCount, refreshUnreadCount } = useMessages();
   const location = useLocation();
+
+  // À chaque changement de page, on redemande le nombre de messages non lus
+  // (un nouveau message a pu arriver entre-temps).
+  useEffect(() => {
+    refreshUnreadCount();
+  }, [location.pathname, refreshUnreadCount]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -94,7 +103,15 @@ export default function NavBar() {
         <div className="navbar-auth">
           {currentUser ? (
             <>
-              <Link to="/messages">MESSAGES</Link>
+              {/* aria-label : un lecteur d'écran lit "Messages (2 non lus)" au lieu de "MESSAGES 2". */}
+              <Link
+                to="/messages"
+                className="navbar-messages"
+                aria-label={unreadCount > 0 ? `Messages (${unreadCount} non lus)` : 'Messages'}
+              >
+                MESSAGES
+                {unreadCount > 0 && <span className="messages-badge">{unreadCount}</span>}
+              </Link>
               <Link to="/profile">PROFIL</Link>
               <button type="button" className="logout-button" onClick={logout}>
                 Déconnexion

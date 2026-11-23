@@ -270,6 +270,12 @@ export async function fetchSentMessages() {
   return database.messages.filter((message) => message.sender_id === user.id).map(toMessageResponse);
 }
 
+export async function fetchUnreadMessageCount() {
+  const user = getLoggedInUser();
+  const count = database.messages.filter((message) => message.recipient_id === user.id && !message.is_read).length;
+  return { count };
+}
+
 export async function sendMessage({ recipient_id: recipientId, product_id: productId, content }) {
   const user = getLoggedInUser();
   if (recipientId === user.id) {
