@@ -39,7 +39,7 @@ Comptes de démo : `collectionneurdu92@example.com` / `password123`, administrat
 - **zod** : validation de tout ce qui entre dans l'API (corps, paramètres d'URL, configuration).
 - **Authentification** : mot de passe haché avec **bcrypt**, jeton **JWT** rangé dans un cookie `httpOnly` + `SameSite=Lax` (inaccessible au JavaScript de la page).
 - **Sécurité** : `helmet` (en-têtes HTTP), CORS limité au front, limitation du nombre de tentatives de connexion, contrôle du propriétaire sur chaque modification, contraintes en base (`CHECK`, `UNIQUE`, clés étrangères).
-- **Journalisation** : `morgan` affiche chaque requête dans le terminal (méthode, adresse, code de réponse, durée).
+- **Journalisation** : un middleware maison (`middlewares/requestLogger.js`) affiche chaque requête dans le terminal (méthode, adresse, code de réponse, durée) ; les erreurs inattendues sont affichées par `errorHandler`.
 - **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test.
 
 ## Organisation du code
@@ -59,7 +59,7 @@ back/
 │   ├── controllers/        Règles métier : droits, codes HTTP (ex : products.controller.js)
 │   ├── models/             Requêtes SQL vers la base (ex : products.model.js)
 │   ├── validators/         Validation des données reçues avec zod (ex : products.validator.js)
-│   ├── middlewares/        Authentification (requireAuth) et gestion des erreurs
+│   ├── middlewares/        Authentification (requireAuth), journal des requêtes, gestion des erreurs
 │   └── utils/              Hachage des mots de passe, classe HttpError
 └── tests/                  Un fichier de test par ressource (auth, users, products...)
 ```

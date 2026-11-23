@@ -2,10 +2,10 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import { config } from './config/config.js';
 import { query } from './config/database.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
+import { requestLogger } from './middlewares/requestLogger.js';
 import authRoutes from './routes/auth.routes.js';
 import likesRoutes from './routes/likes.routes.js';
 import productsRoutes from './routes/products.routes.js';
@@ -25,10 +25,10 @@ app.use(helmet());
 // `credentials: true` autorise l'envoi du cookie de connexion.
 app.use(cors({ origin: config.FRONT_URL, credentials: true }));
 
-// Journal de chaque requête dans le terminal, ex : "GET /api/products 200 4.2 ms".
+// Journal de chaque requête dans le terminal (voir middlewares/requestLogger.js).
 // Désactivé pendant les tests pour garder une sortie lisible.
 if (!config.isTest) {
-  app.use(morgan('dev'));
+  app.use(requestLogger);
 }
 
 // Lit le corps JSON des requêtes (limité à 100 Ko pour éviter les envois géants).
