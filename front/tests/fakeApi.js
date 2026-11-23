@@ -26,6 +26,7 @@ export function resetFakeApi() {
     products: structuredClone(PRODUCTS),
     likes: [], // { userId, productId }
     messages: [],
+    orders: [],
     loggedInUserId: null,
   };
 }
@@ -193,6 +194,56 @@ export async function unlikeProduct(productId) {
   const user = getLoggedInUser();
   database.likes = database.likes.filter((like) => !(like.userId === user.id && like.productId === productId));
   return null;
+}
+
+// ----- Commandes et paiement -----
+
+/** Marque une commande comme payée (simule la confirmation de Stripe). */
+export function markFakeOrderAsPaid(orderId) {
+  const order = database.orders.find((candidate) => candidate.id === orderId);
+  order.status = 'paid';
+  order.paid_at = new Date().toISOString();
+}
+
+export async function createOrder({ items, shipping_address: shippingAddress }) {
+  const user = getLoggedInUser();
+  if (items.length === 0) {
+    throw new ApiError(400, 'Le panier est vide.');
+  }
+  const orderItems = items.map((item) => {
+    const product = findProduct(item.product_id);
+    if (product.owner_id === user.id) {
+      throw new ApiError(400, `Vous ne pouvez pas acheter votre propre annonce (« ${product.title} »).`);
+    }
+    return { product_id: product.id, product_title: product.title, unit_price: product.price, quantity: item.quantity };
+  });
+  const totalInCents = orderItems.reduce((total, item) => total + Math.round(item.unit_price * 100) * item.quantity, 0);
+  const order = {
+    id: nextId(database.orders),
+    buyer_id: user.id,
+    status: 'pending',
+    total_price: totalInCents / 100,
+    shipping_address: shippingAddress,
+    created_at: new Date().toISOString(),
+    paid_at: null,
+    items: orderItems,
+  };
+  database.orders.push(order);
+  return { order_id: order.id, checkout_url: `https://checkout.stripe.com/c/pay/fausse-session-${order.id}` };
+}
+
+export async function fetchOrders() {
+  const user = getLoggedInUser();
+  return structuredClone(database.orders.filter((order) => order.buyer_id === user.id));
+}
+
+export async function fetchOrder(orderId) {
+  const user = getLoggedInUser();
+  const order = database.orders.find((candidate) => candidate.id === Number(orderId) && candidate.buyer_id === user.id);
+  if (!order) {
+    throw new ApiError(404, 'Commande introuvable.');
+  }
+  return structuredClone(order);
 }
 
 // ----- Messagerie -----

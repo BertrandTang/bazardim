@@ -47,7 +47,7 @@ src/
 ├── components/           Morceaux d'interface réutilisables (cartes, formulaires...)
 ├── pages/                Une page = une route (Home, Product, Cart, Profile, Messages...)
 ├── data/                 Liste des catégories
-└── utils/                Fonctions utilitaires (image d'un produit, format du prix)
+└── utils/                Fonctions utilitaires (image d'un produit, format du prix, redirection vers Stripe)
 ```
 
 Les tests sont dans le dossier `tests/` (à côté de `src/`), comme dans le back-end.

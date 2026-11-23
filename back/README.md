@@ -40,7 +40,23 @@ Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@exa
 - **Authentification** : mot de passe haché avec **bcrypt**, jeton **JWT** rangé dans un cookie `httpOnly` + `SameSite=Lax` (inaccessible au JavaScript de la page).
 - **Sécurité** : `helmet` (en-têtes HTTP), CORS limité au front, limitation du nombre de tentatives de connexion, contrôle du propriétaire sur chaque modification, contraintes en base (`CHECK`, `UNIQUE`, clés étrangères).
 - **Journalisation** : un middleware maison (`middlewares/requestLogger.js`) affiche chaque requête dans le terminal (méthode, adresse, code de réponse, durée) ; les erreurs inattendues sont affichées par `errorHandler`.
-- **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test.
+- **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test. Stripe est simulé (`vi.mock`) : les tests ne l'appellent jamais.
+
+## Paiement (Stripe Checkout, mode test)
+
+Le trajet d'une commande :
+
+1. Le front envoie `POST /api/orders` avec les produits du panier (identifiants + quantités, **jamais de prix**) et l'adresse de livraison.
+2. Le back relit les prix dans la base, calcule le total, enregistre la commande « en attente » (`pending`) et crée une **session Stripe Checkout**. Il renvoie l'adresse de la page de paiement (`checkout_url`).
+3. Le front redirige l'acheteur vers cette page, hébergée par Stripe : la carte bancaire ne passe jamais par notre serveur.
+4. Après le paiement, Stripe renvoie l'acheteur sur `/commande/confirmation?order_id=...`. La commande passe à `paid` de deux façons :
+   - **webhook** : Stripe appelle `POST /api/stripe/webhook` (signature vérifiée avec `STRIPE_WEBHOOK_SECRET`). C'est la méthode fiable, même si l'acheteur ferme son navigateur ;
+   - **vérification à l'affichage** : `GET /api/orders/:id` demande à Stripe si la session est payée. Pratique en local, sans webhook.
+
+En local, pour recevoir aussi le webhook, installer la [Stripe CLI](https://docs.stripe.com/stripe-cli) puis lancer
+`stripe listen --forward-to localhost:3000/api/stripe/webhook` : elle affiche un secret `whsec_...` à copier dans `STRIPE_WEBHOOK_SECRET`.
+
+Carte de test : `4242 4242 4242 4242`, n'importe quelle date future et n'importe quel CVC. Seules les clés `sk_test_` sont acceptées par la configuration.
 
 ## Organisation du code
 
@@ -72,29 +88,33 @@ Organisation **MVC** classique (la « vue » est le JSON renvoyé). Le trajet d'
 Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+ `details` par champ pour une erreur de validation 400).
 🔒 = connexion requise (cookie envoyé avec `credentials: 'include'` côté front).
 
-| Méthode   | Route                    | Description                                                                              |
-| --------- | ------------------------ | ---------------------------------------------------------------------------------------- |
-| GET       | `/api/health`            | État de l'API et de la base                                                              |
-| POST      | `/api/auth/register`     | Inscription `{ username, email, password }` → 201 + cookie                               |
-| POST      | `/api/auth/login`        | Connexion `{ email, password }` → cookie                                                 |
-| POST      | `/api/auth/logout`       | Déconnexion → 204                                                                        |
-| GET 🔒    | `/api/auth/me`           | Utilisateur connecté                                                                     |
-| GET       | `/api/users/:id`         | Profil public (pseudo, image — pas d'email)                                              |
-| PATCH 🔒  | `/api/users/me`          | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)  |
-| DELETE 🔒 | `/api/users/me`          | Supprimer son compte `{ current_password }` (RGPD)                                       |
-| GET       | `/api/products`          | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset` |
-| GET       | `/api/products/:id`      | Détail d'un produit                                                                      |
-| POST 🔒   | `/api/products`          | Créer une annonce                                                                        |
-| PUT 🔒    | `/api/products/:id`      | Modifier son annonce (propriétaire ou admin)                                             |
-| DELETE 🔒 | `/api/products/:id`      | Supprimer son annonce (propriétaire ou admin)                                            |
-| GET       | `/api/licences`          | Licences utilisées par au moins une annonce                                              |
-| GET 🔒    | `/api/likes`             | Produits mis en favoris                                                                  |
-| PUT 🔒    | `/api/likes/:productId`  | Ajouter aux favoris (sans effet si déjà présent)                                         |
-| DELETE 🔒 | `/api/likes/:productId`  | Retirer des favoris                                                                      |
-| GET 🔒    | `/api/messages/received` | Messages reçus (boîte de réception)                                                      |
-| GET 🔒    | `/api/messages/sent`     | Messages envoyés                                                                         |
-| POST 🔒   | `/api/messages`          | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                |
-| PATCH 🔒  | `/api/messages/:id/read` | Marquer un message reçu comme lu (destinataire uniquement)                               |
+| Méthode   | Route                    | Description                                                                                        |
+| --------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
+| GET       | `/api/health`            | État de l'API et de la base                                                                        |
+| POST      | `/api/auth/register`     | Inscription `{ username, email, password }` → 201 + cookie                                         |
+| POST      | `/api/auth/login`        | Connexion `{ email, password }` → cookie                                                           |
+| POST      | `/api/auth/logout`       | Déconnexion → 204                                                                                  |
+| GET 🔒    | `/api/auth/me`           | Utilisateur connecté                                                                               |
+| GET       | `/api/users/:id`         | Profil public (pseudo, image — pas d'email)                                                        |
+| PATCH 🔒  | `/api/users/me`          | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)            |
+| DELETE 🔒 | `/api/users/me`          | Supprimer son compte `{ current_password }` (RGPD)                                                 |
+| GET       | `/api/products`          | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset`           |
+| GET       | `/api/products/:id`      | Détail d'un produit                                                                                |
+| POST 🔒   | `/api/products`          | Créer une annonce                                                                                  |
+| PUT 🔒    | `/api/products/:id`      | Modifier son annonce (propriétaire ou admin)                                                       |
+| DELETE 🔒 | `/api/products/:id`      | Supprimer son annonce (propriétaire ou admin)                                                      |
+| GET       | `/api/licences`          | Licences utilisées par au moins une annonce                                                        |
+| GET 🔒    | `/api/likes`             | Produits mis en favoris                                                                            |
+| PUT 🔒    | `/api/likes/:productId`  | Ajouter aux favoris (sans effet si déjà présent)                                                   |
+| DELETE 🔒 | `/api/likes/:productId`  | Retirer des favoris                                                                                |
+| GET 🔒    | `/api/messages/received` | Messages reçus (boîte de réception)                                                                |
+| GET 🔒    | `/api/messages/sent`     | Messages envoyés                                                                                   |
+| POST 🔒   | `/api/messages`          | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                          |
+| PATCH 🔒  | `/api/messages/:id/read` | Marquer un message reçu comme lu (destinataire uniquement)                                         |
+| POST 🔒   | `/api/orders`            | Commander `{ items: [{ product_id, quantity }], shipping_address }` → `{ order_id, checkout_url }` |
+| GET 🔒    | `/api/orders`            | Mes commandes (avec leurs articles)                                                                |
+| GET 🔒    | `/api/orders/:id`        | Une de mes commandes (vérifie le paiement auprès de Stripe si elle est en attente)                 |
+| POST      | `/api/stripe/webhook`    | Réservée à Stripe (signature vérifiée) : confirme un paiement                                      |
 
 Exemple de produit envoyé à `POST /api/products` :
 

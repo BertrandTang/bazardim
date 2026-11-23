@@ -138,6 +138,28 @@ export function unlikeProduct(productId) {
   return request(`/likes/${productId}`, { method: 'DELETE' });
 }
 
+// ----- Commandes et paiement -----
+
+/**
+ * Crée une commande et la page de paiement Stripe.
+ * `order` : { items: [{ product_id, quantity }], shipping_address }. Aucun prix n'est envoyé :
+ * le back relit les prix dans la base.
+ * @returns {Promise<{order_id: number, checkout_url: string}>}
+ */
+export function createOrder(order) {
+  return request('/orders', { method: 'POST', body: order });
+}
+
+/** Commandes de l'utilisateur connecté. */
+export function fetchOrders() {
+  return request('/orders');
+}
+
+/** Une commande (le back vérifie auprès de Stripe si elle a été payée). */
+export function fetchOrder(orderId) {
+  return request(`/orders/${orderId}`);
+}
+
 // ----- Messagerie -----
 
 export function fetchReceivedMessages() {

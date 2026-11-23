@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { addFakeMessage, likeProduct } from './fakeApi.js';
+import { addFakeMessage, createOrder, likeProduct, markFakeOrderAsPaid } from './fakeApi.js';
 import { PRODUCTS, TEST_PASSWORD } from './fixtures.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
 import Auth from '../src/pages/Auth/Auth.jsx';
@@ -8,12 +8,26 @@ import Cart from '../src/pages/Cart/Cart.jsx';
 import Home from '../src/pages/Home/Home.jsx';
 import Messages from '../src/pages/Messages/Messages.jsx';
 import NotFound from '../src/pages/NotFound/NotFound.jsx';
+import OrderConfirmation from '../src/pages/OrderConfirmation/OrderConfirmation.jsx';
 import Product from '../src/pages/Product/Product.jsx';
 import Profile from '../src/pages/Profile/Profile.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
 import Sell from '../src/pages/Sell/Sell.jsx';
 import SignUp from '../src/pages/SignUp/SignUp.jsx';
 import UserProfile from '../src/pages/UserProfile/UserProfile.jsx';
+import { redirectTo } from '../src/utils/redirect.js';
+
+// Le navigateur simulé ne sait pas aller sur un autre site (Stripe) : on remplace
+// redirectTo par une fausse fonction, et on vérifie simplement avec quelle adresse elle est appelée.
+vi.mock('../src/utils/redirect.js', () => ({ redirectTo: vi.fn() }));
+
+/** Adresse de livraison telle que l'enregistre le champ d'adresse du panier. */
+const SHIPPING_ADDRESS = { id: 'A1', label: '10 Rue de Rivoli 75004 Paris', postcode: '75004', city: 'Paris' };
+
+/** Met des produits dans le panier (localStorage), avant d'afficher la page. */
+function fillCart(cartItems) {
+  localStorage.setItem('cartItems', JSON.stringify(cartItems));
+}
 
 // Les nombres attendus sont calculés à partir des données de test (fixtures.js),
 // pour que les tests restent valables quand on ajoute ou retire des produits.
@@ -128,6 +142,64 @@ describe('Cart (panier)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Vider le panier' }));
     expect(screen.getByText('Votre panier est vide.')).toBeInTheDocument();
+  });
+
+  it('demande à un visiteur de se connecter pour commander', async () => {
+    fillCart([{ productId: 2, quantity: 1 }]);
+    await renderWithProviders(<Cart />);
+    expect(screen.getByRole('link', { name: 'Se connecter pour commander' })).toHaveAttribute('href', '/auth');
+  });
+
+  it('demande une adresse, puis crée la commande et envoie vers la page de paiement Stripe', async () => {
+    loginAs(1);
+    fillCart([{ productId: 2, quantity: 1 }]); // produit 2 : vendu par l'utilisateur 2
+    const { user, unmount } = await renderWithProviders(<Cart />);
+    expect(screen.getByRole('button', { name: 'Commander et payer' })).toBeDisabled();
+    unmount();
+
+    localStorage.setItem('shippingAddress', JSON.stringify(SHIPPING_ADDRESS));
+    await renderWithProviders(<Cart />);
+    await user.click(screen.getByRole('button', { name: 'Commander et payer' }));
+    expect(redirectTo).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/fausse-session-1');
+  });
+
+  it('affiche le refus de l’API (achat de sa propre annonce)', async () => {
+    loginAs(1);
+    fillCart([{ productId: 1, quantity: 1 }]); // produit 1 : vendu par l'utilisateur 1 lui-même
+    localStorage.setItem('shippingAddress', JSON.stringify(SHIPPING_ADDRESS));
+    const { user } = await renderWithProviders(<Cart />);
+    await user.click(screen.getByRole('button', { name: 'Commander et payer' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Vous ne pouvez pas acheter votre propre annonce');
+  });
+});
+
+describe('OrderConfirmation (retour du paiement)', () => {
+  it('attend la confirmation du paiement, puis remercie et vide le panier', async () => {
+    loginAs(1);
+    fillCart([{ productId: 2, quantity: 1 }]);
+    const { order_id: orderId } = await createOrder({
+      items: [{ product_id: 2, quantity: 1 }],
+      shipping_address: SHIPPING_ADDRESS.label,
+    });
+    const { user } = await renderWithProviders(<OrderConfirmation />, {
+      route: `/commande/confirmation?order_id=${orderId}`,
+    });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Paiement en cours de vérification');
+    expect(screen.getByText('En attente de paiement')).toBeInTheDocument();
+
+    // Stripe confirme le paiement, l'utilisateur clique sur "Vérifier à nouveau".
+    markFakeOrderAsPaid(orderId);
+    await user.click(screen.getByRole('button', { name: 'Vérifier à nouveau' }));
+    expect(await screen.findByText('Merci pour votre commande !')).toBeInTheDocument();
+    expect(screen.getByText('Payée')).toBeInTheDocument();
+    expect(screen.getByText('10 Rue de Rivoli 75004 Paris', { exact: false })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('cartItems'))).toEqual([]);
+  });
+
+  it('indique une commande introuvable', async () => {
+    loginAs(1);
+    await renderWithProviders(<OrderConfirmation />, { route: '/commande/confirmation?order_id=999' });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Commande introuvable');
   });
 });
 
@@ -245,6 +317,19 @@ describe('Profile (mon profil)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
     expect(screen.getByRole('heading', { name: 'Figurine S.H. Figuarts Luffy' })).toBeInTheDocument();
+  });
+
+  it('liste mes commandes', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(profilePage);
+    await user.click(screen.getByRole('button', { name: 'Mes commandes' }));
+    expect(await screen.findByText('Vous n’avez pas encore passé de commande.')).toBeInTheDocument();
+
+    await createOrder({ items: [{ product_id: 2, quantity: 2 }], shipping_address: SHIPPING_ADDRESS.label });
+    await user.click(screen.getByRole('button', { name: 'Mes likes' }));
+    await user.click(screen.getByRole('button', { name: 'Mes commandes' }));
+    expect(await screen.findByRole('heading', { name: /Commande n° 1/ })).toBeInTheDocument();
+    expect(screen.getByText(/^Total/)).toHaveTextContent('149.98 €'); // 2 × 74.99 €
   });
 });
 

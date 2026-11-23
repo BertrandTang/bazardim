@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useCallback, useContext } from 'react';
 import useLocalStorageState from '../hooks/useLocalStorageState.js';
 import { useProducts } from './ProductsContext.jsx';
 
@@ -54,9 +54,10 @@ export function CartProvider({ children }) {
     setCartItems((previousItems) => previousItems.filter((cartItem) => cartItem.productId !== productId));
   }
 
-  function clearCart() {
-    setCartItems([]);
-  }
+  // useCallback garde la MÊME fonction d'un affichage à l'autre (au lieu d'en recréer une).
+  // C'est nécessaire car la page de confirmation de commande l'utilise dans un useEffect :
+  // une fonction recréée à chaque affichage relancerait cet effet en boucle.
+  const clearCart = useCallback(() => setCartItems([]), [setCartItems]);
 
   const contextValue = {
     cartLines,

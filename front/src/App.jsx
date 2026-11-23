@@ -16,6 +16,7 @@ const Auth = lazy(() => import('./pages/Auth/Auth.jsx'));
 const Cart = lazy(() => import('./pages/Cart/Cart.jsx'));
 const Messages = lazy(() => import('./pages/Messages/Messages.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound/NotFound.jsx'));
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation/OrderConfirmation.jsx'));
 const Product = lazy(() => import('./pages/Product/Product.jsx'));
 const Profile = lazy(() => import('./pages/Profile/Profile.jsx'));
 const Sell = lazy(() => import('./pages/Sell/Sell.jsx'));
@@ -60,6 +61,14 @@ export default function App() {
                     element={
                       <RequireAuth>
                         <Profile />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/commande/confirmation"
+                    element={
+                      <RequireAuth>
+                        <OrderConfirmation />
                       </RequireAuth>
                     }
                   />
