@@ -46,7 +46,7 @@ Types de tests :
 | Favoris | Changement d'utilisateur | Chaque utilisateur a ses propres favoris | Unitaire | `context/contexts.test.jsx` |
 | Panier | Ajouter, +, −, retirer, vider | Quantités et total recalculés | Intégration | `pages/pages.test.jsx` |
 | Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `context/contexts.test.jsx` |
-| Livraison (API tierce) | Taper une adresse | Suggestions de l'API, adresse choisie enregistrée | Composant | `components/AddressAutocomplete/...test.jsx` |
+| Livraison (API tierce) | Taper une adresse | Suggestions de l'API Adresse (BAN), adresse choisie enregistrée | Composant | `components/AddressAutocomplete/...test.jsx` |
 | Livraison (API tierce) | API indisponible | Message d'erreur, saisie libre possible | Composant | `components/AddressAutocomplete/...test.jsx` |
 | Livraison (API tierce) | Moins de 3 caractères | Aucun appel à l'API | Composant | `components/AddressAutocomplete/...test.jsx` |
 | Profil | Modifier son pseudo | « Profil mis à jour » | Intégration | `pages/pages.test.jsx` |

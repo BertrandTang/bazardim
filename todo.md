@@ -94,7 +94,7 @@ Tous ces livrables vont dans le dossier de validation. Cocher quand le document 
 ### C17 / E12 — Consommer une API tierce ⚠️ rien actuellement
 
 - [ ] Consommer **votre propre API** (back-end) avec `fetch` + authentification (JWT ou cookie de session).
-- [x] Consommer **une API tierce** : autocomplétion de l'adresse de livraison dans le panier avec l'API de géocodage de la Géoplateforme (IGN), `services/addressApi.js` + `components/AddressAutocomplete/`. Gestion du délai de frappe, de l'annulation des requêtes, du chargement et des erreurs. Autres idées :
+- [x] Consommer **une API tierce** : autocomplétion de l'adresse de livraison dans le panier avec l'**API Adresse (Base Adresse Nationale)**, API officielle de l'État produite par l'IGN ([fiche data.gouv.fr](https://www.data.gouv.fr/dataservices/api-adresse-base-adresse-nationale-ban)), `services/addressApi.js` + `components/AddressAutocomplete/`. Gestion du délai de frappe, de l'annulation des requêtes, du chargement et des erreurs. Autres idées :
   - **API Adresse** (api-adresse.data.gouv.fr, gratuite, sans clé) : autocomplétion de l'adresse de livraison au moment de la commande ;
   - API de recherche par **code EAN** pour pré-remplir la fiche produit à la mise en vente ;
   - **Stripe** (paiement) compte aussi comme service tiers.

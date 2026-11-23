@@ -1,6 +1,9 @@
-// API tierce : service de géocodage de la Géoplateforme (IGN), qui remplace l'ancienne
-// "API Adresse" (api-adresse.data.gouv.fr). Gratuite, sans clé, utilisable depuis le navigateur.
-// Documentation : https://geoservices.ign.fr/documentation/services/services-geoplateforme/geocodage
+// API tierce : "API Adresse (Base Adresse Nationale - BAN)", l'API officielle de l'État
+// pour rechercher une adresse française, produite par l'IGN (partenaire : ANCT).
+// - Fiche officielle : https://www.data.gouv.fr/dataservices/api-adresse-base-adresse-nationale-ban
+// - Documentation : https://adresse.data.gouv.fr/outils/api-doc/adresse
+// - Accès ouvert, sans clé ; limite de 50 appels par seconde et par adresse IP.
+// Elle est hébergée sur la Géoplateforme de l'IGN, d'où l'adresse data.geopf.fr.
 const ADDRESS_API_URL = 'https://data.geopf.fr/geocodage/search';
 
 // L'API refuse les recherches de moins de 3 caractères (erreur 400).
