@@ -97,7 +97,7 @@ favoris, panier, messagerie simple (boîte de réception, sans discussion en dir
 - [x] `robots.txt` (`front/public/`) et **`sitemap.xml` généré par l'API** avec les annonces en vente (⚠️ remplacer `www.bazardim.fr` dans `robots.txt` par le vrai domaine).
 - [x] Données structurées **schema.org `Product`** (JSON-LD) sur la fiche produit : prix, état, vendeur, EAN.
 - [x] Balises Open Graph (titre, description, image par page).
-- [ ] Outil de **mesure d'audience respectueux du RGPD** (Matomo, Plausible, Umami…) : intégration fonctionnelle à montrer.
+- [ ] ⏸ _Reporté (23/11)_ — Outil de **mesure d'audience respectueux du RGPD** (Matomo, Umami…) : la grille demande une intégration fonctionnelle.
 - [ ] Lancer l'audit **Lighthouse SEO** et corriger ce qui ressort.
 
 ## Bloc 3 — Back-end
@@ -116,7 +116,7 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Contrôle d'accès : propriétaire ou admin pour modifier / supprimer une annonce ; messages visibles par l'expéditeur et le destinataire seulement.
 - [x] Journalisation avec **winston** (`src/config/logger.js`) : niveaux info / warn / error, erreurs écrites dans `back/logs/errors.log` ; une ligne par requête (`src/middlewares/requestLogger.js`) ; route `/api/health` pour la supervision.
 - [x] Configuration validée au démarrage (`src/config/config.js`), `.env` ignoré par Git, `.env.example` fourni.
-- [ ] **Authentification forte** (citée dans la C21) : l'implémenter (code TOTP pour les administrateurs) ou décider de seulement l'expliquer au jury.
+- [ ] ⏸ _Reporté (23/11)_ — **Authentification forte** (citée dans la C21) : double authentification par code TOTP (Google Authenticator), ou à défaut l'expliquer au jury.
 - [x] **Sauvegarde / restauration** de la base : `scripts/backup-database.sh` (`pg_dump`, 7 dernières sauvegardes gardées) et `scripts/restore-database.sh` (base d'essai ou remplacement confirmé) ; restauration testée (mêmes nombres d'utilisateurs, d'annonces et de commandes).
 
 ### C22 / E16 — Développement de l'API
