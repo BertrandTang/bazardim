@@ -138,6 +138,15 @@ Chaque page (accueil, fiche produit, connexion, inscription, panier, messagerie,
 | Barre de navigation | Tous les liens visibles et cliquables, sur plusieurs lignes si besoin |
 | Textes longs (titre de produit, pseudo) | Passent à la ligne ; les prix restent sur une seule ligne |
 
+## Vérification manuelle de la sauvegarde
+
+| Étape | Résultat attendu | Résultat obtenu (23/11/2026) |
+| --- | --- | --- |
+| `./scripts/backup-database.sh` | Fichier `backups/bazardim-<date>.dump` créé | ✅ fichier de 32 Ko |
+| Restauration dans une base d'essai | Mêmes nombres d'utilisateurs, d'annonces et de commandes que la base d'origine | ✅ 8 / 11 / 13 des deux côtés |
+| Restauration une deuxième fois dans la même base | Aucune erreur (`--clean` remplace les tables) | ✅ |
+| Restauration de la vraie base sans écrire RESTAURER | Annulée, base intacte | ✅ |
+
 ## Ce qui n'est pas (encore) couvert
 
 - Tests d'accessibilité avec un lecteur d'écran (VoiceOver, NVDA) : à faire manuellement.

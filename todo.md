@@ -3,12 +3,12 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████████████░░░░` 81 % (63 / 78 tâches)**
+**Progression globale : `████████████████░░░░` 82 % (64 / 78 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 2 — Front-end | `████████████████░░░░` 78 % | 28 / 36 |
-| Bloc 3 — Back-end | `██████████████████░░` 88 % | 29 / 33 |
+| Bloc 3 — Back-end | `██████████████████░░` 91 % | 30 / 33 |
 | RGPD dans l'application | `████████████████░░░░` 80 % | 4 / 5 |
 | Hygiène du projet et Git | `██████████░░░░░░░░░░` 50 % | 2 / 4 |
 
@@ -117,7 +117,7 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Journalisation avec **winston** (`src/config/logger.js`) : niveaux info / warn / error, erreurs écrites dans `back/logs/errors.log` ; une ligne par requête (`src/middlewares/requestLogger.js`) ; route `/api/health` pour la supervision.
 - [x] Configuration validée au démarrage (`src/config/config.js`), `.env` ignoré par Git, `.env.example` fourni.
 - [ ] **Authentification forte** (citée dans la C21) : l'implémenter (code TOTP pour les administrateurs) ou décider de seulement l'expliquer au jury.
-- [ ] **Sauvegarde / restauration** de la base : script `pg_dump`, puis tester une restauration.
+- [x] **Sauvegarde / restauration** de la base : `scripts/backup-database.sh` (`pg_dump`, 7 dernières sauvegardes gardées) et `scripts/restore-database.sh` (base d'essai ou remplacement confirmé) ; restauration testée (mêmes nombres d'utilisateurs, d'annonces et de commandes).
 
 ### C22 / E16 — Développement de l'API
 

@@ -37,3 +37,15 @@ Pour repartir des données d'origine : `npm run db:reset` dans `back/`.
 
 Aucun mot de passe ni clé secrète n'est commité : ils sont dans les fichiers `.env`
 (racine et `back/`), ignorés par Git. Les fichiers `.env.example` montrent les variables à remplir.
+
+## Sauvegarde et restauration de la base
+
+```bash
+./scripts/backup-database.sh                                  # crée backups/bazardim-<date>.dump (7 dernières gardées)
+./scripts/restore-database.sh backups/<fichier>.dump essai    # vérifie la sauvegarde dans une base d'essai
+./scripts/restore-database.sh backups/<fichier>.dump          # ⚠️ remplace la base bazardim (confirmation demandée)
+```
+
+`pg_dump` et `pg_restore` sont lancés dans le conteneur de la base : rien à installer.
+Le dossier `backups/` contient des données personnelles : il est ignoré par Git.
+En production, la sauvegarde est planifiée chaque nuit (cron) et copiée sur un autre serveur.

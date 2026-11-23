@@ -1,3 +1,5 @@
 node_modules
 .env
 .DS_Store
+# Sauvegardes de la base (données personnelles : jamais dans Git). Voir scripts/backup-database.sh.
+backups/
