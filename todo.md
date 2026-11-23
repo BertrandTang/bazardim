@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `██████████░░░░░░░░░░` 49 % (51 / 105 tâches)**
+**Progression globale : `██████████░░░░░░░░░░` 50 % (52 / 105 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
 | Bloc 2 — Front-end | `██████████████░░░░░░` 68 % | 26 / 38 |
-| Bloc 3 — Back-end | `████████████░░░░░░░░` 60 % | 24 / 40 |
+| Bloc 3 — Back-end | `█████████████░░░░░░░` 63 % | 25 / 40 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -23,7 +23,7 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | --- | --- |
 | Front-end (React) | ✅ Branché sur l'API : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion, messagerie. |
 | Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris, messagerie. commandes et paiement Stripe (mode test). |
-| Tests | ✅ Back : 54 tests, 95 % de couverture. ✅ Front : 79 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Tests | ✅ Back : 54 tests, 95 % de couverture. ✅ Front : 81 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
@@ -189,7 +189,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [ ] Pages **Politique de confidentialité** et **Mentions légales** (liens dans le footer).
 - [ ] Formulaire de **demande d'accès / export / suppression** des données personnelles + traitement côté back.
 - [ ] **Double opt-in** à l'inscription : e-mail de confirmation avec lien de validation avant d'activer le compte.
-- [ ] Suppression de compte depuis le profil.
+- [x] Suppression de compte depuis le profil (droit à l'effacement) : pop-up qui demande d'écrire « SUPPRIMER » et le mot de passe actuel ; annonces, favoris et messages supprimés, commandes conservées sans lien avec la personne.
 - [x] L'e-mail des vendeurs n'est plus affiché sur leur profil public.
 
 ---

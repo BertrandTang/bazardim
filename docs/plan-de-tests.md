@@ -8,7 +8,7 @@ qui échoue si un test échoue ou si la couverture du code passe sous 50 % (le m
 | --- | --- | --- |
 | Outils | Vitest + React Testing Library (navigateur simulé : jsdom) | Vitest + supertest, sur une vraie base PostgreSQL de test |
 | Lancer | `cd front && npm run test:coverage` | `cd back && npm run test:coverage` |
-| Nombre de tests | 79 | 54 |
+| Nombre de tests | 81 | 54 |
 | Couverture des lignes | 89 % | 95 % |
 | Emplacement | `front/tests/*.test.js(x)` | `back/tests/*.test.js` |
 
@@ -76,6 +76,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Livraison (API tierce) | Moins de 3 caractères | Aucun appel à l'API | Composant | `AddressAutocomplete.test.jsx` |
 | Profil | Modifier son pseudo | « Profil mis à jour » | Intégration | `pages.test.jsx` |
 | Profil | Changer d'email sans le mot de passe actuel | « Mot de passe actuel incorrect. » | Intégration | `pages.test.jsx` |
+| Suppression du compte (RGPD) | Pop-up : mot mal recopié, mauvais mot de passe, puis tout correct | Bouton désactivé, refus de l'API, puis compte supprimé et retour à l'accueil | Intégration | `pages.test.jsx` |
+| Suppression du compte (RGPD) | Bouton « Annuler » | Pop-up fermée, compte intact | Intégration | `pages.test.jsx` |
 | Profil | Onglets produits / likes | Bonnes listes affichées | Intégration | `pages.test.jsx` |
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |

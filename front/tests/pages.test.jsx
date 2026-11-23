@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   addFakeMessage,
   createOrder,
+  fakeUserExists,
   fetchUnreadMessageCount,
   likeProduct,
   markFakeOrderAsPaid,
@@ -337,6 +338,45 @@ describe('Profile (mon profil)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
     expect(screen.getByRole('heading', { name: 'Figurine S.H. Figuarts Luffy' })).toBeInTheDocument();
+  });
+
+  it('supprime le compte après avoir écrit SUPPRIMER et donné son mot de passe', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(profilePage, { route: '/profile', path: '/profile' });
+    await user.click(screen.getByRole('button', { name: 'Supprimer mon compte' }));
+
+    // La pop-up est ouverte ; le bouton reste désactivé tant que le mot n'est pas exactement "SUPPRIMER".
+    const dialog = screen.getByRole('dialog', { name: 'Supprimer votre compte ?' });
+    const deleteButton = within(dialog).getByRole('button', { name: 'Supprimer définitivement' });
+    await user.type(within(dialog).getByLabelText('Mot de passe actuel'), 'mauvais');
+    await user.type(within(dialog).getByLabelText(/Écrivez SUPPRIMER/), 'supprimer');
+    expect(deleteButton).toBeDisabled();
+
+    await user.clear(within(dialog).getByLabelText(/Écrivez SUPPRIMER/));
+    await user.type(within(dialog).getByLabelText(/Écrivez SUPPRIMER/), 'SUPPRIMER');
+    expect(deleteButton).toBeEnabled();
+
+    // Mauvais mot de passe : refus de l'API, le compte existe toujours.
+    await user.click(deleteButton);
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Mot de passe actuel incorrect.');
+    expect(fakeUserExists(1)).toBe(true);
+
+    // Bon mot de passe : compte supprimé, le site est rechargé sur l'accueil.
+    await user.clear(within(dialog).getByLabelText('Mot de passe actuel'));
+    await user.type(within(dialog).getByLabelText('Mot de passe actuel'), TEST_PASSWORD);
+    await user.click(deleteButton);
+    expect(fakeUserExists(1)).toBe(false);
+    expect(redirectTo).toHaveBeenCalledWith('/');
+  });
+
+  it('ferme la pop-up sans rien supprimer avec Annuler', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(profilePage);
+    await user.click(screen.getByRole('button', { name: 'Supprimer mon compte' }));
+    await user.click(screen.getByRole('button', { name: 'Annuler' }));
+    // La pop-up se ferme avec une petite animation : on attend qu'elle ait disparu.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(fakeUserExists(1)).toBe(true);
   });
 
   it('liste mes commandes', async () => {

@@ -104,6 +104,11 @@ export function updateAccount(changes) {
   return request('/users/me', { method: 'PATCH', body: changes });
 }
 
+/** Supprime définitivement le compte connecté (le mot de passe actuel est exigé par l'API). */
+export function deleteAccount(currentPassword) {
+  return request('/users/me', { method: 'DELETE', body: { current_password: currentPassword } });
+}
+
 // ----- Annonces -----
 
 /** Les 100 annonces les plus récentes (maximum autorisé par l'API en une requête). */

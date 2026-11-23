@@ -149,6 +149,21 @@ export async function updateAccount(changes) {
   return toAccount(user);
 }
 
+export async function deleteAccount(currentPassword) {
+  const user = getLoggedInUser();
+  if (currentPassword !== user.password) {
+    throw new ApiError(403, 'Mot de passe actuel incorrect.');
+  }
+  database.users = database.users.filter((candidate) => candidate.id !== user.id);
+  database.loggedInUserId = null;
+  return null;
+}
+
+/** Vrai si le compte existe encore (pour vérifier une suppression dans un test). */
+export function fakeUserExists(userId) {
+  return database.users.some((user) => user.id === userId);
+}
+
 // ----- Annonces -----
 
 export async function fetchProducts() {
