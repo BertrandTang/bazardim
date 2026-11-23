@@ -173,6 +173,11 @@ export function fetchSales() {
   return request('/orders/sales');
 }
 
+/** Le vendeur indique qu'il a expédié un article vendu (orderItemId = order_item_id d'une vente). */
+export function markItemAsShipped(orderItemId) {
+  return request(`/orders/items/${orderItemId}/shipped`, { method: 'PATCH' });
+}
+
 /** Une commande (le back vérifie auprès de Stripe si elle a été payée). */
 export function fetchOrder(orderId) {
   return request(`/orders/${orderId}`);

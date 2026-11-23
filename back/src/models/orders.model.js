@@ -18,7 +18,8 @@ const ORDER_SELECT = `
         json_build_object(
           'product_id', order_items.product_id,
           'product_title', order_items.product_title,
-          'price', order_items.price
+          'price', order_items.price,
+          'shipped_at', order_items.shipped_at
         )
         ORDER BY order_items.id
       ) FILTER (WHERE order_items.id IS NOT NULL),
@@ -101,17 +102,21 @@ export async function findOrdersByBuyer(buyerId) {
 }
 
 /**
- * Ventes d'un vendeur : pour chacune de ses annonces vendues (commande payée), qui l'a achetée et quand.
+ * Ventes d'un vendeur : pour chacune de ses annonces vendues (commande payée), qui l'a achetée, quand,
+ * où l'expédier et si elle a déjà été expédiée.
  * LEFT JOIN sur users : si l'acheteur a supprimé son compte (buyer_id vide), la vente reste listée,
  * avec un pseudo vide.
  */
 export async function findSalesBySeller(sellerId) {
   return query(
     `SELECT
+       order_items.id AS order_item_id,
        order_items.product_id,
        orders.buyer_id,
        users.username AS buyer_username,
-       orders.paid_at
+       orders.shipping_address,
+       orders.paid_at,
+       order_items.shipped_at
      FROM order_items
      JOIN orders ON orders.id = order_items.order_id
      JOIN products ON products.id = order_items.product_id
@@ -120,4 +125,29 @@ export async function findSalesBySeller(sellerId) {
      ORDER BY orders.paid_at DESC`,
     [sellerId],
   );
+}
+
+/**
+ * Une ligne de commande avec ce qu'il faut pour vérifier qui peut la marquer comme expédiée :
+ * le vendeur de l'annonce (owner_id), le statut de la commande et la date d'expédition.
+ */
+export async function findOrderItemForShipping(orderItemId) {
+  const rows = await query(
+    `SELECT order_items.id, order_items.shipped_at, orders.status, products.owner_id
+     FROM order_items
+     JOIN orders ON orders.id = order_items.order_id
+     JOIN products ON products.id = order_items.product_id
+     WHERE order_items.id = $1`,
+    [orderItemId],
+  );
+  return rows[0] ?? null;
+}
+
+/** Enregistre la date d'expédition d'une ligne de commande et la renvoie. */
+export async function markOrderItemAsShipped(orderItemId) {
+  const rows = await query(
+    'UPDATE order_items SET shipped_at = now() WHERE id = $1 RETURNING id AS order_item_id, shipped_at',
+    [orderItemId],
+  );
+  return rows[0];
 }

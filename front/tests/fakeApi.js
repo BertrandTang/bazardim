@@ -257,7 +257,14 @@ export async function createOrder({ product_ids: productIds, shipping_address: s
     if (product.owner_id === user.id) {
       throw new ApiError(400, `Vous ne pouvez pas acheter votre propre annonce (« ${product.title} »).`);
     }
-    return { product_id: product.id, product_title: product.title, price: product.price };
+    database.lastOrderItemId = (database.lastOrderItemId ?? 0) + 1;
+    return {
+      id: database.lastOrderItemId,
+      product_id: product.id,
+      product_title: product.title,
+      price: product.price,
+      shipped_at: null,
+    };
   });
   const itemsTotalInCents = orderItems.reduce((total, item) => total + Math.round(item.price * 100), 0);
   const serviceFee = computeServiceFee(itemsTotalInCents / 100);
@@ -290,15 +297,33 @@ export async function fetchSales() {
       if (findProduct(item.product_id).owner_id === user.id) {
         const buyer = database.users.find((candidate) => candidate.id === order.buyer_id);
         sales.push({
+          order_item_id: item.id,
           product_id: item.product_id,
           buyer_id: order.buyer_id,
           buyer_username: buyer.username,
+          shipping_address: order.shipping_address,
           paid_at: order.paid_at,
+          shipped_at: item.shipped_at,
         });
       }
     }
   }
   return sales;
+}
+
+/** Le vendeur marque un article vendu comme expédié (mêmes règles que l'API). */
+export async function markItemAsShipped(orderItemId) {
+  const user = getLoggedInUser();
+  const order = database.orders.find((candidate) => candidate.items.some((item) => item.id === orderItemId));
+  const item = order?.items.find((candidate) => candidate.id === orderItemId);
+  if (!item || findProduct(item.product_id).owner_id !== user.id) {
+    throw new ApiError(404, 'Vente introuvable.');
+  }
+  if (item.shipped_at) {
+    throw new ApiError(409, 'Cet article est déjà marqué comme expédié.');
+  }
+  item.shipped_at = new Date().toISOString();
+  return { order_item_id: item.id, shipped_at: item.shipped_at };
 }
 
 export async function fetchOrder(orderId) {

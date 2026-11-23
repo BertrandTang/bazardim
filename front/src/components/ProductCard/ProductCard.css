@@ -122,16 +122,45 @@
 }
 
 /* "Vendu à <pseudo>" : remplace le bouton Modifier sur une annonce vendue. */
-.product-sold-to {
-  margin: 0;
-  font-size: 14px;
-  text-align: center;
-  overflow-wrap: anywhere; /* un pseudo très long passe à la ligne au lieu de déborder */
+/* Encadré « vente » d'une annonce vendue (vue du vendeur) : acheteur, adresse, expédition. */
+.product-sale {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13px;
+  overflow-wrap: anywhere; /* un pseudo ou une adresse très longs passent à la ligne */
 }
 
-.product-sold-to a {
+.product-sale p {
+  margin: 0;
+}
+
+.product-sale a {
   font-weight: 700;
   color: var(--color-primary);
+}
+
+.product-sale-shipped {
+  color: #1b5e20;
+  font-weight: 700;
+}
+
+.product-ship-button {
+  align-self: flex-start;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  background: #1b5e20;
+  color: #fff;
+  font-size: 13px;
+}
+
+.product-ship-button:hover {
+  background: #2e7d32;
 }
 
 .product-edit-button,

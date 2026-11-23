@@ -35,7 +35,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Catalogue | Une annonce est vendue | Elle n'apparaît plus sur l'accueil | Intégration | `pages.test.jsx` |
 | Fiche produit | Annonce vendue (page et carte) | Bandeau « Vendu », pas de bouton AJOUTER | Intégration / Composant | `pages.test.jsx`, `components.test.jsx` |
 | Fiche produit | Le vendeur ouvre son annonce vendue en mode modification | Pas de formulaire ni de bouton Modifier | Intégration | `pages.test.jsx` |
-| Mes produits | Une de mes annonces est vendue | « Vendu à *pseudo* » (lien vers son profil), pas de bouton Modifier | Intégration | `pages.test.jsx` |
+| Mes produits | Une de mes annonces est vendue | « Vendu à *pseudo* » (lien vers son profil), adresse de livraison, pas de bouton Modifier ; « Marquer comme expédié » puis « Expédié le … », visible par l'acheteur dans « Mes commandes » | Intégration | `pages.test.jsx` |
 | Panier | Annonce vendue entre-temps | Retirée du panier | Intégration | `pages.test.jsx` |
 | Recherche | Taper « luffy » + Entrée dans la barre | Adresse `/?q=luffy` | Composant | `components.test.jsx` |
 | Recherche | Ouvrir `/?q=vegeta` | « 1 résultat(s) pour « vegeta » » | Intégration | `pages.test.jsx` |
@@ -120,6 +120,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Paiement | Webhook avec une signature invalide / valide | 400 / commande payée et produits marqués vendus | `orders.test.js` |
 | Annonce vendue | Paiement confirmé, puis nouvelle commande du même produit | `sold_at` rempli, puis 409 « vient d'être vendu » | `orders.test.js` |
 | Annonce vendue | Le vendeur consulte ses ventes, puis tente de modifier l'annonce | Pseudo de l'acheteur (l'acheteur, lui, n'a aucune vente) ; modification refusée (409) | `orders.test.js` |
+| Expédition | Marquer un article comme expédié : commande non payée, acheteur, visiteur, article inconnu, vendeur (deux fois) | 409 / 404 / 401 / 404 / 200 puis 409 ; adresse visible dans les ventes ; l'acheteur voit la date d'expédition de l'article | `orders.test.js` |
 | Commande (confidentialité) | Un autre utilisateur consulte la commande | 404, n'apparaît pas dans sa liste | `orders.test.js` |
 | Compte | Changer de mot de passe ou d'email sans le mot de passe actuel | 403 | `users.test.js` |
 | Compte | Envoyer `role: admin` | 400 (champ refusé) | `users.test.js` |

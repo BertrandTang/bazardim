@@ -394,6 +394,18 @@ describe('Profile (mon profil)', () => {
     expect(within(soldCard).getByRole('link', { name: 'FigurineParadise' })).toHaveAttribute('href', '/user/2');
     expect(within(soldCard).queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
     expect(within(soldCard).getByRole('button', { name: 'Supprimer' })).toBeInTheDocument();
+    // Le vendeur voit où expédier l'article, puis indique qu'il l'a expédié (après confirmation).
+    expect(within(soldCard).getByText('1 rue de Paris')).toBeInTheDocument();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    await user.click(within(soldCard).getByRole('button', { name: 'Marquer comme expédié' }));
+    expect(await within(soldCard).findByText(/Expédié le/)).toBeInTheDocument();
+    expect(within(soldCard).queryByRole('button', { name: 'Marquer comme expédié' })).not.toBeInTheDocument();
+
+    // L'acheteur (utilisateur 2) voit l'article expédié dans « Mes commandes ».
+    loginAs(2);
+    await renderWithProviders(profilePage);
+    await user.click(screen.getAllByRole('button', { name: 'Mes commandes' }).at(-1));
+    expect(await screen.findByText(/^Expédié le/)).toBeInTheDocument();
   });
 
   it('supprime le compte après avoir écrit SUPPRIMER et donné son mot de passe', async () => {

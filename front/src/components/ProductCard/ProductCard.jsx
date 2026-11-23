@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
+import { formatDate } from '../../utils/formatDate.js';
 import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
 import AddToCartButton from '../AddToCartButton/AddToCartButton.jsx';
 import SellerLink from '../SellerLink/SellerLink.jsx';
@@ -13,9 +14,10 @@ import './ProductCard.css';
  * - par défaut : bouton favori + bouton "AJOUTER" au panier ;
  * - si `onEdit` et `onDelete` sont fournis (page "Mes produits") : boutons Modifier / Supprimer.
  *   Une annonce vendue ne peut plus être modifiée : à la place du bouton Modifier, on affiche
- *   l'acheteur (`sale` : { buyer_id, buyer_username }, voir GET /api/orders/sales).
+ *   la vente (`sale`, voir GET /api/orders/sales) : acheteur, adresse de livraison, et un bouton
+ *   pour indiquer l'expédition (`onShip`).
  */
-export default function ProductCard({ product, onEdit, onDelete, sale }) {
+export default function ProductCard({ product, onEdit, onDelete, sale, onShip }) {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
   const { isLiked, toggleLike } = useLikes();
   const navigate = useNavigate();
@@ -84,13 +86,14 @@ export default function ProductCard({ product, onEdit, onDelete, sale }) {
       <p className="product-description">{product.description}</p>
       <p className="product-manufacturer">Fabricant : {product.manufacturer || 'N/C'}</p>
 
+      {isOwnerView && product.sold_at && <SaleDetails sale={sale} onShip={onShip} />}
+
       <div className="product-bottom">
         <span className="product-price">{formatPrice(product.price)}</span>
         {isOwnerView ? (
           <div className="product-owner-actions">
-            {product.sold_at ? (
-              <SoldTo sale={sale} />
-            ) : (
+            {/* Une annonce vendue ne peut plus être modifiée (l'API le refuse aussi). */}
+            {!product.sold_at && (
               <button type="button" className="product-edit-button" onClick={() => onEdit(product)}>
                 Modifier
               </button>
@@ -108,19 +111,32 @@ export default function ProductCard({ product, onEdit, onDelete, sale }) {
   );
 }
 
-/** "Vendu à <pseudo>", avec un lien vers le profil public de l'acheteur. */
-function SoldTo({ sale }) {
+/**
+ * Encadré d'une annonce vendue, visible uniquement par le vendeur : à qui elle a été vendue,
+ * où l'expédier, puis le bouton « Marquer comme expédié » (ou la date d'expédition).
+ */
+function SaleDetails({ sale, onShip }) {
   // Les ventes sont encore en cours de chargement.
   if (!sale) {
     return null;
   }
-  // L'acheteur a supprimé son compte depuis l'achat.
-  if (!sale.buyer_username) {
-    return <p className="product-sold-to">Vendu à un compte supprimé</p>;
-  }
+
   return (
-    <p className="product-sold-to">
-      Vendu à <Link to={`/user/${sale.buyer_id}`}>{sale.buyer_username}</Link>
-    </p>
+    <div className="product-sale">
+      <p>
+        Vendu à{' '}
+        {sale.buyer_username ? <Link to={`/user/${sale.buyer_id}`}>{sale.buyer_username}</Link> : 'un compte supprimé'}
+      </p>
+      <p>
+        <strong>Livrer à :</strong> {sale.shipping_address}
+      </p>
+      {sale.shipped_at ? (
+        <p className="product-sale-shipped">✓ Expédié le {formatDate(sale.shipped_at)}</p>
+      ) : (
+        <button type="button" className="product-ship-button" onClick={() => onShip(sale)}>
+          Marquer comme expédié
+        </button>
+      )}
+    </div>
   );
 }

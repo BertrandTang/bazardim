@@ -3,12 +3,12 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████████████░░░░` 82 % (64 / 78 tâches)**
+**Progression globale : `████████████████░░░░` 82 % (65 / 79 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 2 — Front-end | `████████████████░░░░` 78 % | 28 / 36 |
-| Bloc 3 — Back-end | `██████████████████░░` 91 % | 30 / 33 |
+| Bloc 3 — Back-end | `██████████████████░░` 91 % | 31 / 34 |
 | RGPD dans l'application | `████████████████░░░░` 80 % | 4 / 5 |
 | Hygiène du projet et Git | `██████████░░░░░░░░░░` 50 % | 2 / 4 |
 
@@ -126,7 +126,8 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] **Front branché sur l'API** (`front/src/services/api.js`, proxy Vite vers `http://localhost:3000`).
 - [x] **Messagerie** : contacter le vendeur, boîte de réception / messages envoyés, réponse, marquer comme lu, pastille des messages non lus.
 - [x] Envoi d'images avec **multer** (`POST /api/uploads`, JPEG/PNG/WebP, 2 Mo max, nom de fichier aléatoire) : photo d'annonce obligatoire et photo de profil.
-- [x] Annonce **vendue** : bandeau « Vendu », plus modifiable (409), le vendeur voit le pseudo de l'acheteur (`GET /api/orders/sales`).
+- [x] Annonce **vendue** : bandeau « Vendu », plus modifiable (409), le vendeur voit le pseudo et l'adresse de livraison de l'acheteur (`GET /api/orders/sales`).
+- [x] **Expédition** : bouton « Marquer comme expédié » pour le vendeur (`PATCH /api/orders/items/:id/shipped`), suivi « En préparation » / « Expédié le … » dans « Mes commandes » de l'acheteur.
 
 ### C23 / E17 — Paiement et monétisation
 

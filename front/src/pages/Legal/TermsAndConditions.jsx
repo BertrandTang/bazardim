@@ -78,8 +78,10 @@ export default function TermsAndConditions() {
 
       <h2>7. Livraison</h2>
       <p>
-        Le vendeur s’engage à expédier l’objet, soigneusement emballé, dans les 5 jours ouvrés qui suivent le paiement.
-        L’acheteur et le vendeur peuvent échanger à tout moment grâce à la messagerie du site.
+        Après le paiement, le vendeur voit l’adresse de livraison dans son profil (onglet « Mes produits »). Il s’engage
+        à expédier l’objet, soigneusement emballé, dans les 5 jours ouvrés, puis à l’indiquer sur le site avec le bouton
+        « Marquer comme expédié ». L’acheteur suit l’envoi dans l’onglet « Mes commandes » (« En préparation », puis «
+        Expédié le … »). L’acheteur et le vendeur peuvent échanger à tout moment grâce à la messagerie du site.
       </p>
 
       <h2>8. Rétractation, réclamations et litiges</h2>

@@ -358,9 +358,29 @@ export const openApiDocument = {
     '/api/orders/sales': {
       get: {
         tags: ['Commandes'],
-        summary: 'Mes ventes : qui a acheté chacune de mes annonces',
+        summary: 'Mes ventes : acheteur, adresse de livraison et expédition de chacune de mes annonces vendues',
         security: requiresLogin,
         responses: { 200: jsonResponse('Ventes', { type: 'array', items: reference('Sale') }), 401: notLoggedIn },
+      },
+    },
+    '/api/orders/items/{id}/shipped': {
+      patch: {
+        tags: ['Commandes'],
+        summary: 'Marquer un article vendu comme expédié (vendeur de l’annonce uniquement)',
+        security: requiresLogin,
+        parameters: [idParameter('id', 'Identifiant de la ligne de commande (order_item_id dans /api/orders/sales)')],
+        responses: {
+          200: jsonResponse('Article expédié', {
+            type: 'object',
+            properties: {
+              order_item_id: { type: 'integer' },
+              shipped_at: { type: 'string', format: 'date-time' },
+            },
+          }),
+          401: notLoggedIn,
+          404: errorResponse('Vente introuvable (ou ce n’est pas votre annonce)'),
+          409: errorResponse('Commande pas encore payée, ou article déjà expédié'),
+        },
       },
     },
     '/api/orders/{id}': {
@@ -599,6 +619,12 @@ export const openApiDocument = {
                 },
                 product_title: { type: 'string' },
                 price: { type: 'number' },
+                shipped_at: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true,
+                  description: 'null tant que non expédié',
+                },
               },
             },
           },
@@ -607,10 +633,13 @@ export const openApiDocument = {
       Sale: {
         type: 'object',
         properties: {
+          order_item_id: { type: 'integer', description: 'À utiliser pour marquer l’article comme expédié' },
           product_id: { type: 'integer' },
           buyer_id: { type: 'integer', nullable: true },
           buyer_username: { type: 'string', nullable: true, description: 'null si l’acheteur a supprimé son compte' },
+          shipping_address: { type: 'string', description: 'Adresse où expédier l’article' },
           paid_at: { type: 'string', format: 'date-time' },
+          shipped_at: { type: 'string', format: 'date-time', nullable: true },
         },
       },
     },
