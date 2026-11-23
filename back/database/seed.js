@@ -5,6 +5,9 @@ import { hashPassword } from '../src/utils/passwords.js';
 import figuresData from './seed-data/figures.json' with { type: 'json' };
 import profilesData from './seed-data/profiles.json' with { type: 'json' };
 
+// Nombre d'images de démonstration dans front/public/img (img_1.jpg à img_11.jpg).
+const DEMO_IMAGE_COUNT = 11;
+
 /**
  * Mot de passe commun à tous les comptes de démonstration, lu dans back/.env.
  * Il n'est jamais écrit dans le code : un compte administrateur avec un mot de passe
@@ -41,8 +44,10 @@ export async function seedDatabase() {
     userIdByOldId.set(profile.user_id, user.id);
   }
 
-  for (const figure of figuresData.figures) {
+  for (const [index, figure] of figuresData.figures.entries()) {
     const productFields = productSchema.parse({
+      // La photo est obligatoire : on donne à chaque produit de démo une des images de front/public/img.
+      image_url: `/img/img_${((index + 1) % DEMO_IMAGE_COUNT) + 1}.jpg`,
       title: figure.title,
       description: figure.description,
       price: figure.price,

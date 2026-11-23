@@ -1,3 +1,4 @@
+import multer from 'multer';
 import { z } from 'zod';
 import { HttpError } from '../utils/errors.js';
 
@@ -31,6 +32,13 @@ export function errorHandler(error, request, response, next) {
   if (error instanceof z.ZodError) {
     const details = error.issues.map((issue) => ({ field: issue.path.join('.'), message: issue.message }));
     return response.status(400).json({ error: 'Données invalides.', details });
+  }
+
+  // Fichier refusé par multer (envoi d'images) : trop lourd, plusieurs fichiers...
+  if (error instanceof multer.MulterError) {
+    const message =
+      error.code === 'LIMIT_FILE_SIZE' ? 'Image trop lourde : 2 Mo maximum.' : 'Envoi de l’image impossible.';
+    return response.status(400).json({ error: message });
   }
 
   // Corps de requête qui n'est pas du JSON valide.

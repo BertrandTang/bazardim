@@ -290,6 +290,10 @@ describe('Sell (mise en vente)', () => {
     await user.type(screen.getByLabelText(/Titre/), 'Statue Zoro');
     await user.type(screen.getByLabelText(/Description/), 'Statue en résine');
     await user.type(screen.getByLabelText(/Prix/), '120');
+    await user.upload(
+      screen.getByLabelText('Choisir une image'),
+      new File(['photo'], 'zoro.jpg', { type: 'image/jpeg' }),
+    );
     await user.click(screen.getByRole('button', { name: 'Publier le produit' }));
 
     // La fausse API donne l'identifiant suivant : 12 (il y a 11 produits au départ).
@@ -311,6 +315,19 @@ describe('Profile (mon profil)', () => {
     const usernameInput = screen.getByLabelText('Pseudo');
     await user.clear(usernameInput);
     await user.type(usernameInput, 'Collec92');
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    expect(screen.getByText('Profil mis à jour.')).toBeInTheDocument();
+  });
+
+  it('change la photo de profil avec une image de l’appareil', async () => {
+    loginAs(1);
+    const { user } = await renderWithProviders(profilePage);
+    // L'utilisateur 1 a déjà une photo : le bouton propose de la changer.
+    await user.upload(screen.getByLabelText('Changer l’image'), new File(['photo'], 'moi.png', { type: 'image/png' }));
+    expect(screen.getByRole('img', { name: /Photo de profil/ })).toHaveAttribute(
+      'src',
+      expect.stringMatching(/^\/uploads\/.*moi\.png$/),
+    );
     await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
     expect(screen.getByText('Profil mis à jour.')).toBeInTheDocument();
   });

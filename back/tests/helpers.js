@@ -60,6 +60,7 @@ export function buildProduct(overrides = {}) {
     licence_name: 'One Piece',
     character_name: 'Monkey D. Luffy',
     has_box: true,
+    image_url: '/uploads/photo-de-test.jpg',
     tags: ['bandai', 'SHF'],
     ...overrides,
   };

@@ -42,7 +42,8 @@ export const productSchema = z.object({
   height_cm: optionalPositiveNumber(1000),
   width_cm: optionalPositiveNumber(1000),
   scale: optionalText(20),
-  image_url: imageUrlSchema.optional().transform((value) => value || null),
+  // Photo obligatoire : une annonce sans photo n'inspire pas confiance.
+  image_url: imageUrlSchema,
   // Tags en minuscules et sans doublons : ["SHF", "shf "] devient ["shf"].
   tags: z
     .array(z.string().trim().toLowerCase().min(1).max(30))

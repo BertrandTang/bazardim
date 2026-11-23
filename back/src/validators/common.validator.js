@@ -16,12 +16,12 @@ export const emailSchema = z.string().trim().toLowerCase().pipe(z.email('Email i
 // bcrypt ignore tout ce qui dépasse 72 octets : on limite donc la longueur.
 export const passwordSchema = z.string().min(8).max(72);
 
-/** Adresse d'image : URL http(s) ou chemin du site ("/img/..."). Vide = pas d'image. */
+/**
+ * Adresse d'une image DU SITE : une image envoyée par un utilisateur ("/uploads/abc.jpg",
+ * voir la route POST /api/uploads) ou une image de démonstration ("/img/img_1.jpg").
+ * Les liens vers d'autres sites sont refusés : on ne charge jamais d'image venant d'ailleurs.
+ */
 export const imageUrlSchema = z
   .string()
   .trim()
-  .max(500)
-  .refine(
-    (value) => value === '' || /^(https?:\/\/|\/)/.test(value),
-    'L’image doit être une URL http(s) ou un chemin commençant par /',
-  );
+  .regex(/^\/(uploads|img)\/[\w.-]+$/, 'Choisissez une image depuis votre appareil.');

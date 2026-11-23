@@ -1,8 +1,9 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { PRODUCTS } from './fixtures.js';
 import { addFakeMessage } from './fakeApi.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
+import ImageUploadField from '../src/components/ImageUploadField/ImageUploadField.jsx';
 import NavBar from '../src/components/NavBar/NavBar.jsx';
 import PasswordField from '../src/components/PasswordField/PasswordField.jsx';
 import ProductCard from '../src/components/ProductCard/ProductCard.jsx';
@@ -74,10 +75,15 @@ describe('ProductForm', () => {
     await user.type(screen.getByLabelText(/Description/), 'Très belle figurine');
     await user.click(screen.getByRole('button', { name: 'Publier' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Le prix doit être supérieur à 0.');
+
+    await user.type(screen.getByLabelText(/Prix/), '49.9');
+    await user.click(screen.getByRole('button', { name: 'Publier' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Ajoutez une photo de votre annonce.');
     expect(handleSubmit).not.toHaveBeenCalled();
   });
 
   it('convertit les valeurs saisies en champs de produit, au format de l’API', async () => {
+    loginAs(1); // il faut être connecté pour envoyer une image
     const handleSubmit = vi.fn();
     const { user } = await renderWithProviders(
       <ProductForm submitLabel="Publier" onSubmit={handleSubmit} onCancel={vi.fn()} />,
@@ -87,6 +93,12 @@ describe('ProductForm', () => {
     await user.type(screen.getByLabelText(/Description/), 'Très belle figurine');
     await user.type(screen.getByLabelText(/Prix/), '49.9');
     await user.type(screen.getByLabelText(/Tags/), 'shf, bandai, ');
+    // user.upload simule le choix d'un fichier sur l'appareil.
+    await user.upload(
+      screen.getByLabelText('Choisir une image'),
+      new File(['photo'], 'luffy.png', { type: 'image/png' }),
+    );
+    expect(screen.getByRole('img', { name: /Aperçu/ })).toHaveAttribute('src', expect.stringMatching(/^\/uploads\//));
     await user.click(screen.getByRole('button', { name: 'Publier' }));
 
     expect(handleSubmit).toHaveBeenCalledWith(
@@ -97,6 +109,7 @@ describe('ProductForm', () => {
         has_box: true,
         category: 'FIGURINE',
         scale: '1/8',
+        image_url: expect.stringMatching(/^\/uploads\/.*luffy\.png$/),
       }),
     );
   });
@@ -196,5 +209,35 @@ describe('PasswordField', () => {
 
     await user.click(screen.getByRole('button', { name: 'Masquer le mot de passe' }));
     expect(passwordInput).toHaveAttribute('type', 'password');
+  });
+});
+
+describe('ImageUploadField', () => {
+  /** Simule le choix d'un fichier (sans tenir compte de l'attribut accept, pour tester nos propres vérifications). */
+  function chooseFile(file) {
+    fireEvent.change(screen.getByLabelText('Choisir une image'), { target: { files: [file] } });
+  }
+
+  it('refuse un fichier qui n’est pas une image JPEG, PNG ou WebP', async () => {
+    const handleChange = vi.fn();
+    await renderWithProviders(<ImageUploadField label="Photo" imageUrl="" onChange={handleChange} />);
+    chooseFile(new File(['texte'], 'notes.pdf', { type: 'application/pdf' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Format non accepté');
+    expect(handleChange).not.toHaveBeenCalled();
+  });
+
+  it('refuse une image de plus de 2 Mo', async () => {
+    const handleChange = vi.fn();
+    await renderWithProviders(<ImageUploadField label="Photo" imageUrl="" onChange={handleChange} />);
+    chooseFile(new File([new Uint8Array(2 * 1024 * 1024 + 1)], 'enorme.jpg', { type: 'image/jpeg' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Image trop lourde : 2 Mo maximum.');
+    expect(handleChange).not.toHaveBeenCalled();
+  });
+
+  it('affiche le refus de l’API (ex : visiteur non connecté)', async () => {
+    const handleChange = vi.fn();
+    const { user } = await renderWithProviders(<ImageUploadField label="Photo" imageUrl="" onChange={handleChange} />);
+    await user.upload(screen.getByLabelText('Choisir une image'), new File(['photo'], 'a.png', { type: 'image/png' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Vous devez être connecté.');
   });
 });
