@@ -2,6 +2,7 @@ import { HttpError } from '../utils/errors.js';
 import { idSchema } from '../validators/common.validator.js';
 import { sendMessageSchema } from '../validators/messages.validator.js';
 import {
+  countUnreadMessages,
   findMessageById,
   findReceivedMessages,
   findSentMessages,
@@ -14,6 +15,11 @@ import { findUserById } from '../models/users.model.js';
 /** GET /api/messages/received — boîte de réception de l'utilisateur connecté. */
 export async function listReceivedMessages(request, response) {
   response.json(await findReceivedMessages(request.user.id));
+}
+
+/** GET /api/messages/unread-count — nombre de messages non lus : { count: 2 }. */
+export async function getUnreadCount(request, response) {
+  response.json({ count: await countUnreadMessages(request.user.id) });
 }
 
 /** GET /api/messages/sent — messages envoyés par l'utilisateur connecté. */

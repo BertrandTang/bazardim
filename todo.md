@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `██████████░░░░░░░░░░` 48 % (50 / 104 tâches)**
+**Progression globale : `██████████░░░░░░░░░░` 50 % (52 / 105 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
 | Bloc 2 — Front-end | `██████████████░░░░░░` 68 % | 26 / 38 |
-| Bloc 3 — Back-end | `████████████░░░░░░░░` 59 % | 23 / 39 |
+| Bloc 3 — Back-end | `█████████████░░░░░░░` 63 % | 25 / 40 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -23,7 +23,7 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | --- | --- |
 | Front-end (React) | ✅ Branché sur l'API : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion, messagerie. |
 | Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris, messagerie. commandes et paiement Stripe (mode test). |
-| Tests | ✅ Back : 53 tests, 95 % de couverture. ✅ Front : 78 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Tests | ✅ Back : 54 tests, 95 % de couverture. ✅ Front : 81 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
@@ -150,7 +150,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Routes REST : auth, comptes, produits (filtres + pagination), licences, favoris, messagerie.
 - [x] Organisation MVC : `routes/` → `controllers/` → `validators/` (données reçues) et `models/` (requêtes SQL).
 - [x] **Front branché sur l'API** (`front/src/services/api.js`, proxy Vite `/api` → `http://localhost:3000`). Le panier reste dans le localStorage jusqu'à la création des commandes.
-- [x] **Messagerie** : contacter le vendeur depuis la fiche produit, boîte de réception / messages envoyés, réponse, marquer comme lu (`/api/messages`, page `/messages`).
+- [x] **Messagerie** : contacter le vendeur depuis la fiche produit, boîte de réception / messages envoyés, réponse, marquer comme lu (`/api/messages`, page `/messages`), pastille du nombre de messages non lus dans la barre de navigation.
 - [ ] Upload d'images d'annonces (**multer**) au lieu d'une URL saisie à la main.
 
 ### C23 / E17 — Paiement et monétisation
@@ -158,6 +158,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Tables `orders` / `order_items` (titre et prix copiés à l'achat) + routes `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`.
 - [x] **Stripe Checkout** en mode test : bouton « Commander et payer » du panier, page de confirmation, onglet « Mes commandes » du profil. Total recalculé côté back (le front n'envoie aucun prix).
 - [x] Webhook Stripe (`POST /api/stripe/webhook`, signature vérifiée) + vérification du paiement à l'affichage de la confirmation.
+- [x] Modèle « pièce unique » (comme Vinted) : chaque annonce est ajoutée une seule fois au panier, sans quantité ; une commande = une liste d'annonces.
 - [x] Annonce **vendue** après paiement (`products.sold_at`) : retirée de l'accueil, du profil public et des paniers, badge « Vendu » sur sa page et dans « Mes produits » ; une annonce vendue ne peut plus être commandée (409).
 - [ ] Faire un vrai paiement de test à la main (carte `4242 4242 4242 4242`) et garder des captures pour le dossier.
 - [ ] Marketplace entre particuliers → étudier **Stripe Connect** (reversement aux vendeurs).
@@ -188,7 +189,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [ ] Pages **Politique de confidentialité** et **Mentions légales** (liens dans le footer).
 - [ ] Formulaire de **demande d'accès / export / suppression** des données personnelles + traitement côté back.
 - [ ] **Double opt-in** à l'inscription : e-mail de confirmation avec lien de validation avant d'activer le compte.
-- [ ] Suppression de compte depuis le profil.
+- [x] Suppression de compte depuis le profil (droit à l'effacement) : pop-up qui demande d'écrire « SUPPRIMER » et le mot de passe actuel ; annonces, favoris et messages supprimés, commandes conservées sans lien avec la personne.
 - [x] L'e-mail des vendeurs n'est plus affiché sur leur profil public.
 
 ---

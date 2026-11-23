@@ -1,35 +1,29 @@
-import { useState } from 'react';
 import { useCart } from '../../context/CartContext.jsx';
 import './AddToCartButton.css';
 
 /**
- * Bouton "AJOUTER" qui met le produit dans le panier et affiche brièvement "Ajouté au panier".
+ * Bouton "AJOUTER" qui met l'annonce dans le panier.
+ * Une annonce est une pièce unique : une fois dans le panier, le bouton affiche
+ * "DANS LE PANIER" et ne peut plus être cliqué.
  */
 export default function AddToCartButton({ productId }) {
-  const { addToCart } = useCart();
-
-  // Nombre de clics sur le bouton. On s'en sert comme `key` du message de confirmation :
-  // quand la key change, React recrée l'élément, ce qui relance son animation CSS.
-  const [clickCount, setClickCount] = useState(0);
-
-  function handleClick() {
-    addToCart(productId);
-    setClickCount((previousCount) => previousCount + 1);
-  }
+  const { isInCart, addToCart } = useCart();
+  const isAlreadyInCart = isInCart(productId);
 
   return (
     <div className="add-to-cart">
-      {/* aria-live : les lecteurs d'écran annoncent le message quand il apparaît */}
-      <div aria-live="polite">
-        {clickCount > 0 && (
-          <span key={clickCount} className="add-to-cart-confirmation">
-            Ajouté au panier
-          </span>
-        )}
-      </div>
-      <button type="button" className="add-to-cart-button" onClick={handleClick}>
-        AJOUTER
+      <button
+        type="button"
+        className="add-to-cart-button"
+        onClick={() => addToCart(productId)}
+        disabled={isAlreadyInCart}
+      >
+        {isAlreadyInCart ? 'DANS LE PANIER' : 'AJOUTER'}
       </button>
+      {/* aria-live : les lecteurs d'écran annoncent ce texte quand il apparaît (après le clic). */}
+      <span className="visually-hidden" aria-live="polite">
+        {isAlreadyInCart ? 'Ajouté au panier' : ''}
+      </span>
     </div>
   );
 }

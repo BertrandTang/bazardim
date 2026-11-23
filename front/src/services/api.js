@@ -104,6 +104,11 @@ export function updateAccount(changes) {
   return request('/users/me', { method: 'PATCH', body: changes });
 }
 
+/** Supprime définitivement le compte connecté (le mot de passe actuel est exigé par l'API). */
+export function deleteAccount(currentPassword) {
+  return request('/users/me', { method: 'DELETE', body: { current_password: currentPassword } });
+}
+
 // ----- Annonces -----
 
 /** Les 100 annonces les plus récentes (maximum autorisé par l'API en une requête). */
@@ -142,8 +147,8 @@ export function unlikeProduct(productId) {
 
 /**
  * Crée une commande et la page de paiement Stripe.
- * `order` : { items: [{ product_id, quantity }], shipping_address }. Aucun prix n'est envoyé :
- * le back relit les prix dans la base.
+ * `order` : { product_ids: [3, 8], shipping_address }. Chaque annonce est une pièce unique,
+ * donc pas de quantité. Aucun prix n'est envoyé : le back relit les prix dans la base.
  * @returns {Promise<{order_id: number, checkout_url: string}>}
  */
 export function createOrder(order) {
@@ -168,6 +173,11 @@ export function fetchReceivedMessages() {
 
 export function fetchSentMessages() {
   return request('/messages/sent');
+}
+
+/** Nombre de messages reçus non lus : { count: 2 }. */
+export function fetchUnreadMessageCount() {
+  return request('/messages/unread-count');
 }
 
 /** Envoie un message. `message` : { recipient_id, product_id, content }. */

@@ -44,12 +44,12 @@ async function findOwnOrder(request) {
  * Réponse : { order_id, checkout_url } ; le front redirige l'utilisateur vers checkout_url.
  */
 export async function createOrder(request, response) {
-  const { items, shipping_address: shippingAddress } = createOrderSchema.parse(request.body);
+  const { product_ids: productIds, shipping_address: shippingAddress } = createOrderSchema.parse(request.body);
 
   // 1. On relit chaque produit en base : titre et prix viennent de NOTRE base, pas du navigateur.
   const lines = [];
-  for (const item of items) {
-    const product = await findProductById(item.product_id);
+  for (const productId of productIds) {
+    const product = await findProductById(productId);
     if (!product) {
       throw new HttpError(404, 'Un produit de votre panier n’est plus en vente.');
     }
@@ -59,16 +59,11 @@ export async function createOrder(request, response) {
     if (product.owner_id === request.user.id) {
       throw new HttpError(400, `Vous ne pouvez pas acheter votre propre annonce (« ${product.title} »).`);
     }
-    lines.push({
-      productId: product.id,
-      productTitle: product.title,
-      unitPrice: product.price,
-      quantity: item.quantity,
-    });
+    lines.push({ productId: product.id, productTitle: product.title, price: product.price });
   }
 
   // 2. Total calculé côté serveur, en centimes.
-  const totalInCents = lines.reduce((total, line) => total + toCents(line.unitPrice) * line.quantity, 0);
+  const totalInCents = lines.reduce((total, line) => total + toCents(line.price), 0);
   const orderId = await insertOrder({
     buyerId: request.user.id,
     shippingAddress,
@@ -83,10 +78,10 @@ export async function createOrder(request, response) {
     session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: lines.map((line) => ({
-        quantity: line.quantity,
+        quantity: 1, // pièce unique
         price_data: {
           currency: 'eur',
-          unit_amount: toCents(line.unitPrice),
+          unit_amount: toCents(line.price),
           product_data: { name: line.productTitle },
         },
       })),

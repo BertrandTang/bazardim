@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider } from '../src/context/AuthContext.jsx';
 import { CartProvider } from '../src/context/CartContext.jsx';
 import { LikesProvider } from '../src/context/LikesContext.jsx';
+import { MessagesProvider } from '../src/context/MessagesContext.jsx';
 import { ProductsProvider } from '../src/context/ProductsContext.jsx';
 import { setLoggedInUser } from './fakeApi.js';
 
@@ -13,7 +14,9 @@ export function AllProviders({ children }) {
     <AuthProvider>
       <ProductsProvider>
         <CartProvider>
-          <LikesProvider>{children}</LikesProvider>
+          <LikesProvider>
+            <MessagesProvider>{children}</MessagesProvider>
+          </LikesProvider>
         </CartProvider>
       </ProductsProvider>
     </AuthProvider>

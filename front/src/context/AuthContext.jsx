@@ -54,7 +54,13 @@ export function AuthProvider({ children }) {
     setCurrentUser(user);
   }
 
-  const contextValue = { currentUser, isLoading, login, logout, register, updateAccount };
+  /** Supprime définitivement le compte connecté, puis "déconnecte" l'application. */
+  async function deleteAccount(currentPassword) {
+    await api.deleteAccount(currentPassword);
+    setCurrentUser(null);
+  }
+
+  const contextValue = { currentUser, isLoading, login, logout, register, updateAccount, deleteAccount };
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 

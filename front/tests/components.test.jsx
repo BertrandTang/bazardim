@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { PRODUCTS } from './fixtures.js';
+import { addFakeMessage } from './fakeApi.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
 import NavBar from '../src/components/NavBar/NavBar.jsx';
 import PasswordField from '../src/components/PasswordField/PasswordField.jsx';
@@ -32,8 +33,10 @@ describe('ProductCard', () => {
     await user.click(likeButton);
     expect(screen.getByRole('button', { name: 'Retirer des favoris' })).toHaveAttribute('aria-pressed', 'true');
 
+    // Pièce unique : une fois ajoutée, le bouton indique qu'elle est déjà dans le panier.
     await user.click(screen.getByRole('button', { name: 'AJOUTER' }));
-    expect(screen.getByText('Ajouté au panier')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'DANS LE PANIER' })).toBeDisabled();
+    expect(screen.getByText('Ajouté au panier')).toBeInTheDocument(); // annoncé aux lecteurs d'écran
   });
 
   it('affiche le badge "Vendu" et pas de bouton AJOUTER pour une annonce vendue', async () => {
@@ -139,13 +142,23 @@ describe('NavBar', () => {
     expect(categoriesButton).toHaveFocus();
   });
 
+  it('affiche une pastille avec le nombre de messages non lus', async () => {
+    addFakeMessage({ sender_id: 2, recipient_id: 1, product_id: 1, content: 'Bonjour' });
+    addFakeMessage({ sender_id: 2, recipient_id: 1, product_id: 1, content: 'Toujours là ?' });
+    loginAs(1);
+    await renderWithProviders(<NavBar />);
+    const messagesLink = screen.getByRole('link', { name: 'Messages (2 non lus)' });
+    expect(messagesLink).toHaveTextContent('2');
+  });
+
   it('affiche Messages, Profil et Déconnexion quand l’utilisateur est connecté', async () => {
     loginAs(1);
     const { user } = await renderWithProviders(<NavBar />);
-    expect(screen.getByRole('link', { name: 'MESSAGES' })).toHaveAttribute('href', '/messages');
-    expect(screen.getByRole('link', { name: 'PROFIL' })).toBeInTheDocument();
+    // Sans message non lu : pas de pastille.
+    expect(screen.getByRole('link', { name: 'Messages' })).toHaveAttribute('href', '/messages');
+    expect(screen.getByRole('link', { name: 'Profil' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Déconnexion' }));
-    expect(screen.getByRole('link', { name: 'CONNEXION' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Connexion' })).toBeInTheDocument();
   });
 });
 

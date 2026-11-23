@@ -25,33 +25,10 @@
   transform: scale(0.98);
 }
 
-/* Message qui apparaît au-dessus du bouton puis disparaît tout seul (animation) */
-.add-to-cart-confirmation {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 6px);
-  background: rgba(22, 22, 24, 0.9);
-  color: #fff;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 10px;
-  white-space: nowrap;
-  pointer-events: none;
-  animation: confirmation-fade-out 1.5s ease forwards;
-}
-
-@keyframes confirmation-fade-out {
-  0% {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  15%,
-  70% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
+/* Annonce déjà dans le panier : bouton grisé, non cliquable. */
+.add-to-cart-button:disabled {
+  background: #888;
+  cursor: default;
+  transform: none;
+  border-radius: 0 30px 0 30px;
 }

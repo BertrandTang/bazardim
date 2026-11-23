@@ -106,7 +106,8 @@ CREATE TABLE messages (
 );
 
 -- ---------------------------------------------------------------------
--- Commandes : une commande regroupe plusieurs lignes (order_items).
+-- Commandes : une commande regroupe plusieurs articles (order_items).
+-- Chaque annonce est une pièce unique : un article = une annonce, sans quantité.
 -- Elle est créée "pending" (en attente), puis passe à "paid" quand Stripe
 -- confirme le paiement.
 -- ---------------------------------------------------------------------
@@ -132,8 +133,7 @@ CREATE TABLE order_items (
   -- Titre et prix COPIÉS au moment de l'achat : la commande ne change pas
   -- si le vendeur modifie son annonce ensuite.
   product_title VARCHAR(150)   NOT NULL,
-  unit_price    NUMERIC(10, 2) NOT NULL CHECK (unit_price > 0),
-  quantity      INTEGER        NOT NULL CHECK (quantity > 0)
+  price         NUMERIC(10, 2) NOT NULL CHECK (price > 0)
 );
 
 -- ---------------------------------------------------------------------

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Alert, Button, Stack } from '@mui/material';
 import MessageForm from '../../components/MessageForm/MessageForm.jsx';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
+import { useMessages } from '../../context/MessagesContext.jsx';
 import { fetchReceivedMessages, fetchSentMessages, markMessageAsRead, sendMessage } from '../../services/api.js';
 import './Messages.css';
 
@@ -91,12 +92,15 @@ export default function Messages() {
  * et formulaire de réponse (la réponse concerne la même annonce).
  */
 function MessageItem({ message, isReceived, onMessageUpdated }) {
+  const { refreshUnreadCount } = useMessages();
   const [isReplying, setIsReplying] = useState(false);
   const isUnread = isReceived && !message.is_read;
 
   async function handleMarkAsRead() {
     await markMessageAsRead(message.id);
     onMessageUpdated({ ...message, is_read: true });
+    // Met à jour la pastille de la barre de navigation.
+    refreshUnreadCount();
   }
 
   async function handleReply(content) {

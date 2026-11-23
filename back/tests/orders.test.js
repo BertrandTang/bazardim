@@ -35,13 +35,10 @@ async function createSellerAndBuyer() {
   return { seller, buyer, firstProduct, secondProduct };
 }
 
-/** Passe une commande : 2 × produit A + 1 × produit B (renvoie la requête supertest). */
+/** Passe une commande des produits A et B (renvoie la requête supertest). */
 function placeOrder({ buyer, firstProduct, secondProduct }) {
   return buyer.agent.post('/api/orders').send({
-    items: [
-      { product_id: firstProduct.id, quantity: 2 },
-      { product_id: secondProduct.id, quantity: 1 },
-    ],
+    product_ids: [firstProduct.id, secondProduct.id],
     shipping_address: SHIPPING_ADDRESS,
   });
 }
@@ -56,7 +53,7 @@ describe('Commandes et paiement Stripe', () => {
     // Stripe a reçu les bons montants, en centimes.
     const stripeRequest = stripe.checkout.sessions.create.mock.calls[0][0];
     expect(stripeRequest.line_items.map((line) => [line.price_data.unit_amount, line.quantity])).toEqual([
-      [2000, 2],
+      [2000, 1],
       [3550, 1],
     ]);
     expect(stripeRequest.success_url).toBe(
@@ -65,8 +62,11 @@ describe('Commandes et paiement Stripe', () => {
 
     // La commande est enregistrée "en attente", avec un total calculé par le serveur.
     const order = await context.buyer.agent.get(`/api/orders/${response.body.order_id}`).expect(200);
-    expect(order.body).toMatchObject({ status: 'pending', total_price: 75.5, shipping_address: SHIPPING_ADDRESS });
-    expect(order.body.items).toHaveLength(2);
+    expect(order.body).toMatchObject({ status: 'pending', total_price: 55.5, shipping_address: SHIPPING_ADDRESS });
+    expect(order.body.items).toEqual([
+      { product_id: context.firstProduct.id, product_title: 'A', price: 20 },
+      { product_id: context.secondProduct.id, product_title: 'B', price: 35.5 },
+    ]);
     expect(order.body).not.toHaveProperty('stripe_session_id');
   });
 
@@ -74,23 +74,31 @@ describe('Commandes et paiement Stripe', () => {
     const { buyer, firstProduct } = await createSellerAndBuyer();
     const response = await buyer.agent
       .post('/api/orders')
-      .send({ items: [{ product_id: firstProduct.id, quantity: 1, price: 0.01 }], shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: [firstProduct.id], price: 0.01, shipping_address: SHIPPING_ADDRESS })
       .expect(201);
     const order = await buyer.agent.get(`/api/orders/${response.body.order_id}`);
     expect(order.body.total_price).toBe(20);
   });
 
-  it('refuse un panier vide, une adresse manquante, un produit inexistant ou sa propre annonce', async () => {
+  it('refuse un panier vide, une adresse manquante, une annonce en double, inexistante ou à soi', async () => {
     const { seller, buyer, firstProduct } = await createSellerAndBuyer();
-    const oneItem = [{ product_id: firstProduct.id, quantity: 1 }];
+    const oneProduct = [firstProduct.id];
 
-    await buyer.agent.post('/api/orders').send({ items: [], shipping_address: SHIPPING_ADDRESS }).expect(400);
-    await buyer.agent.post('/api/orders').send({ items: oneItem, shipping_address: '' }).expect(400);
+    await buyer.agent.post('/api/orders').send({ product_ids: [], shipping_address: SHIPPING_ADDRESS }).expect(400);
+    await buyer.agent.post('/api/orders').send({ product_ids: oneProduct, shipping_address: '' }).expect(400);
+    // La même annonce deux fois : refusé (pièce unique).
     await buyer.agent
       .post('/api/orders')
-      .send({ items: [{ product_id: 9999, quantity: 1 }], shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: [firstProduct.id, firstProduct.id], shipping_address: SHIPPING_ADDRESS })
+      .expect(400);
+    await buyer.agent
+      .post('/api/orders')
+      .send({ product_ids: [9999], shipping_address: SHIPPING_ADDRESS })
       .expect(404);
-    await seller.agent.post('/api/orders').send({ items: oneItem, shipping_address: SHIPPING_ADDRESS }).expect(400);
+    await seller.agent
+      .post('/api/orders')
+      .send({ product_ids: oneProduct, shipping_address: SHIPPING_ADDRESS })
+      .expect(400);
     expect(stripe.checkout.sessions.create).not.toHaveBeenCalled();
   });
 
@@ -140,7 +148,7 @@ describe('Commandes et paiement Stripe', () => {
     const otherBuyer = await createLoggedInUser();
     const response = await otherBuyer.agent
       .post('/api/orders')
-      .send({ items: [{ product_id: context.firstProduct.id, quantity: 1 }], shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: [context.firstProduct.id], shipping_address: SHIPPING_ADDRESS })
       .expect(409);
     expect(response.body.error).toContain('vient d’être vendu');
   });
