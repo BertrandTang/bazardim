@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████████████░░░░` 78 % (60 / 77 tâches)**
+**Progression globale : `████████████████░░░░` 78 % (61 / 78 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 2 — Front-end | `███████████████░░░░░` 75 % | 27 / 36 |
 | Bloc 3 — Back-end | `█████████████████░░░` 85 % | 28 / 33 |
-| RGPD dans l'application | `███████████████░░░░░` 75 % | 3 / 4 |
+| RGPD dans l'application | `████████████████░░░░` 80 % | 4 / 5 |
 | Hygiène du projet et Git | `██████████░░░░░░░░░░` 50 % | 2 / 4 |
 
 **Hors progression** (suivi à part, voir en bas du fichier) :
@@ -161,7 +161,8 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Suppression de compte depuis le profil (droit à l'effacement) : pop-up qui demande d'écrire « SUPPRIMER » et le mot de passe actuel ; annonces, favoris et messages supprimés, commandes conservées sans lien avec la personne.
 - [x] L'e-mail des vendeurs n'est pas affiché sur leur profil public.
 - [x] Pages **Mentions légales** (`/mentions-legales`) et **Politique de confidentialité** (`/confidentialite`), liens dans le pied de page.
-- [ ] Remplir les informations entre crochets dans `front/src/data/legalInformation.js` (nom, adresse, e-mail de contact, hébergeur).
+- [x] Éditeur, directeur de publication et contact renseignés dans `front/src/data/legalInformation.js`.
+- [ ] Renseigner l'hébergeur (nom, adresse, téléphone) dans `front/src/data/legalInformation.js` une fois le site mis en ligne.
 
 ## Hygiène du projet et Git
 
