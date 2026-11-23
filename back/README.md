@@ -49,7 +49,7 @@ Le trajet d'une commande :
 1. Le front envoie `POST /api/orders` avec les produits du panier (identifiants + quantités, **jamais de prix**) et l'adresse de livraison.
 2. Le back relit les prix dans la base, calcule le total, enregistre la commande « en attente » (`pending`) et crée une **session Stripe Checkout**. Il renvoie l'adresse de la page de paiement (`checkout_url`).
 3. Le front redirige l'acheteur vers cette page, hébergée par Stripe : la carte bancaire ne passe jamais par notre serveur.
-4. Après le paiement, Stripe renvoie l'acheteur sur `/commande/confirmation?order_id=...`. La commande passe à `paid` de deux façons :
+4. Après le paiement, Stripe renvoie l'acheteur sur `/commande/confirmation?order_id=...`. La commande passe à `paid`, et ses produits sont marqués **vendus** (`sold_at`, ils ne peuvent plus être commandés). Cela se fait de deux façons :
    - **webhook** : Stripe appelle `POST /api/stripe/webhook` (signature vérifiée avec `STRIPE_WEBHOOK_SECRET`). C'est la méthode fiable, même si l'acheteur ferme son navigateur ;
    - **vérification à l'affichage** : `GET /api/orders/:id` demande à Stripe si la session est payée. Pratique en local, sans webhook.
 

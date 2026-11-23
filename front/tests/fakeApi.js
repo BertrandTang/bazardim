@@ -23,7 +23,8 @@ export function resetFakeApi() {
   database = {
     // Chaque compte reçoit le mot de passe de test.
     users: USERS.map((user) => ({ ...user, password: TEST_PASSWORD })),
-    products: structuredClone(PRODUCTS),
+    // Au départ, toutes les annonces sont en vente (sold_at vide).
+    products: PRODUCTS.map((product) => ({ ...product, sold_at: null })),
     likes: [], // { userId, productId }
     messages: [],
     orders: [],
@@ -198,11 +199,19 @@ export async function unlikeProduct(productId) {
 
 // ----- Commandes et paiement -----
 
-/** Marque une commande comme payée (simule la confirmation de Stripe). */
+/** Marque une commande comme payée et ses produits comme vendus (simule la confirmation de Stripe). */
 export function markFakeOrderAsPaid(orderId) {
   const order = database.orders.find((candidate) => candidate.id === orderId);
   order.status = 'paid';
   order.paid_at = new Date().toISOString();
+  for (const item of order.items) {
+    findProduct(item.product_id).sold_at = order.paid_at;
+  }
+}
+
+/** Marque directement une annonce comme vendue (pour préparer un test). */
+export function markFakeProductAsSold(productId) {
+  findProduct(productId).sold_at = new Date().toISOString();
 }
 
 export async function createOrder({ items, shipping_address: shippingAddress }) {
@@ -212,6 +221,9 @@ export async function createOrder({ items, shipping_address: shippingAddress }) 
   }
   const orderItems = items.map((item) => {
     const product = findProduct(item.product_id);
+    if (product.sold_at) {
+      throw new ApiError(409, `« ${product.title} » vient d’être vendu, retirez-le de votre panier.`);
+    }
     if (product.owner_id === user.id) {
       throw new ApiError(400, `Vous ne pouvez pas acheter votre propre annonce (« ${product.title} »).`);
     }

@@ -55,6 +55,9 @@ CREATE TABLE products (
   width_cm            NUMERIC(6, 1),
   scale               VARCHAR(20),
   image_url           VARCHAR(500),
+  -- Date de la vente : NULL tant que l'annonce est en vente. Les figurines sont souvent
+  -- des pièces uniques : une annonce payée est marquée vendue (voir orders.model.js).
+  sold_at             TIMESTAMPTZ,
   created_at          TIMESTAMPTZ   NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
@@ -173,6 +176,7 @@ SELECT
   products.width_cm,
   products.scale,
   products.image_url,
+  products.sold_at,
   products.owner_id,
   users.username AS owner_username,
   -- array_agg regroupe les tags en un tableau ; FILTER ignore les produits sans tag.

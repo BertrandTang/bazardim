@@ -57,13 +57,30 @@ export async function setOrderStripeSession(orderId, stripeSessionId) {
   await query('UPDATE orders SET stripe_session_id = $1 WHERE id = $2', [stripeSessionId, orderId]);
 }
 
-/** Marque comme payée la commande liée à cette session Stripe (si elle ne l'est pas déjà). */
+/**
+ * Marque comme payée la commande liée à cette session Stripe (si elle ne l'est pas déjà),
+ * puis marque ses produits comme vendus. Les deux se font dans une transaction :
+ * on ne peut pas avoir une commande payée dont les produits seraient encore en vente.
+ */
 export async function markOrderAsPaid(stripeSessionId) {
-  await query(
-    `UPDATE orders SET status = 'paid', paid_at = now()
-     WHERE stripe_session_id = $1 AND status = 'pending'`,
-    [stripeSessionId],
-  );
+  await withTransaction(async (transactionQuery) => {
+    const paidOrders = await transactionQuery(
+      `UPDATE orders SET status = 'paid', paid_at = now()
+       WHERE stripe_session_id = $1 AND status = 'pending'
+       RETURNING id`,
+      [stripeSessionId],
+    );
+    // Commande déjà payée (ou inconnue) : rien d'autre à faire.
+    if (paidOrders.length === 0) {
+      return;
+    }
+    await transactionQuery(
+      `UPDATE products SET sold_at = now()
+       WHERE sold_at IS NULL
+         AND id IN (SELECT product_id FROM order_items WHERE order_id = $1)`,
+      [paidOrders[0].id],
+    );
+  });
 }
 
 export async function deleteOrderById(orderId) {

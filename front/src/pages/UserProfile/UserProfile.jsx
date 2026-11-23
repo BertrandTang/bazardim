@@ -12,7 +12,7 @@ import './UserProfile.css';
 export default function UserProfile() {
   const { id } = useParams();
   const { currentUser } = useAuth();
-  const { products } = useProducts();
+  const { availableProducts } = useProducts();
 
   // Profil chargé depuis l'API, avec l'identifiant auquel il correspond :
   // { userId: "3", seller: {...} } ou { userId: "3", seller: null } s'il est introuvable.
@@ -48,7 +48,7 @@ export default function UserProfile() {
     return <Navigate to="/profile" replace />;
   }
 
-  const sellerProducts = products.filter((product) => product.owner_id === seller.id);
+  const sellerProducts = availableProducts.filter((product) => product.owner_id === seller.id);
 
   return (
     <section className="user-profile-page">

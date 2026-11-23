@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `██████████░░░░░░░░░░` 48 % (49 / 103 tâches)**
+**Progression globale : `██████████░░░░░░░░░░` 48 % (50 / 104 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 1 — Concevoir et modéliser | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 16 |
 | Bloc 2 — Front-end | `██████████████░░░░░░` 68 % | 26 / 38 |
-| Bloc 3 — Back-end | `████████████░░░░░░░░` 58 % | 22 / 38 |
+| Bloc 3 — Back-end | `████████████░░░░░░░░` 59 % | 23 / 39 |
 | Bloc 4 — Déploiement et maintien en production | `░░░░░░░░░░░░░░░░░░░░` 0 % | 0 / 7 |
 | Hygiène du projet et Git | `█████░░░░░░░░░░░░░░░` 25 % | 1 / 4 |
 
@@ -23,7 +23,7 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | --- | --- |
 | Front-end (React) | ✅ Branché sur l'API : catalogue, filtres, recherche, fiche produit, panier, favoris, vente / modification / suppression d'annonce, profil, inscription / connexion, messagerie. |
 | Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, produits, favoris, messagerie. commandes et paiement Stripe (mode test). |
-| Tests | ✅ Back : 52 tests, 95 % de couverture. ✅ Front : 74 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Tests | ✅ Back : 53 tests, 95 % de couverture. ✅ Front : 78 tests, 89 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit (bloc 1) | ❓ À vérifier / produire (voir plus bas). |
 
@@ -158,6 +158,7 @@ Détails et liste des routes : [back/README.md](back/README.md). À justifier da
 - [x] Tables `orders` / `order_items` (titre et prix copiés à l'achat) + routes `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`.
 - [x] **Stripe Checkout** en mode test : bouton « Commander et payer » du panier, page de confirmation, onglet « Mes commandes » du profil. Total recalculé côté back (le front n'envoie aucun prix).
 - [x] Webhook Stripe (`POST /api/stripe/webhook`, signature vérifiée) + vérification du paiement à l'affichage de la confirmation.
+- [x] Annonce **vendue** après paiement (`products.sold_at`) : retirée de l'accueil, du profil public et des paniers, badge « Vendu » sur sa page et dans « Mes produits » ; une annonce vendue ne peut plus être commandée (409).
 - [ ] Faire un vrai paiement de test à la main (carte `4242 4242 4242 4242`) et garder des captures pour le dossier.
 - [ ] Marketplace entre particuliers → étudier **Stripe Connect** (reversement aux vendeurs).
 - [ ] Rédiger la stratégie de monétisation : commission sur chaque vente (ex : 5 %), mise en avant payante d'annonces, abonnement vendeur pro...

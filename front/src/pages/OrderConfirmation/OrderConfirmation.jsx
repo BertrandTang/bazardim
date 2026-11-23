@@ -4,6 +4,7 @@ import { Alert, Button } from '@mui/material';
 import OrderSummary from '../../components/OrderSummary/OrderSummary.jsx';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import { useCart } from '../../context/CartContext.jsx';
+import { useProducts } from '../../context/ProductsContext.jsx';
 import { fetchOrder } from '../../services/api.js';
 import './OrderConfirmation.css';
 
@@ -15,6 +16,7 @@ export default function OrderConfirmation() {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('order_id');
   const { clearCart } = useCart();
+  const { reloadProducts } = useProducts();
 
   // Commande chargée depuis l'API (null tant que rien n'est chargé).
   const [order, setOrder] = useState(null);
@@ -26,13 +28,15 @@ export default function OrderConfirmation() {
     fetchOrder(orderId)
       .then((loadedOrder) => {
         setOrder(loadedOrder);
-        // Paiement confirmé : le panier a été acheté, on peut le vider.
+        // Paiement confirmé : le panier a été acheté, on peut le vider,
+        // et on recharge les annonces (celles achetées sont maintenant "vendues").
         if (loadedOrder.status === 'paid') {
           clearCart();
+          reloadProducts();
         }
       })
       .catch((error) => setErrorMessage(error.message));
-  }, [orderId, reloadCount, clearCart]);
+  }, [orderId, reloadCount, clearCart, reloadProducts]);
 
   if (errorMessage) {
     return (

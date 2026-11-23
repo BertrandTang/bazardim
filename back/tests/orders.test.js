@@ -122,6 +122,29 @@ describe('Commandes et paiement Stripe', () => {
     expect(stripe.checkout.sessions.retrieve).toHaveBeenCalledWith('cs_test_123');
   });
 
+  it('marque les annonces comme vendues une fois payées, et refuse ensuite de les commander', async () => {
+    const context = await createSellerAndBuyer();
+    const { order_id: orderId } = (await placeOrder(context)).body;
+
+    // Tant que la commande n'est pas payée, l'annonce reste en vente.
+    const beforePayment = await anonymous().get(`/api/products/${context.firstProduct.id}`);
+    expect(beforePayment.body.sold_at).toBeNull();
+
+    stripe.checkout.sessions.retrieve.mockResolvedValue({ payment_status: 'paid' });
+    await context.buyer.agent.get(`/api/orders/${orderId}`).expect(200);
+
+    const afterPayment = await anonymous().get(`/api/products/${context.firstProduct.id}`);
+    expect(afterPayment.body.sold_at).not.toBeNull();
+
+    // Un autre acheteur ne peut plus la commander.
+    const otherBuyer = await createLoggedInUser();
+    const response = await otherBuyer.agent
+      .post('/api/orders')
+      .send({ items: [{ product_id: context.firstProduct.id, quantity: 1 }], shipping_address: SHIPPING_ADDRESS })
+      .expect(409);
+    expect(response.body.error).toContain('vient d’être vendu');
+  });
+
   it('une commande n’est visible que par son acheteur', async () => {
     const context = await createSellerAndBuyer();
     const { order_id: orderId } = (await placeOrder(context)).body;
@@ -167,6 +190,10 @@ describe('Commandes et paiement Stripe', () => {
       const order = await context.buyer.agent.get(`/api/orders/${orderId}`);
       expect(order.body.status).toBe('paid');
       expect(stripe.checkout.sessions.retrieve).not.toHaveBeenCalled();
+
+      // Les produits de la commande sont marqués vendus.
+      const product = await anonymous().get(`/api/products/${context.secondProduct.id}`);
+      expect(product.body.sold_at).not.toBeNull();
     });
   });
 });

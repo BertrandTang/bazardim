@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { addFakeMessage, createOrder, likeProduct, markFakeOrderAsPaid } from './fakeApi.js';
+import { addFakeMessage, createOrder, likeProduct, markFakeOrderAsPaid, markFakeProductAsSold } from './fakeApi.js';
 import { PRODUCTS, TEST_PASSWORD } from './fixtures.js';
 import { loginAs, renderWithProviders } from './renderWithProviders.jsx';
 import Auth from '../src/pages/Auth/Auth.jsx';
@@ -51,6 +51,13 @@ describe('Home', () => {
   it('affiche le nombre de résultats d’une recherche', async () => {
     await renderWithProviders(<Home />, { route: '/?q=vegeta' });
     expect(screen.getByRole('status')).toHaveTextContent('1 résultat(s) pour « vegeta »');
+  });
+
+  it('n’affiche pas les annonces vendues', async () => {
+    markFakeProductAsSold(1); // Vegeta
+    await renderWithProviders(<Home />);
+    expect(screen.getAllByRole('article')).toHaveLength(PRODUCTS.length - 1);
+    expect(screen.queryByText(/Vegeta/)).not.toBeInTheDocument();
   });
 
   it('affiche un message quand rien ne correspond', async () => {
@@ -171,6 +178,17 @@ describe('Cart (panier)', () => {
     await user.click(screen.getByRole('button', { name: 'Commander et payer' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Vous ne pouvez pas acheter votre propre annonce');
   });
+
+  it('retire du panier une annonce vendue entre-temps', async () => {
+    fillCart([
+      { productId: 1, quantity: 1 },
+      { productId: 2, quantity: 1 },
+    ]);
+    markFakeProductAsSold(1);
+    await renderWithProviders(<Cart />);
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+    expect(screen.queryByText(/Vegeta/)).not.toBeInTheDocument();
+  });
 });
 
 describe('OrderConfirmation (retour du paiement)', () => {
@@ -211,6 +229,13 @@ describe('Product (fiche produit)', () => {
     expect(screen.getByRole('button', { name: 'AJOUTER' })).toBeInTheDocument();
     const structuredData = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
     expect(structuredData).toMatchObject({ '@type': 'Product', offers: { price: '59.99', priceCurrency: 'EUR' } });
+  });
+
+  it('indique une annonce vendue, sans bouton pour l’ajouter au panier', async () => {
+    markFakeProductAsSold(1);
+    await renderWithProviders(<Product />, { route: '/product/1', path: '/product/:id' });
+    expect(screen.getByText('Vendu')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'AJOUTER' })).not.toBeInTheDocument();
   });
 
   it('indique un produit introuvable', async () => {

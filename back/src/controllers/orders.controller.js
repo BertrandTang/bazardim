@@ -53,6 +53,9 @@ export async function createOrder(request, response) {
     if (!product) {
       throw new HttpError(404, 'Un produit de votre panier n’est plus en vente.');
     }
+    if (product.sold_at) {
+      throw new HttpError(409, `« ${product.title} » vient d’être vendu, retirez-le de votre panier.`);
+    }
     if (product.owner_id === request.user.id) {
       throw new HttpError(400, `Vous ne pouvez pas acheter votre propre annonce (« ${product.title} »).`);
     }

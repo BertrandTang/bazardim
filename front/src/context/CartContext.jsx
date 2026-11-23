@@ -17,10 +17,10 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useLocalStorageState('cartItems', []);
 
   // On associe chaque ligne du panier à son produit complet.
-  // Si un produit a été supprimé entre-temps, on l'ignore.
+  // Si un produit a été supprimé ou vendu entre-temps, on l'ignore.
   const cartLines = cartItems
     .map((cartItem) => ({ product: findProductById(cartItem.productId), quantity: cartItem.quantity }))
-    .filter((cartLine) => cartLine.product !== null);
+    .filter((cartLine) => cartLine.product !== null && !cartLine.product.sold_at);
 
   // Nombre total d'articles (affiché dans la pastille de la barre de navigation).
   const itemCount = cartLines.reduce((total, cartLine) => total + cartLine.quantity, 0);

@@ -8,7 +8,7 @@ qui échoue si un test échoue ou si la couverture du code passe sous 50 % (le m
 | --- | --- | --- |
 | Outils | Vitest + React Testing Library (navigateur simulé : jsdom) | Vitest + supertest, sur une vraie base PostgreSQL de test |
 | Lancer | `cd front && npm run test:coverage` | `cd back && npm run test:coverage` |
-| Nombre de tests | 74 | 52 |
+| Nombre de tests | 78 | 53 |
 | Couverture des lignes | 89 % | 95 % |
 | Emplacement | `front/tests/*.test.js(x)` | `back/tests/*.test.js` |
 
@@ -32,6 +32,9 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | --- | --- | --- | --- | --- |
 | Catalogue | Ouvrir l'accueil | Tous les produits du catalogue et un titre `<h1>` | Intégration | `pages.test.jsx` |
 | Catalogue | Ouvrir une catégorie (Statues) | Toutes les statues, et seulement elles | Intégration | `pages.test.jsx` |
+| Catalogue | Une annonce est vendue | Elle n'apparaît plus sur l'accueil | Intégration | `pages.test.jsx` |
+| Fiche produit | Annonce vendue (page et carte) | Badge « Vendu », pas de bouton AJOUTER | Intégration / Composant | `pages.test.jsx`, `components.test.jsx` |
+| Panier | Annonce vendue entre-temps | Retirée du panier | Intégration | `pages.test.jsx` |
 | Recherche | Taper « luffy » + Entrée dans la barre | Adresse `/?q=luffy` | Composant | `components.test.jsx` |
 | Recherche | Ouvrir `/?q=vegeta` | « 1 résultat(s) pour « vegeta » » | Intégration | `pages.test.jsx` |
 | Recherche | Licence inconnue | Message « Aucun produit ne correspond » | Intégration | `pages.test.jsx` |
@@ -100,7 +103,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Commande | Panier vide, adresse manquante, produit inexistant, sa propre annonce | 400 / 400 / 404 / 400, Stripe jamais appelé | `orders.test.js` |
 | Commande | Stripe indisponible | 502 et commande supprimée | `orders.test.js` |
 | Paiement | Relire une commande en attente | Payée si Stripe confirme le paiement | `orders.test.js` |
-| Paiement | Webhook avec une signature invalide / valide | 400 / commande marquée payée | `orders.test.js` |
+| Paiement | Webhook avec une signature invalide / valide | 400 / commande payée et produits marqués vendus | `orders.test.js` |
+| Annonce vendue | Paiement confirmé, puis nouvelle commande du même produit | `sold_at` rempli, puis 409 « vient d'être vendu » | `orders.test.js` |
 | Commande (confidentialité) | Un autre utilisateur consulte la commande | 404, n'apparaît pas dans sa liste | `orders.test.js` |
 | Compte | Changer de mot de passe ou d'email sans le mot de passe actuel | 403 | `users.test.js` |
 | Compte | Envoyer `role: admin` | 400 (champ refusé) | `users.test.js` |
