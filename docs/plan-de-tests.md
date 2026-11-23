@@ -73,7 +73,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Commande | Commande inconnue / onglet « Mes commandes » | « Commande introuvable » / liste avec le total | Intégration | `pages.test.jsx` |
 | Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur (401) | Message lisible, pas de plantage | Unitaire | `api.test.js` |
 | Panier | Ajouter deux fois la même annonce | Ajoutée une seule fois, bouton « DANS LE PANIER » (pièce unique) | Unitaire / Composant | `contexts.test.jsx`, `components.test.jsx` |
-| Panier | Afficher, retirer une annonce, vider | Total recalculé, pas de boutons de quantité | Intégration | `pages.test.jsx` |
+| Panier | Afficher, retirer une annonce, vider | Détail articles / frais de service / total recalculé, pas de boutons de quantité | Intégration | `pages.test.jsx` |
+| Frais de service | 40 €, 0 €, 55,50 €, 134,98 € d'articles | 0,70 € + 5 %, arrondi au centime (même calcul que l'API) | Unitaire | `serviceFee.test.js` |
 | Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `contexts.test.jsx` |
 | Livraison (API tierce) | Taper une adresse | Suggestions de l'API Adresse (BAN), adresse choisie enregistrée | Composant | `AddressAutocomplete.test.jsx` |
 | Livraison (API tierce) | API indisponible | Message d'erreur, saisie libre possible | Composant | `AddressAutocomplete.test.jsx` |
@@ -84,6 +85,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Suppression du compte (RGPD) | Bouton « Annuler » | Pop-up fermée, compte intact | Intégration | `pages.test.jsx` |
 | Profil | Onglets produits / likes | Bonnes listes affichées | Intégration | `pages.test.jsx` |
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
+| Pages légales | Pied de page, mentions légales, politique de confidentialité | Liens vers les deux pages ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 
 ## Back-end (API)
@@ -110,8 +112,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Messagerie | Nombre de messages non lus | Compte exact, baisse après lecture, 401 sans connexion | `messages.test.js` |
 | Messagerie (confidentialité) | Un autre utilisateur, même administrateur, consulte ses messages | Il ne voit pas les messages des autres (403 s'il tente d'agir dessus) | `messages.test.js` |
 | Messagerie | Annonce supprimée | Le message est conservé (`product_id` vide) | `messages.test.js` |
-| Commande | Créer une commande | 201, total calculé avec les prix de la base, montants en centimes envoyés à Stripe | `orders.test.js` |
-| Commande | Prix envoyé par le navigateur | Ignoré : le total vient de la base | `orders.test.js` |
+| Commande | Créer une commande | 201, total calculé avec les prix de la base + frais de service (0,70 € + 5 %), montants en centimes envoyés à Stripe avec une ligne « Frais de service Bazardim » | `orders.test.js` |
+| Commande | Prix ou frais envoyés par le navigateur | Ignorés : le total et les frais sont calculés par le serveur | `orders.test.js` |
 | Commande | Panier vide, adresse manquante, même annonce deux fois, produit inexistant, sa propre annonce | 400 / 400 / 400 / 404 / 400, Stripe jamais appelé | `orders.test.js` |
 | Commande | Stripe indisponible | 502 et commande supprimée | `orders.test.js` |
 | Paiement | Relire une commande en attente | Payée si Stripe confirme le paiement | `orders.test.js` |
@@ -122,6 +124,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Compte | Changer de mot de passe ou d'email sans le mot de passe actuel | 403 | `users.test.js` |
 | Compte | Envoyer `role: admin` | 400 (champ refusé) | `users.test.js` |
 | Compte (RGPD) | Supprimer son compte | Compte, annonces et session supprimés | `users.test.js` |
+| Documentation | `/api/docs.json` et `/api/docs/` | Description OpenAPI 3 (routes principales présentes) et page Swagger UI | `docs.test.js` |
+| SEO | `/sitemap.xml` | XML avec les pages fixes et les annonces en vente, sans les annonces vendues, dates au format AAAA-MM-JJ | `sitemap.test.js` |
 | Sécurité | En-têtes HTTP, CORS | `nosniff`, origine autorisée = front uniquement | `users.test.js` |
 
 ## Vérification manuelle de l'affichage (responsive)
