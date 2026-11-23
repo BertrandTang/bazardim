@@ -66,7 +66,7 @@ favoris, panier, messagerie simple (boîte de réception, sans discussion en dir
 - [x] Plus aucun mot de passe ni donnée de compte dans le localStorage : la connexion passe par un cookie `httpOnly` déposé par l'API (illisible par le JavaScript de la page).
 - [x] Éco-conception : pages chargées à la demande (`React.lazy`), Material UI n'est plus chargé sur la page d'accueil : JavaScript initial de 163 Ko → 91 Ko compressés (−44 %).
 - [x] Images de démonstration redimensionnées (41 Mo → 2,3 Mo).
-- [ ] **CSP** (Content Security Policy) pour le front : liste des sources autorisées (scripts, images, API…).
+- [x] **CSP** (Content Security Policy) ajoutée au build du front (`vite.config.js`) : scripts et images du site uniquement, appels vers l'API et l'API Adresse ; vérifiée dans le navigateur (aucune violation).
 - [ ] **HTTPS** (certificat SSL) et en-têtes de sécurité du front, au déploiement ; vérifier avec securityheaders.com et Mozilla Observatory.
 - [ ] Mesurer avec **EcoIndex** / GreenIT-Analysis.
 - [ ] Tester sur Chrome, Firefox, Safari et sur un vrai téléphone (compatibilité navigateurs).

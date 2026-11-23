@@ -27,6 +27,14 @@ pour qu'un visiteur puisse remplir son panier sans être connecté.
 En développement, Vite transmet les requêtes `/api/...` à `http://localhost:3000` (`server.proxy` dans `vite.config.js`).
 En cas d'erreur, l'API renvoie un message (« Email ou mot de passe incorrect. »...) que les pages affichent.
 
+## Sécurité : CSP (Content Security Policy)
+
+Le build de production (`npm run build`) ajoute dans `index.html` une balise `<meta http-equiv="Content-Security-Policy">` :
+la liste des sources que le navigateur a le droit de charger (scripts et images du site, appels vers notre API et vers
+l'API Adresse). Un script injecté par un pirate (faille XSS) serait bloqué. Elle est définie dans `vite.config.js`
+(`CONTENT_SECURITY_POLICY`) et n'est pas active avec `npm run dev`, dont les scripts de rechargement à chaud seraient bloqués.
+Pour la tester : `npm run build && npm run preview`.
+
 ## Organisation du code
 
 ```
