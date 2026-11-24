@@ -50,6 +50,18 @@
   gap: 12px;
 }
 
+/* Suivi de l'envoi d'un article, sous son titre. */
+.order-item-shipping {
+  display: block;
+  font-size: 13px;
+  color: #666;
+}
+
+.order-item-shipping.shipped {
+  color: #1b5e20;
+  font-weight: 600;
+}
+
 /* Le prix reste sur une ligne, c'est le titre qui passe à la ligne s'il est long. */
 .order-summary-items li > :last-child {
   white-space: nowrap;

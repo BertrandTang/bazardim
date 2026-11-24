@@ -3,13 +3,13 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████████████░░░░` 78 % (60 / 77 tâches)**
+**Progression globale : `████████████████░░░░` 82 % (65 / 79 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
-| Bloc 2 — Front-end | `███████████████░░░░░` 75 % | 27 / 36 |
-| Bloc 3 — Back-end | `█████████████████░░░` 85 % | 28 / 33 |
-| RGPD dans l'application | `███████████████░░░░░` 75 % | 3 / 4 |
+| Bloc 2 — Front-end | `████████████████░░░░` 78 % | 28 / 36 |
+| Bloc 3 — Back-end | `██████████████████░░` 91 % | 31 / 34 |
+| RGPD dans l'application | `████████████████░░░░` 80 % | 4 / 5 |
 | Hygiène du projet et Git | `██████████░░░░░░░░░░` 50 % | 2 / 4 |
 
 **Hors progression** (suivi à part, voir en bas du fichier) :
@@ -66,7 +66,7 @@ favoris, panier, messagerie simple (boîte de réception, sans discussion en dir
 - [x] Plus aucun mot de passe ni donnée de compte dans le localStorage : la connexion passe par un cookie `httpOnly` déposé par l'API (illisible par le JavaScript de la page).
 - [x] Éco-conception : pages chargées à la demande (`React.lazy`), Material UI n'est plus chargé sur la page d'accueil : JavaScript initial de 163 Ko → 91 Ko compressés (−44 %).
 - [x] Images de démonstration redimensionnées (41 Mo → 2,3 Mo).
-- [ ] **CSP** (Content Security Policy) pour le front : liste des sources autorisées (scripts, images, API…).
+- [x] **CSP** (Content Security Policy) ajoutée au build du front (`vite.config.js`) : scripts et images du site uniquement, appels vers l'API et l'API Adresse ; vérifiée dans le navigateur (aucune violation).
 - [ ] **HTTPS** (certificat SSL) et en-têtes de sécurité du front, au déploiement ; vérifier avec securityheaders.com et Mozilla Observatory.
 - [ ] Mesurer avec **EcoIndex** / GreenIT-Analysis.
 - [ ] Tester sur Chrome, Firefox, Safari et sur un vrai téléphone (compatibilité navigateurs).
@@ -97,7 +97,7 @@ favoris, panier, messagerie simple (boîte de réception, sans discussion en dir
 - [x] `robots.txt` (`front/public/`) et **`sitemap.xml` généré par l'API** avec les annonces en vente (⚠️ remplacer `www.bazardim.fr` dans `robots.txt` par le vrai domaine).
 - [x] Données structurées **schema.org `Product`** (JSON-LD) sur la fiche produit : prix, état, vendeur, EAN.
 - [x] Balises Open Graph (titre, description, image par page).
-- [ ] Outil de **mesure d'audience respectueux du RGPD** (Matomo, Plausible, Umami…) : intégration fonctionnelle à montrer.
+- [ ] ⏸ _Reporté (23/11)_ — Outil de **mesure d'audience respectueux du RGPD** (Matomo, Umami…) : la grille demande une intégration fonctionnelle.
 - [ ] Lancer l'audit **Lighthouse SEO** et corriger ce qui ressort.
 
 ## Bloc 3 — Back-end
@@ -116,8 +116,8 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Contrôle d'accès : propriétaire ou admin pour modifier / supprimer une annonce ; messages visibles par l'expéditeur et le destinataire seulement.
 - [x] Journalisation avec **winston** (`src/config/logger.js`) : niveaux info / warn / error, erreurs écrites dans `back/logs/errors.log` ; une ligne par requête (`src/middlewares/requestLogger.js`) ; route `/api/health` pour la supervision.
 - [x] Configuration validée au démarrage (`src/config/config.js`), `.env` ignoré par Git, `.env.example` fourni.
-- [ ] **Authentification forte** (citée dans la C21) : l'implémenter (code TOTP pour les administrateurs) ou décider de seulement l'expliquer au jury.
-- [ ] **Sauvegarde / restauration** de la base : script `pg_dump`, puis tester une restauration.
+- [ ] ⏸ _Reporté (23/11)_ — **Authentification forte** (citée dans la C21) : double authentification par code TOTP (Google Authenticator), ou à défaut l'expliquer au jury.
+- [x] **Sauvegarde / restauration** de la base : `scripts/backup-database.sh` (`pg_dump`, 7 dernières sauvegardes gardées) et `scripts/restore-database.sh` (base d'essai ou remplacement confirmé) ; restauration testée (mêmes nombres d'utilisateurs, d'annonces et de commandes).
 
 ### C22 / E16 — Développement de l'API
 
@@ -126,7 +126,8 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] **Front branché sur l'API** (`front/src/services/api.js`, proxy Vite vers `http://localhost:3000`).
 - [x] **Messagerie** : contacter le vendeur, boîte de réception / messages envoyés, réponse, marquer comme lu, pastille des messages non lus.
 - [x] Envoi d'images avec **multer** (`POST /api/uploads`, JPEG/PNG/WebP, 2 Mo max, nom de fichier aléatoire) : photo d'annonce obligatoire et photo de profil.
-- [x] Annonce **vendue** : bandeau « Vendu », plus modifiable (409), le vendeur voit le pseudo de l'acheteur (`GET /api/orders/sales`).
+- [x] Annonce **vendue** : bandeau « Vendu », plus modifiable (409), le vendeur voit le pseudo et l'adresse de livraison de l'acheteur (`GET /api/orders/sales`).
+- [x] **Expédition** : bouton « Marquer comme expédié » pour le vendeur (`PATCH /api/orders/items/:id/shipped`), suivi « En préparation » / « Expédié le … » dans « Mes commandes » de l'acheteur.
 
 ### C23 / E17 — Paiement et monétisation
 
@@ -135,7 +136,7 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Webhook Stripe (`POST /api/stripe/webhook`, signature vérifiée) + vérification du paiement à l'affichage de la confirmation.
 - [x] Modèle « pièce unique » (comme Vinted) : chaque annonce est ajoutée une seule fois au panier, sans quantité.
 - [x] **Monétisation** : frais de service payés par l'acheteur (0,70 € + 5 %), calculés par le back, affichés dans le panier avant le paiement, envoyés à Stripe comme une ligne à part et enregistrés dans `orders.service_fee`.
-- [ ] Page **CGU / CGV** (conditions d'utilisation et de vente : rôle de la plateforme, frais de service, paiement, livraison, litiges).
+- [x] Page **CGU / CGV** (`/conditions-generales`) : rôle d'intermédiaire, annonces, frais de service, paiement, livraison, rétractation entre particuliers, litiges ; lien dans le pied de page et dans le panier.
 - [ ] Faire un vrai paiement de test à la main (carte `4242 4242 4242 4242`) et garder des captures.
 
 ### C24 / E18 — API sécurisée pour des services tiers
@@ -161,7 +162,8 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Suppression de compte depuis le profil (droit à l'effacement) : pop-up qui demande d'écrire « SUPPRIMER » et le mot de passe actuel ; annonces, favoris et messages supprimés, commandes conservées sans lien avec la personne.
 - [x] L'e-mail des vendeurs n'est pas affiché sur leur profil public.
 - [x] Pages **Mentions légales** (`/mentions-legales`) et **Politique de confidentialité** (`/confidentialite`), liens dans le pied de page.
-- [ ] Remplir les informations entre crochets dans `front/src/data/legalInformation.js` (nom, adresse, e-mail de contact, hébergeur).
+- [x] Éditeur, directeur de publication et contact renseignés dans `front/src/data/legalInformation.js`.
+- [ ] Renseigner l'hébergeur (nom, adresse, téléphone) dans `front/src/data/legalInformation.js` une fois le site mis en ligne.
 
 ## Hygiène du projet et Git
 

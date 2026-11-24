@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { query } from '../src/config/database.js';
 import { stripe } from '../src/config/stripe.js';
 import { anonymous, buildProduct, createLoggedInUser, useEmptyDatabase } from './helpers.js';
 
@@ -72,8 +73,8 @@ describe('Commandes et paiement Stripe', () => {
       shipping_address: SHIPPING_ADDRESS,
     });
     expect(order.body.items).toEqual([
-      { product_id: context.firstProduct.id, product_title: 'A', price: 20 },
-      { product_id: context.secondProduct.id, product_title: 'B', price: 35.5 },
+      { product_id: context.firstProduct.id, product_title: 'A', price: 20, shipped_at: null },
+      { product_id: context.secondProduct.id, product_title: 'B', price: 35.5, shipped_at: null },
     ]);
     expect(order.body).not.toHaveProperty('stripe_session_id');
   });
@@ -190,6 +191,41 @@ describe('Commandes et paiement Stripe', () => {
       .send(buildProduct({ title: 'Nouveau titre' }))
       .expect(409);
     expect(response.body.error).toContain('ne peut plus être modifiée');
+  });
+
+  it('le vendeur voit l’adresse de livraison et marque l’article comme expédié', async () => {
+    const context = await createSellerAndBuyer();
+    const { order_id: orderId } = (await placeOrder(context)).body;
+
+    // Commande pas encore payée : impossible de marquer comme expédié.
+    const firstItemId = (
+      await query('SELECT id FROM order_items WHERE order_id = $1 ORDER BY id LIMIT 1', [orderId])
+    )[0].id;
+    await context.seller.agent.patch(`/api/orders/items/${firstItemId}/shipped`).expect(409);
+
+    stripe.checkout.sessions.retrieve.mockResolvedValue({ payment_status: 'paid' });
+    await context.buyer.agent.get(`/api/orders/${orderId}`).expect(200);
+
+    // Le vendeur voit où expédier, et rien n'est encore expédié.
+    const sale = (await context.seller.agent.get('/api/orders/sales')).body.find(
+      (candidate) => candidate.product_id === context.firstProduct.id,
+    );
+    expect(sale).toMatchObject({ shipping_address: SHIPPING_ADDRESS, shipped_at: null });
+
+    // Ni l'acheteur ni un inconnu ne peuvent marquer l'article comme expédié (404 : rien n'est révélé).
+    await context.buyer.agent.patch(`/api/orders/items/${sale.order_item_id}/shipped`).expect(404);
+    await anonymous().patch(`/api/orders/items/${sale.order_item_id}/shipped`).expect(401);
+    await context.seller.agent.patch('/api/orders/items/999999/shipped').expect(404);
+
+    // Le vendeur marque l'article comme expédié, une seule fois.
+    const shipped = await context.seller.agent.patch(`/api/orders/items/${sale.order_item_id}/shipped`).expect(200);
+    expect(shipped.body.shipped_at).not.toBeNull();
+    await context.seller.agent.patch(`/api/orders/items/${sale.order_item_id}/shipped`).expect(409);
+
+    // L'acheteur voit l'article expédié dans sa commande ; l'autre article ne l'est pas encore.
+    const order = (await context.buyer.agent.get(`/api/orders/${orderId}`)).body;
+    expect(order.items[0].shipped_at).not.toBeNull();
+    expect(order.items[1].shipped_at).toBeNull();
   });
 
   it('une commande n’est visible que par son acheteur', async () => {

@@ -8,9 +8,11 @@ import {
   deleteOrderById,
   findOrderById,
   findOrdersByBuyer,
+  findOrderItemForShipping,
   findSalesBySeller,
   insertOrder,
   markOrderAsPaid,
+  markOrderItemAsShipped,
   setOrderStripeSession,
 } from '../models/orders.model.js';
 import { findProductById } from '../models/products.model.js';
@@ -129,6 +131,29 @@ export async function listOrders(request, response) {
  */
 export async function listSales(request, response) {
   response.json(await findSalesBySeller(request.user.id));
+}
+
+/**
+ * PATCH /api/orders/items/:id/shipped — le vendeur indique qu'il a expédié un article vendu.
+ * L'acheteur le voit ensuite dans « Mes commandes » (« Expédié le ... »).
+ */
+export async function markAsShipped(request, response) {
+  const orderItemId = idSchema.parse(request.params.id);
+  const item = await findOrderItemForShipping(orderItemId);
+
+  // Article inexistant, ou qui n'est pas une annonce de cet utilisateur : même réponse 404,
+  // pour ne rien révéler des commandes des autres.
+  if (!item || item.owner_id !== request.user.id) {
+    throw new HttpError(404, 'Vente introuvable.');
+  }
+  if (item.status !== 'paid') {
+    throw new HttpError(409, 'La commande n’est pas encore payée : l’article ne peut pas être expédié.');
+  }
+  if (item.shipped_at) {
+    throw new HttpError(409, 'Cet article est déjà marqué comme expédié.');
+  }
+
+  response.json(await markOrderItemAsShipped(orderItemId));
 }
 
 /**

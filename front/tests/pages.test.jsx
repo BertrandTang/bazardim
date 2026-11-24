@@ -23,6 +23,7 @@ import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
 import Footer from '../src/components/Footer/Footer.jsx';
 import LegalNotice from '../src/pages/Legal/LegalNotice.jsx';
 import PrivacyPolicy from '../src/pages/Legal/PrivacyPolicy.jsx';
+import TermsAndConditions from '../src/pages/Legal/TermsAndConditions.jsx';
 import Sell from '../src/pages/Sell/Sell.jsx';
 import SignUp from '../src/pages/SignUp/SignUp.jsx';
 import UserProfile from '../src/pages/UserProfile/UserProfile.jsx';
@@ -162,6 +163,10 @@ describe('Cart (panier)', () => {
     fillCart([2]);
     await renderWithProviders(<Cart />);
     expect(screen.getByRole('link', { name: 'Se connecter pour commander' })).toHaveAttribute('href', '/auth');
+    expect(screen.getByRole('link', { name: 'conditions générales de vente' })).toHaveAttribute(
+      'href',
+      '/conditions-generales',
+    );
   });
 
   it('demande une adresse, puis crée la commande et envoie vers la page de paiement Stripe', async () => {
@@ -389,6 +394,18 @@ describe('Profile (mon profil)', () => {
     expect(within(soldCard).getByRole('link', { name: 'FigurineParadise' })).toHaveAttribute('href', '/user/2');
     expect(within(soldCard).queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
     expect(within(soldCard).getByRole('button', { name: 'Supprimer' })).toBeInTheDocument();
+    // Le vendeur voit où expédier l'article, puis indique qu'il l'a expédié (après confirmation).
+    expect(within(soldCard).getByText('1 rue de Paris')).toBeInTheDocument();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    await user.click(within(soldCard).getByRole('button', { name: 'Marquer comme expédié' }));
+    expect(await within(soldCard).findByText(/Expédié le/)).toBeInTheDocument();
+    expect(within(soldCard).queryByRole('button', { name: 'Marquer comme expédié' })).not.toBeInTheDocument();
+
+    // L'acheteur (utilisateur 2) voit l'article expédié dans « Mes commandes ».
+    loginAs(2);
+    await renderWithProviders(profilePage);
+    await user.click(screen.getAllByRole('button', { name: 'Mes commandes' }).at(-1));
+    expect(await screen.findByText(/^Expédié le/)).toBeInTheDocument();
   });
 
   it('supprime le compte après avoir écrit SUPPRIMER et donné son mot de passe', async () => {
@@ -524,6 +541,7 @@ describe('Pages légales', () => {
       'href',
       '/confidentialite',
     );
+    expect(screen.getByRole('link', { name: 'Conditions générales' })).toHaveAttribute('href', '/conditions-generales');
   });
 
   it('affiche les mentions légales : éditeur et hébergeur', async () => {
@@ -540,5 +558,15 @@ describe('Pages légales', () => {
     expect(screen.getByRole('rowheader', { name: 'Passer et suivre une commande' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Cookies et stockage dans le navigateur' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'votre profil' })).toHaveAttribute('href', '/profile');
+  });
+
+  it('affiche les conditions générales avec le barème des frais de service', async () => {
+    await renderWithProviders(<TermsAndConditions />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Conditions générales d’utilisation et de vente',
+    );
+    expect(screen.getByRole('heading', { name: '5. Prix et frais de service' })).toBeInTheDocument();
+    expect(screen.getByText(/0,70 € \+ 5 % du prix des articles/)).toBeInTheDocument();
+    expect(screen.getByText(/mode test/)).toBeInTheDocument();
   });
 });

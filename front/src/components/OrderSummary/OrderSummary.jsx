@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { formatDate } from '../../utils/formatDate.js';
 import { formatPrice } from '../../utils/productHelpers.js';
 import './OrderSummary.css';
 
@@ -7,11 +8,6 @@ const STATUS_LABELS = {
   pending: 'En attente de paiement',
   paid: 'Payée',
 };
-
-/** Formate une date de l'API ("2026-11-23T10:15:00Z") en texte français : "23/11/2026". */
-function formatDate(isoDate) {
-  return new Date(isoDate).toLocaleDateString('fr-FR');
-}
 
 /**
  * Récapitulatif d'une commande : date, statut, articles, adresse et total.
@@ -36,6 +32,12 @@ export default function OrderSummary({ order }) {
                 <Link to={`/product/${item.product_id}`}>{item.product_title}</Link>
               ) : (
                 item.product_title
+              )}
+              {/* Suivi de l'envoi, une fois la commande payée : chaque vendeur expédie de son côté. */}
+              {order.status === 'paid' && (
+                <span className={item.shipped_at ? 'order-item-shipping shipped' : 'order-item-shipping'}>
+                  {item.shipped_at ? `Expédié le ${formatDate(item.shipped_at)}` : 'En préparation'}
+                </span>
               )}
             </span>
             <span>{formatPrice(item.price)}</span>

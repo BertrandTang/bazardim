@@ -1,19 +1,20 @@
 /**
  * Informations légales affichées sur les pages « Mentions légales » et « Politique de confidentialité ».
  *
- * ⚠️ À COMPLÉTER : les valeurs entre crochets sont à remplacer par les vraies informations
- * (obligatoires pour un site en ligne, loi pour la confiance dans l'économie numérique — LCEN).
- * Elles sont réunies ici pour n'avoir à les modifier qu'à un seul endroit.
+ * Ces informations sont obligatoires pour un site en ligne (loi pour la confiance dans l'économie
+ * numérique — LCEN). Elles sont réunies ici pour n'avoir à les modifier qu'à un seul endroit.
+ *
+ * ⚠️ À COMPLÉTER au déploiement : les informations de l'hébergeur (valeurs entre crochets).
  */
 export const LEGAL_INFORMATION = {
   // Éditeur du site : la personne (ou l'entreprise) responsable de Bazardim.
-  publisherName: '[Prénom Nom]',
+  publisherName: 'Bertrand Tang',
   publisherStatus: 'Projet réalisé dans le cadre d’une formation de Développeur Full Stack (sans activité commerciale)',
-  publisherAddress: '[Adresse postale]',
+  publisherAddress: 'Paris, France',
   // Adresse à laquelle les utilisateurs écrivent, notamment pour exercer leurs droits RGPD.
-  contactEmail: '[adresse e-mail de contact]',
+  contactEmail: 'bertrand.tang.dev@gmail.com',
   // Directeur de la publication : en général, l'éditeur lui-même.
-  publicationDirector: '[Prénom Nom]',
+  publicationDirector: 'Bertrand Tang',
   // Hébergeur : à renseigner une fois le site mis en ligne (nom, adresse, téléphone).
   hostName: '[Nom de l’hébergeur]',
   hostAddress: '[Adresse de l’hébergeur]',

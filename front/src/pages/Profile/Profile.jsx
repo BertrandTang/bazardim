@@ -10,7 +10,7 @@ import ProductCard from '../../components/ProductCard/ProductCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
-import { fetchOrders, fetchSales } from '../../services/api.js';
+import { fetchOrders, fetchSales, markItemAsShipped } from '../../services/api.js';
 import './Profile.css';
 
 // Onglets du menu latéral. `component` est le composant affiché quand l'onglet est actif
@@ -179,8 +179,8 @@ function MyProductsSection() {
 
   const myProducts = products.filter((product) => product.owner_id === currentUser.id);
 
-  // Ventes (qui a acheté quelle annonce), chargées à l'ouverture de l'onglet.
-  // Le pseudo de l'acheteur n'est connu que du vendeur : il ne fait pas partie de l'annonce publique.
+  // Ventes (acheteur, adresse de livraison, expédition), chargées à l'ouverture de l'onglet.
+  // Ces informations ne sont connues que du vendeur : elles ne font pas partie de l'annonce publique.
   useEffect(() => {
     fetchSales()
       .then((loadedSales) => setSales(loadedSales))
@@ -190,6 +190,25 @@ function MyProductsSection() {
   /** La vente d'une annonce (undefined si elle n'est pas vendue). */
   function findSale(productId) {
     return sales.find((sale) => sale.product_id === productId);
+  }
+
+  /** Le vendeur indique qu'il a expédié l'article : l'acheteur le verra dans « Mes commandes ». */
+  async function handleShip(sale) {
+    if (!window.confirm(`Confirmer l’expédition à ${sale.shipping_address} ?`)) {
+      return;
+    }
+    try {
+      const { shipped_at: shippedAt } = await markItemAsShipped(sale.order_item_id);
+      // On met à jour cette vente dans la liste, sans recharger toutes les ventes.
+      setSales((previousSales) =>
+        previousSales.map((candidate) =>
+          candidate.order_item_id === sale.order_item_id ? { ...candidate, shipped_at: shippedAt } : candidate,
+        ),
+      );
+      setErrorMessage('');
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
   }
 
   async function handleDelete(product) {
@@ -219,6 +238,7 @@ function MyProductsSection() {
               key={product.id}
               product={product}
               sale={findSale(product.id)}
+              onShip={handleShip}
               onEdit={() => navigate(`/product/${product.id}?edit=1`)}
               onDelete={handleDelete}
             />

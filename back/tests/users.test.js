@@ -60,7 +60,9 @@ describe('DELETE /api/users/me', () => {
 
     await anonymous().get(`/api/users/${user.id}`).expect(404);
     await anonymous().get(`/api/products/${product.id}`).expect(404);
-    await agent.get('/api/auth/me').expect(401);
+    // La session ne donne plus accès à rien : /me renvoie null, une route protégée répond 401.
+    expect((await agent.get('/api/auth/me').expect(200)).body).toBeNull();
+    await agent.get('/api/likes').expect(401);
   });
 });
 

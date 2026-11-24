@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { config } from '../config/config.js';
-import { requireAuth } from '../middlewares/authentication.js';
 import { getCurrentUser, login, logout, register } from '../controllers/auth.controller.js';
 
 // Routes montées sur /api/auth (voir app.js).
@@ -21,6 +20,7 @@ const authenticationRateLimiter = rateLimit({
 router.post('/register', authenticationRateLimiter, register);
 router.post('/login', authenticationRateLimiter, login);
 router.post('/logout', logout);
-router.get('/me', requireAuth, getCurrentUser);
+// Pas de requireAuth : un visiteur reçoit null (ce n'est pas une erreur, voir getCurrentUser).
+router.get('/me', getCurrentUser);
 
 export default router;

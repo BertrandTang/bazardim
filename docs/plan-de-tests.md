@@ -35,7 +35,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Catalogue | Une annonce est vendue | Elle n'apparaît plus sur l'accueil | Intégration | `pages.test.jsx` |
 | Fiche produit | Annonce vendue (page et carte) | Bandeau « Vendu », pas de bouton AJOUTER | Intégration / Composant | `pages.test.jsx`, `components.test.jsx` |
 | Fiche produit | Le vendeur ouvre son annonce vendue en mode modification | Pas de formulaire ni de bouton Modifier | Intégration | `pages.test.jsx` |
-| Mes produits | Une de mes annonces est vendue | « Vendu à *pseudo* » (lien vers son profil), pas de bouton Modifier | Intégration | `pages.test.jsx` |
+| Mes produits | Une de mes annonces est vendue | « Vendu à *pseudo* » (lien vers son profil), adresse de livraison, pas de bouton Modifier ; « Marquer comme expédié » puis « Expédié le … », visible par l'acheteur dans « Mes commandes » | Intégration | `pages.test.jsx` |
 | Panier | Annonce vendue entre-temps | Retirée du panier | Intégration | `pages.test.jsx` |
 | Recherche | Taper « luffy » + Entrée dans la barre | Adresse `/?q=luffy` | Composant | `components.test.jsx` |
 | Recherche | Ouvrir `/?q=vegeta` | « 1 résultat(s) pour « vegeta » » | Intégration | `pages.test.jsx` |
@@ -71,7 +71,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Commande | Acheter sa propre annonce | Message de refus de l'API | Intégration | `pages.test.jsx` |
 | Paiement | Retour de Stripe : en attente puis payé | « Vérifier à nouveau », puis « Merci », panier vidé | Intégration | `pages.test.jsx` |
 | Commande | Commande inconnue / onglet « Mes commandes » | « Commande introuvable » / liste avec le total | Intégration | `pages.test.jsx` |
-| Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur (401) | Message lisible, pas de plantage | Unitaire | `api.test.js` |
+| Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur non connecté | Message lisible, pas de plantage ; visiteur = `null` | Unitaire | `api.test.js` |
 | Panier | Ajouter deux fois la même annonce | Ajoutée une seule fois, bouton « DANS LE PANIER » (pièce unique) | Unitaire / Composant | `contexts.test.jsx`, `components.test.jsx` |
 | Panier | Afficher, retirer une annonce, vider | Détail articles / frais de service / total recalculé, pas de boutons de quantité | Intégration | `pages.test.jsx` |
 | Frais de service | 40 €, 0 €, 55,50 €, 134,98 € d'articles | 0,70 € + 5 %, arrondi au centime (même calcul que l'API) | Unitaire | `serviceFee.test.js` |
@@ -85,7 +85,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Suppression du compte (RGPD) | Bouton « Annuler » | Pop-up fermée, compte intact | Intégration | `pages.test.jsx` |
 | Profil | Onglets produits / likes | Bonnes listes affichées | Intégration | `pages.test.jsx` |
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
-| Pages légales | Pied de page, mentions légales, politique de confidentialité | Liens vers les deux pages ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD | Intégration | `pages.test.jsx` |
+| Pages légales | Pied de page, mentions légales, politique de confidentialité, conditions générales | Liens vers les trois pages (et vers les CGV dans le panier) ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD ; barème des frais de service | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 
 ## Back-end (API)
@@ -96,7 +96,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Inscription | Email ou pseudo déjà pris | 409 avec message clair | `auth.test.js` |
 | Inscription | Champs invalides | 400 avec la liste des champs en erreur | `auth.test.js` |
 | Connexion | Bon / mauvais mot de passe, email inconnu | 200 / 401 (même message dans les deux cas d'échec) | `auth.test.js` |
-| Session | Sans cookie, jeton falsifié, après déconnexion | 401 | `auth.test.js` |
+| Session | Sans cookie, jeton falsifié, après déconnexion | `GET /api/auth/me` renvoie `null` (un visiteur n'est pas une erreur) ; une route protégée répond 401 | `auth.test.js` |
 | Produits | Créer une annonce | 201, appartient à l'utilisateur connecté | `products.test.js` |
 | Produits | Prix négatif, catégorie inconnue, image `javascript:` | 400 | `products.test.js` |
 | Produits | Filtres catégorie, licence, recherche, vendeur, pagination | Seuls les bons produits | `products.test.js` |
@@ -120,6 +120,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Paiement | Webhook avec une signature invalide / valide | 400 / commande payée et produits marqués vendus | `orders.test.js` |
 | Annonce vendue | Paiement confirmé, puis nouvelle commande du même produit | `sold_at` rempli, puis 409 « vient d'être vendu » | `orders.test.js` |
 | Annonce vendue | Le vendeur consulte ses ventes, puis tente de modifier l'annonce | Pseudo de l'acheteur (l'acheteur, lui, n'a aucune vente) ; modification refusée (409) | `orders.test.js` |
+| Expédition | Marquer un article comme expédié : commande non payée, acheteur, visiteur, article inconnu, vendeur (deux fois) | 409 / 404 / 401 / 404 / 200 puis 409 ; adresse visible dans les ventes ; l'acheteur voit la date d'expédition de l'article | `orders.test.js` |
 | Commande (confidentialité) | Un autre utilisateur consulte la commande | 404, n'apparaît pas dans sa liste | `orders.test.js` |
 | Compte | Changer de mot de passe ou d'email sans le mot de passe actuel | 403 | `users.test.js` |
 | Compte | Envoyer `role: admin` | 400 (champ refusé) | `users.test.js` |
@@ -137,6 +138,15 @@ Chaque page (accueil, fiche produit, connexion, inscription, panier, messagerie,
 | Largeur de la page | Aucun défilement horizontal, rien ne dépasse de l'écran |
 | Barre de navigation | Tous les liens visibles et cliquables, sur plusieurs lignes si besoin |
 | Textes longs (titre de produit, pseudo) | Passent à la ligne ; les prix restent sur une seule ligne |
+
+## Vérification manuelle de la sauvegarde
+
+| Étape | Résultat attendu | Résultat obtenu (23/11/2026) |
+| --- | --- | --- |
+| `./scripts/backup-database.sh` | Fichier `backups/bazardim-<date>.dump` créé | ✅ fichier de 32 Ko |
+| Restauration dans une base d'essai | Mêmes nombres d'utilisateurs, d'annonces et de commandes que la base d'origine | ✅ 8 / 11 / 13 des deux côtés |
+| Restauration une deuxième fois dans la même base | Aucune erreur (`--clean` remplace les tables) | ✅ |
+| Restauration de la vraie base sans écrire RESTAURER | Annulée, base intacte | ✅ |
 
 ## Ce qui n'est pas (encore) couvert
 

@@ -136,7 +136,10 @@ CREATE TABLE order_items (
   -- Titre et prix COPIÉS au moment de l'achat : la commande ne change pas
   -- si le vendeur modifie son annonce ensuite.
   product_title VARCHAR(150)   NOT NULL,
-  price         NUMERIC(10, 2) NOT NULL CHECK (price > 0)
+  price         NUMERIC(10, 2) NOT NULL CHECK (price > 0),
+  -- Date à laquelle le vendeur a indiqué avoir expédié l'article (NULL = pas encore expédié).
+  -- Elle est par article et non par commande : une commande peut regrouper plusieurs vendeurs.
+  shipped_at    TIMESTAMPTZ
 );
 
 -- ---------------------------------------------------------------------

@@ -139,6 +139,9 @@ export default function Cart() {
       )}
       <p className="cart-hint">Frais de service Bazardim : {SERVICE_FEE_DESCRIPTION}.</p>
       <p className="cart-hint">
+        En commandant, vous acceptez les <Link to="/conditions-generales">conditions générales de vente</Link>.
+      </p>
+      <p className="cart-hint">
         Paiement sécurisé par Stripe (mode test : carte <code>4242 4242 4242 4242</code>, date future, CVC au choix).
       </p>
     </section>

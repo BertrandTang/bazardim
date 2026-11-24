@@ -26,7 +26,7 @@ const DATA_PROCESSING = [
   },
   {
     purpose: 'Passer et suivre une commande',
-    data: 'Annonces achetées, prix, adresse de livraison, date de paiement',
+    data: 'Annonces achetées, prix, adresse de livraison, dates de paiement et d’expédition',
     legalBasis: 'Exécution du contrat, puis obligation légale (comptabilité)',
     retention:
       '10 ans (obligation comptable, article L123-22 du Code de commerce). Si vous supprimez votre compte, la commande est conservée mais n’est plus reliée à vous.',
@@ -86,7 +86,8 @@ export default function PrivacyPolicy() {
       </div>
       <p>
         Le profil public d’un vendeur affiche uniquement son pseudo, sa photo et ses annonces : jamais son adresse
-        e-mail. Le pseudo de l’acheteur n’est visible que par le vendeur, une fois l’annonce vendue.
+        e-mail. Une fois l’annonce payée, le pseudo et l’adresse de livraison de l’acheteur sont communiqués au vendeur,
+        et à lui seul, pour qu’il puisse expédier l’objet.
       </p>
 
       <h2>Destinataires et services tiers</h2>

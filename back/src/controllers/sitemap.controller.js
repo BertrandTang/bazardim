@@ -13,6 +13,7 @@ const STATIC_PAGES = [
   { path: '/signup', changefreq: 'monthly', priority: '0.3' },
   { path: '/mentions-legales', changefreq: 'yearly', priority: '0.1' },
   { path: '/confidentialite', changefreq: 'yearly', priority: '0.1' },
+  { path: '/conditions-generales', changefreq: 'yearly', priority: '0.1' },
 ];
 
 /** Une entrée <url> du plan du site. `lastmod` (date de dernière modification) est facultatif. */

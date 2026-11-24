@@ -9,6 +9,7 @@ export default function Footer() {
       <nav className="footer-links" aria-label="Informations légales">
         <Link to="/mentions-legales">Mentions légales</Link>
         <Link to="/confidentialite">Politique de confidentialité</Link>
+        <Link to="/conditions-generales">Conditions générales</Link>
       </nav>
     </footer>
   );
