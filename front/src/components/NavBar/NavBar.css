@@ -1,11 +1,29 @@
+/*
+ * Barre de navigation : une grille CSS (grid) à deux lignes.
+ *
+ *   Ordinateur :  logo | recherche        | compte + panier
+ *                 logo | liens ..................... VENDRE
+ *
+ *   Téléphone :   logo               compte + panier
+ *                 recherche (toute la largeur)
+ *                 liens (passent à la ligne si besoin)
+ *
+ * grid-template-areas donne un nom à chaque zone ; chaque élément choisit sa zone avec grid-area.
+ * Aucune zone n'a de largeur fixe : rien ne peut dépasser de l'écran (pas de défilement horizontal).
+ */
 .navbar-container {
   max-width: 1200px;
   margin: 18px auto 10px;
-  padding: 10px 28px;
-  display: flex;
+  padding: 12px 28px;
+  display: grid;
+  /* auto = largeur du contenu ; minmax(0, 1fr) = toute la place restante, et peut rétrécir. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'logo search account'
+    'logo links  links';
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  column-gap: 28px;
+  row-gap: 10px;
   background: var(--color-surface);
   border-radius: 32px;
 }
@@ -14,7 +32,11 @@
   color: var(--color-primary);
   font-family: monospace;
   font-weight: 700;
-  transition: all 0.2s ease;
+  /* Un lien reste toujours sur une seule ligne ("COMMENT ÇA MARCHE ?", "Déconnexion"). */
+  white-space: nowrap;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .navbar-container a:hover,
@@ -22,50 +44,29 @@
   color: var(--color-accent);
 }
 
-.navbar-left,
-.navbar-middle,
-.navbar-right {
-  display: flex;
-  align-items: center;
-}
-
-.navbar-left {
-  flex: 1.6;
-  /* Comme pour la recherche : ce bloc peut rétrécir sous sa largeur « naturelle » si la place manque. */
-  min-width: 0;
-  gap: 16px;
-}
-
-.navbar-middle {
-  flex: 1;
-  justify-content: center;
-  gap: 28px;
-}
-
-.navbar-right {
-  flex: 1;
-  justify-content: flex-end;
-  gap: 16px;
-}
-
 /* ----- Logo ----- */
+.navbar-logo-link {
+  grid-area: logo;
+  display: flex;
+}
+
 .navbar-logo {
-  width: 88px;
-  height: 88px;
+  width: 84px;
+  height: 84px;
   object-fit: contain;
   transition: transform 0.2s ease;
 }
 
-.logo-link:hover .navbar-logo {
+.navbar-logo-link:hover .navbar-logo {
   transform: scale(1.1) rotate(-5deg);
 }
 
 /* ----- Barre de recherche ----- */
 .navbar-search {
-  flex: 1;
-  /* min-width: 0 autorise la recherche à rétrécir quand la place manque (sinon elle garde sa largeur minimale). */
+  grid-area: search;
+  /* min-width: 0 autorise la recherche à rétrécir quand la place manque. */
   min-width: 0;
-  max-width: 520px;
+  max-width: 560px;
   display: flex;
   align-items: center;
   padding: 8px 18px;
@@ -81,7 +82,7 @@
 
 .navbar-search svg {
   margin-right: 8px;
-  color: #1976d2;
+  color: var(--color-primary);
 }
 
 .navbar-search input {
@@ -90,20 +91,113 @@
   border: none;
   outline: none; /* le contour est déjà affiché sur tout le formulaire (:focus-within) */
   background: transparent;
-  font-size: 18px;
+  font-size: 16px; /* 16 px minimum : en dessous, l'iPhone zoome sur le champ quand on tape */
   color: var(--color-primary);
 }
 
 .navbar-search input::placeholder {
-  color: #1976d2;
+  color: var(--color-primary);
   opacity: 1;
 }
 
-/* ----- Liens du milieu + menus déroulants ----- */
-.navbar-middle a {
-  font-size: 16px;
-  /* Un lien reste sur une seule ligne ("COMMENT ÇA MARCHE ?") : c'est la recherche qui rétrécit. */
+/* ----- Compte (connexion, messages, profil...) et panier : sur une seule ligne ----- */
+.navbar-account {
+  grid-area: account;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* « Inscription » : bouton à contour, pour le distinguer de « Connexion ». */
+.navbar-container .navbar-signup {
+  padding: 6px 14px;
+  border: 2px solid var(--color-primary);
+  border-radius: 999px;
+}
+
+.navbar-container .navbar-signup:hover,
+.navbar-container .navbar-signup:focus {
+  border-color: var(--color-accent);
+}
+
+.logout-button {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
   white-space: nowrap;
+  color: var(--color-primary);
+}
+
+.logout-button:hover {
+  color: var(--color-accent);
+}
+
+.navbar-cart {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-cart:hover {
+  transform: scale(1.06);
+}
+
+.cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Pastille du nombre de messages non lus, à côté du lien « Messages ». */
+.messages-badge {
+  margin-left: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* ----- Liens de navigation (deuxième ligne) ----- */
+.navbar-links {
+  grid-area: links;
+  /* Repère pour les menus déroulants sur téléphone (voir plus bas). */
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Si la place manque, un lien passe à la ligne au lieu de dépasser de l'écran. */
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  font-size: 16px;
+}
+
+/* « VENDRE » est poussé tout à droite de la ligne (margin-left: auto prend la place libre). */
+.navbar-container .navbar-sell-button {
+  margin-left: auto;
+  padding: 9px 18px;
+  border-radius: 0 28px 0 28px;
+  background: var(--gradient-primary);
+  color: #fff;
+  line-height: 1;
+  box-shadow: 0 6px 16px rgba(109, 53, 255, 0.22);
+}
+
+.navbar-container .navbar-sell-button:hover,
+.navbar-container .navbar-sell-button:focus {
+  color: #fff;
+  transform: translateY(-1px) scale(1.02);
 }
 
 .navbar-dropdown {
@@ -121,7 +215,7 @@
   background: none;
   font-family: monospace;
   font-weight: 700;
-  font-size: 16px;
+  font-size: inherit;
   color: var(--color-primary);
 }
 
@@ -153,6 +247,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   font-size: 14px;
+  white-space: normal; /* un long nom de licence peut passer à la ligne dans le menu */
 }
 
 .navbar-dropdown-menu a:hover,
@@ -160,84 +255,12 @@
   background: #f3eaff;
 }
 
-.navbar-container .navbar-sell-button {
-  padding: 9px 16px;
-  border-radius: 0 28px 0 28px;
-  background: var(--gradient-primary);
-  color: #fff;
-  line-height: 1;
-  box-shadow: 0 6px 16px rgba(109, 53, 255, 0.22);
-}
-
-.navbar-container .navbar-sell-button:hover,
-.navbar-container .navbar-sell-button:focus {
-  color: #fff;
-  transform: translateY(-1px) scale(1.02);
-  border-radius: 0 32px 0 32px;
-}
-
-/* ----- Connexion / profil / panier ----- */
-.navbar-auth {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-family: monospace;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.logout-button {
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  text-align: left;
-  color: var(--color-primary);
-}
-
-.logout-button:hover {
-  color: var(--color-accent);
-}
-
-.navbar-cart {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.navbar-cart:hover {
-  transform: scale(1.06);
-}
-
-.cart-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: #fff;
-  font-size: 12px;
-  line-height: 1;
-}
-
-/* Pastille du nombre de messages non lus, à côté du lien « Messages ». */
-.messages-badge {
-  margin-left: 4px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: #fff;
-  font-size: 12px;
-  line-height: 1;
-}
-
-/* ----- Adaptation aux petits écrans ----- */
+/* ----- Écrans moyens : on resserre ----- */
 @media (max-width: 1024px) {
   .navbar-container {
     margin: 12px 12px 8px;
-    padding: 8px 16px;
-    gap: 16px;
+    padding: 10px 20px;
+    column-gap: 20px;
   }
 
   .navbar-logo {
@@ -245,87 +268,105 @@
     height: 72px;
   }
 
-  .navbar-middle {
+  .navbar-account {
     gap: 14px;
+    font-size: 14px;
   }
 
-  .navbar-middle a,
-  .navbar-dropdown-button {
+  .navbar-links {
+    gap: 6px 20px;
     font-size: 14px;
   }
 }
 
-/* Tablettes et téléphones : la barre passe sur plusieurs lignes (logo + recherche, liens, compte). */
-@media (max-width: 960px) {
+/* ----- Tablettes et téléphones : logo + compte, puis recherche, puis liens ----- */
+@media (max-width: 720px) {
   .navbar-container {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'logo   account'
+      'search search'
+      'links  links';
+    row-gap: 12px;
     border-radius: 24px;
   }
 
-  .navbar-left,
-  .navbar-middle,
-  .navbar-right {
-    justify-content: center;
-    flex: none;
+  .navbar-logo {
+    width: 56px;
+    height: 56px;
   }
 
   .navbar-search {
-    max-width: 100%;
+    max-width: none;
   }
 
-  /* Liens du compte (Messages, Profil, Déconnexion) sur une ligne au lieu d'une colonne. */
-  .navbar-auth {
-    flex-direction: row;
-    flex-wrap: wrap;
+  /* Les liens sont centrés ; « VENDRE » n'est plus poussé à droite. */
+  .navbar-links {
     justify-content: center;
-    gap: 6px 16px;
+    gap: 4px 18px;
+  }
+
+  .navbar-container .navbar-sell-button {
+    margin-left: 0;
+  }
+
+  /*
+   * Sur un petit écran, un menu collé sous son bouton pourrait dépasser à droite.
+   * Le menu se place donc par rapport à toute la ligne des liens (.navbar-links, position: relative)
+   * et en prend toute la largeur.
+   */
+  .navbar-dropdown {
+    position: static;
+  }
+
+  .navbar-dropdown-menu {
+    right: 0;
+    min-width: 0;
   }
 }
 
-/* Téléphones : tout est resserré pour que chaque ligne tienne dans l'écran. */
-@media (max-width: 480px) {
+/* ----- Petits téléphones : tout est resserré pour que chaque ligne tienne ----- */
+@media (max-width: 420px) {
   .navbar-container {
     margin: 8px 8px 4px;
-    padding: 8px 12px;
-    gap: 10px;
-  }
-
-  .navbar-left {
-    gap: 10px;
+    padding: 8px 14px;
+    column-gap: 10px;
+    row-gap: 10px;
   }
 
   .navbar-logo {
-    width: 52px;
-    height: 52px;
+    width: 44px;
+    height: 44px;
   }
 
   .navbar-search {
     padding: 6px 12px;
   }
 
-  .navbar-search input {
-    font-size: 16px; /* 16 px minimum : en dessous, l'iPhone zoome sur le champ quand on tape */
+  .navbar-account {
+    gap: 10px;
+    font-size: 12px;
   }
 
-  /* flex-wrap : si l'écran est vraiment étroit, un lien passe à la ligne au lieu de dépasser. */
-  .navbar-middle {
-    flex-wrap: wrap;
-    gap: 8px 14px;
+  .navbar-container .navbar-signup {
+    padding: 4px 10px;
   }
 
-  .navbar-middle a,
-  .navbar-dropdown-button {
+  .navbar-links {
+    gap: 2px 14px;
     font-size: 13px;
   }
 
   .navbar-container .navbar-sell-button {
     padding: 8px 12px;
   }
+}
 
-  .navbar-auth {
-    font-size: 13px;
+/* Très petits téléphones (320 px) : « Messages Profil Déconnexion » doit tenir à côté du logo. */
+@media (max-width: 360px) {
+  .navbar-account {
+    gap: 8px;
+    font-size: 11px;
   }
 }
 

@@ -53,28 +53,62 @@ export default function NavBar() {
     navigate(queryString ? `${targetPath}?${queryString}` : targetPath);
   }
 
+  // Mise en page (voir NavBar.css) : une grille sur deux lignes.
+  //   Ordinateur : [logo] [recherche]              [compte + panier]
+  //                [logo] [liens de navigation .............. VENDRE]
+  //   Téléphone : le logo et le compte en haut, puis la recherche, puis les liens.
   return (
     <nav className="navbar-container" aria-label="Navigation principale">
-      <div className="navbar-left">
-        <Link to="/" className="logo-link">
-          <img src="/icons/bazardim_logo.ico" alt="Bazardim - retour à l'accueil" className="navbar-logo" />
+      <Link to="/" className="navbar-logo-link">
+        <img src="/icons/bazardim_logo.ico" alt="Bazardim - retour à l'accueil" className="navbar-logo" />
+      </Link>
+
+      <form className="navbar-search" role="search" onSubmit={handleSearchSubmit}>
+        <SearchIcon />
+        {/* `key` force React à recréer le champ quand la recherche de l'URL change,
+            pour qu'il affiche toujours la bonne valeur (ex : après un retour arrière). */}
+        <input
+          key={currentSearch}
+          name="search"
+          type="search"
+          placeholder="SEARCH サーチ"
+          aria-label="Rechercher un produit"
+          defaultValue={currentSearch}
+        />
+      </form>
+
+      <div className="navbar-account">
+        {currentUser ? (
+          <>
+            {/* aria-label : un lecteur d'écran lit "Messages (2 non lus)" au lieu de "Messages 2". */}
+            <Link
+              to="/messages"
+              className="navbar-messages"
+              aria-label={unreadCount > 0 ? `Messages (${unreadCount} non lus)` : 'Messages'}
+            >
+              Messages
+              {unreadCount > 0 && <span className="messages-badge">{unreadCount}</span>}
+            </Link>
+            <Link to="/profile">Profil</Link>
+            <button type="button" className="logout-button" onClick={logout}>
+              Déconnexion
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/auth">Connexion</Link>
+            <Link to="/signup" className="navbar-signup">
+              Inscription
+            </Link>
+          </>
+        )}
+        <Link to="/cart" className="navbar-cart" aria-label={`Panier (${itemCount} articles)`}>
+          <CartIcon />
+          {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
         </Link>
-        <form className="navbar-search" role="search" onSubmit={handleSearchSubmit}>
-          <SearchIcon />
-          {/* `key` force React à recréer le champ quand la recherche de l'URL change,
-              pour qu'il affiche toujours la bonne valeur (ex : après un retour arrière). */}
-          <input
-            key={currentSearch}
-            name="search"
-            type="search"
-            placeholder="SEARCH サーチ"
-            aria-label="Rechercher un produit"
-            defaultValue={currentSearch}
-          />
-        </form>
       </div>
 
-      <div className="navbar-middle">
+      <div className="navbar-links">
         <Link to="/">ACCUEIL</Link>
 
         <NavBarDropdown label="CATEGORIES">
@@ -98,39 +132,6 @@ export default function NavBar() {
 
         <Link to="/vendre" className="navbar-sell-button">
           VENDRE
-        </Link>
-      </div>
-
-      <div className="navbar-right">
-        <div className="navbar-auth">
-          {currentUser ? (
-            <>
-              {/* aria-label : un lecteur d'écran lit "Messages (2 non lus)" au lieu de "Messages 2". */}
-              <Link
-                to="/messages"
-                className="navbar-messages"
-                aria-label={unreadCount > 0 ? `Messages (${unreadCount} non lus)` : 'Messages'}
-              >
-                Messages
-                {unreadCount > 0 && <span className="messages-badge">{unreadCount}</span>}
-              </Link>
-              <Link to="/profile">Profil</Link>
-              {/* Lien visible uniquement par les administrateurs (l'API vérifie aussi le rôle). */}
-              {currentUser.role === 'admin' && <Link to="/admin/licences">Admin</Link>}
-              <button type="button" className="logout-button" onClick={logout}>
-                Déconnexion
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/signup">Inscription</Link>
-              <Link to="/auth">Connexion</Link>
-            </>
-          )}
-        </div>
-        <Link to="/cart" className="navbar-cart" aria-label={`Panier (${itemCount} articles)`}>
-          <CartIcon />
-          {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
         </Link>
       </div>
     </nav>

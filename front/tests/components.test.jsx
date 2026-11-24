@@ -153,15 +153,16 @@ describe('NavBar', () => {
     expect(screen.getByRole('link', { name: 'COMMENT ÇA MARCHE ?' })).toHaveAttribute('href', '/comment-ca-marche');
   });
 
-  it('affiche le lien « Admin » seulement aux administrateurs', async () => {
-    loginAs(1);
-    const { unmount } = await renderWithProviders(<NavBar />);
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
-    unmount();
+  it('propose Connexion et Inscription à un visiteur', async () => {
+    await renderWithProviders(<NavBar />);
+    expect(screen.getByRole('link', { name: 'Connexion' })).toHaveAttribute('href', '/auth');
+    expect(screen.getByRole('link', { name: 'Inscription' })).toHaveAttribute('href', '/signup');
+  });
 
+  it('n’affiche pas de lien vers l’administration, même à un administrateur', async () => {
     loginAs(8);
     await renderWithProviders(<NavBar />);
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin/licences');
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
   });
 
   it('ouvre le menu des catégories au clavier et le ferme avec Échap', async () => {
