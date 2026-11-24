@@ -4,17 +4,20 @@
 /* ================================================================== */
 :root {
   --color-primary: #5b2be0; /* violet : liens, textes de marque (contraste 5,6:1 sur le bleu clair) */
-  --color-accent: #d6005a; /* rose : survol, prix (contraste 5,2:1 sur blanc) */
+  /* rose : survol, prix. Contraste 6:1 sur blanc et 4,7:1 sur le bleu clair des cartes et de la barre
+     (un lien survolé reste lisible partout). */
+  --color-accent: #c40052;
   --color-danger: #e11d48; /* rouge : actions de suppression */
   --color-surface: #b9e9ff; /* bleu clair : fond des cartes, barre de navigation */
+  --color-page: #faf8ff; /* blanc légèrement violet : fond de toutes les pages (sous le décor) */
   --color-text: #213547;
-  --color-error: #c62828;
+  --color-error: #b71c1c; /* rouge foncé : messages d'erreur (5:1 même sur le bleu clair) */
   --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-accent));
 
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   color: var(--color-text);
-  background-color: #fff;
+  background-color: var(--color-page);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -25,6 +28,46 @@
 body {
   margin: 0;
   min-width: 320px;
+}
+
+/*
+ * Décor de fond du site : de grandes taches pastel (lavande, rose, bleu, couleurs de la charte)
+ * et un fin motif de points blancs.
+ *
+ * - Il est dessiné par un pseudo-élément ::before "fixed" : il reste immobile pendant le défilement
+ *   (plus fluide sur téléphone que background-attachment: fixed, mal géré par Safari sur iPhone).
+ * - z-index: -1 le place DERRIÈRE tout le contenu ; pointer-events: none laisse passer les clics.
+ * - Accessibilité : les pastels ont été choisis assez clairs (luminance ≥ 0,86) pour que tous les textes
+ *   posés sur le fond gardent un contraste d'au moins 4,5:1 (niveau AA du WCAG), y compris
+ *   le gris #666 et le rose des liens survolés. Les points sont blancs : ils éclaircissent le fond,
+ *   ils ne peuvent donc pas réduire le contraste. Le décor est purement visuel : aucune information n'en dépend.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* Motif de points blancs : 1 point tous les 22 px (le premier fond listé est dessiné au-dessus) */
+    radial-gradient(circle, rgba(255, 255, 255, 0.9) 1.5px, transparent 2px) 0 0 / 22px 22px,
+    /* Taches pastel dans les coins et sur les côtés */ radial-gradient(ellipse at 0% 0%, #f2ecff, transparent 55%),
+    radial-gradient(ellipse at 100% 25%, #ffe9f3, transparent 50%),
+    radial-gradient(ellipse at 15% 100%, #e2f3ff, transparent 55%),
+    radial-gradient(ellipse at 100% 100%, #f2ecff, transparent 45%),
+    var(--color-page);
+}
+
+/* L'utilisateur a demandé plus de contraste à son système, ou utilise un mode « couleurs forcées » :
+   on retire le décor, le fond redevient blanc uni. */
+@media (prefers-contrast: more), (forced-colors: active) {
+  :root {
+    background-color: #fff;
+  }
+
+  body::before {
+    display: none;
+  }
 }
 
 a {

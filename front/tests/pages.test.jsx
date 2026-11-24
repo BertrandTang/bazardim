@@ -284,6 +284,25 @@ describe('Product (fiche produit)', () => {
     expect(screen.getByTestId('current-location')).toHaveTextContent('/profile');
   });
 
+  it('permet à un administrateur de supprimer l’annonce d’un autre vendeur (modération)', async () => {
+    loginAs(8); // administrateur
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const { user } = await renderWithProviders(<Product />, { route: '/product/1', path: '/product/:id' });
+
+    // Ce n'est pas son annonce : pas de bouton « Modifier ».
+    expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Supprimer (modération)' }));
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('CollectionneurDu92'));
+    expect(screen.getByTestId('current-location')).toHaveTextContent(/^\/$/);
+  });
+
+  it('ne montre pas le bouton de modération à un simple utilisateur', async () => {
+    loginAs(2);
+    await renderWithProviders(<Product />, { route: '/product/1', path: '/product/:id' });
+    expect(screen.queryByRole('button', { name: /Supprimer/ })).not.toBeInTheDocument();
+  });
+
   it('ouvre directement le formulaire avec ?edit=1 et permet d’annuler', async () => {
     loginAs(1);
     const { user } = await renderWithProviders(<Product />, { route: '/product/1?edit=1', path: '/product/:id' });
