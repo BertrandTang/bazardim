@@ -58,8 +58,12 @@ function toAccount(user) {
     email: user.email,
     profile_image_url: user.profile_image_url,
     role: user.role,
+    two_factor_enabled: user.two_factor_enabled ?? false,
   };
 }
+
+/** Code de double authentification « reçu par e-mail » dans les tests (l'API, elle, le tire au hasard). */
+export const FAKE_TWO_FACTOR_CODE = '123456';
 
 function getLoggedInUser() {
   const user = database.users.find((candidate) => candidate.id === database.loggedInUserId);
@@ -110,8 +114,25 @@ export async function login(email, password) {
   if (!user) {
     throw new ApiError(401, 'Email ou mot de passe incorrect.');
   }
+  // Double authentification (activée, ou administrateur) : pas encore connecté, un code est « envoyé ».
+  if (user.two_factor_enabled || user.role === 'admin') {
+    database.userIdAwaitingCode = user.id;
+    return { two_factor_required: true };
+  }
   database.loggedInUserId = user.id;
   return toAccount(user);
+}
+
+export async function verifyLoginCode(code) {
+  if (!database.userIdAwaitingCode) {
+    throw new ApiError(401, 'Code expiré : reconnectez-vous pour en recevoir un nouveau.');
+  }
+  if (code !== FAKE_TWO_FACTOR_CODE) {
+    throw new ApiError(401, 'Code incorrect.');
+  }
+  database.loggedInUserId = database.userIdAwaitingCode;
+  database.userIdAwaitingCode = null;
+  return toAccount(getLoggedInUser());
 }
 
 export async function register({ username, email, password }) {
@@ -140,13 +161,15 @@ export async function fetchPublicProfile(userId) {
 export async function updateAccount(changes) {
   const user = getLoggedInUser();
   const isChangingEmail = changes.email !== undefined && changes.email !== user.email;
-  if ((isChangingEmail || changes.new_password) && changes.current_password !== user.password) {
+  const isChangingTwoFactor = changes.two_factor_enabled !== undefined;
+  if ((isChangingEmail || changes.new_password || isChangingTwoFactor) && changes.current_password !== user.password) {
     throw new ApiError(403, 'Mot de passe actuel incorrect.');
   }
   user.username = changes.username ?? user.username;
   user.email = changes.email ?? user.email;
   user.profile_image_url = changes.profile_image_url ?? user.profile_image_url;
   user.password = changes.new_password ?? user.password;
+  user.two_factor_enabled = changes.two_factor_enabled ?? user.two_factor_enabled;
   return toAccount(user);
 }
 

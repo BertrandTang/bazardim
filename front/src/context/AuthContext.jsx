@@ -33,8 +33,23 @@ export function AuthProvider({ children }) {
   // En cas d'erreur (mauvais mot de passe, email déjà pris...), l'API renvoie un message
   // et la fonction lance une erreur que la page attrape (try/catch) pour l'afficher.
 
+  /**
+   * Connexion avec l'email et le mot de passe.
+   * Renvoie { twoFactorRequired: true } si l'API a envoyé un code par e-mail : l'utilisateur
+   * n'est pas encore connecté, il doit saisir ce code (voir verifyLoginCode).
+   */
   async function login(email, password) {
-    const user = await api.login(email, password);
+    const result = await api.login(email, password);
+    if (result.two_factor_required) {
+      return { twoFactorRequired: true };
+    }
+    setCurrentUser(result);
+    return { twoFactorRequired: false };
+  }
+
+  /** Deuxième étape de la connexion : le code reçu par e-mail. */
+  async function verifyLoginCode(code) {
+    const user = await api.verifyLoginCode(code);
     setCurrentUser(user);
   }
 
@@ -60,7 +75,16 @@ export function AuthProvider({ children }) {
     setCurrentUser(null);
   }
 
-  const contextValue = { currentUser, isLoading, login, logout, register, updateAccount, deleteAccount };
+  const contextValue = {
+    currentUser,
+    isLoading,
+    login,
+    verifyLoginCode,
+    logout,
+    register,
+    updateAccount,
+    deleteAccount,
+  };
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 

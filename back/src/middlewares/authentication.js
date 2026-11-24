@@ -6,6 +6,13 @@ import { findUserById } from '../models/users.model.js';
 const AUTH_COOKIE_NAME = 'bazardim_token';
 const SESSION_DURATION_IN_SECONDS = 7 * 24 * 60 * 60; // 7 jours
 
+// Double authentification : entre le mot de passe et le code reçu par e-mail, l'utilisateur
+// n'est PAS connecté. Un second cookie, de courte durée, retient seulement « qui attend son code ».
+const TWO_FACTOR_COOKIE_NAME = 'bazardim_2fa';
+const TWO_FACTOR_DURATION_IN_SECONDS = 10 * 60; // 10 minutes, comme la validité du code
+// Marque écrite dans ce jeton temporaire : elle empêche de l'utiliser comme jeton de connexion.
+const TWO_FACTOR_PURPOSE = 'two-factor';
+
 // Le jeton de connexion est rangé dans un cookie :
 // - httpOnly : le JavaScript de la page ne peut pas le lire (protège contre le vol par XSS) ;
 // - secure : envoyé uniquement en HTTPS (activé en production) ;
@@ -30,6 +37,33 @@ export function clearAuthCookie(response) {
   response.clearCookie(AUTH_COOKIE_NAME, cookieOptions);
 }
 
+/** Dépose le cookie temporaire « mot de passe vérifié, code e-mail attendu » (10 minutes). */
+export function setTwoFactorCookie(response, userId) {
+  const token = jwt.sign({ purpose: TWO_FACTOR_PURPOSE }, config.JWT_SECRET, {
+    subject: String(userId),
+    expiresIn: TWO_FACTOR_DURATION_IN_SECONDS,
+  });
+  response.cookie(TWO_FACTOR_COOKIE_NAME, token, { ...cookieOptions, maxAge: TWO_FACTOR_DURATION_IN_SECONDS * 1000 });
+}
+
+export function clearTwoFactorCookie(response) {
+  response.clearCookie(TWO_FACTOR_COOKIE_NAME, cookieOptions);
+}
+
+/** Identifiant de l'utilisateur qui attend son code, ou null (cookie absent, falsifié ou expiré). */
+export function findUserIdAwaitingTwoFactor(request) {
+  const token = request.cookies[TWO_FACTOR_COOKIE_NAME];
+  if (!token) {
+    return null;
+  }
+  try {
+    const payload = jwt.verify(token, config.JWT_SECRET);
+    return payload.purpose === TWO_FACTOR_PURPOSE ? Number(payload.sub) : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Lit le cookie de connexion et retrouve l'utilisateur connecté.
  * Retourne { user } si la session est valide, sinon { user: null, reason } avec la raison.
@@ -45,6 +79,10 @@ async function readSession(request) {
     // verify() contrôle la signature (le jeton n'a pas été modifié) et la date d'expiration.
     payload = jwt.verify(token, config.JWT_SECRET);
   } catch {
+    return { user: null, reason: 'Session expirée ou invalide, reconnectez-vous.' };
+  }
+  // Un jeton « code e-mail attendu » ne permet jamais d'être connecté, même copié dans ce cookie.
+  if (payload.purpose === TWO_FACTOR_PURPOSE) {
     return { user: null, reason: 'Session expirée ou invalide, reconnectez-vous.' };
   }
 

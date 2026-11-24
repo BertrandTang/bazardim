@@ -85,6 +85,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Suppression du compte (RGPD) | Bouton « Annuler » | Pop-up fermée, compte intact | Intégration | `pages.test.jsx` |
 | Profil | Onglets produits / likes | Bonnes listes affichées | Intégration | `pages.test.jsx` |
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
+| Connexion (2FA) | Administrateur : mauvais code, puis bon code ; « Recevoir un nouveau code » | « Code incorrect. », puis connecté et redirigé vers le profil ; retour à l'étape du mot de passe | Intégration | `pages.test.jsx`, `contexts.test.jsx` |
+| Profil (2FA) | Activer la double authentification sans puis avec le mot de passe ; compte administrateur | Refus puis « Profil mis à jour. » ; interrupteur coché et désactivé (« Toujours active pour les administrateurs. ») | Intégration | `pages.test.jsx` |
 | Pages légales | Pied de page, mentions légales, politique de confidentialité, conditions générales | Liens vers les trois pages (et vers les CGV dans le panier) ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD ; barème des frais de service | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 
@@ -96,6 +98,11 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Inscription | Email ou pseudo déjà pris | 409 avec message clair | `auth.test.js` |
 | Inscription | Champs invalides | 400 avec la liste des champs en erreur | `auth.test.js` |
 | Connexion | Bon / mauvais mot de passe, email inconnu | 200 / 401 (même message dans les deux cas d'échec) | `auth.test.js` |
+| Double authentification | Activer / désactiver sans puis avec le mot de passe | 403 puis 200 | `twoFactor.test.js` |
+| Double authentification | Connexion avec la 2FA active | `{ two_factor_required: true }`, pas encore connecté, e-mail envoyé à l'adresse du compte, code stocké haché ; code mal formé 400 ; bon code 200 et connecté | `twoFactor.test.js` |
+| Double authentification | 5 mauvais codes, code expiré, code déjà utilisé, sans l'étape du mot de passe | 401 (« Trop de codes incorrects », « Code expiré »…), même le bon code est ensuite refusé | `twoFactor.test.js` |
+| Double authentification | Jeton temporaire copié dans le cookie de connexion | 401 : il ne donne jamais accès au compte | `twoFactor.test.js` |
+| Double authentification | Administrateur / utilisateur sans 2FA / serveur d'e-mails en panne | Code toujours demandé / connexion directe sans e-mail / 503 | `twoFactor.test.js` |
 | Session | Sans cookie, jeton falsifié, après déconnexion | `GET /api/auth/me` renvoie `null` (un visiteur n'est pas une erreur) ; une route protégée répond 401 | `auth.test.js` |
 | Produits | Créer une annonce | 201, appartient à l'utilisateur connecté | `products.test.js` |
 | Produits | Prix négatif, catégorie inconnue, image `javascript:` | 400 | `products.test.js` |

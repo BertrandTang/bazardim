@@ -88,11 +88,38 @@ export const openApiDocument = {
     '/api/auth/login': {
       post: {
         tags: ['Authentification'],
-        summary: 'Se connecter',
+        summary: 'Se connecter (étape 1 : email et mot de passe)',
+        description:
+          'Si la double authentification est active (ou pour un administrateur), un code à 6 chiffres est envoyé par e-mail et la réponse est `{ "two_factor_required": true }` : l’utilisateur n’est pas encore connecté, il doit appeler `POST /api/auth/login/verify`.',
         requestBody: jsonBody(reference('LoginInput')),
         responses: {
-          200: jsonResponse('Connecté, cookie de connexion déposé', reference('Account')),
+          200: jsonResponse('Connecté (compte), ou code envoyé par e-mail ({ two_factor_required: true })', {
+            oneOf: [
+              reference('Account'),
+              { type: 'object', properties: { two_factor_required: { type: 'boolean', example: true } } },
+            ],
+          }),
           401: errorResponse('Email ou mot de passe incorrect'),
+          429: errorResponse('Trop de tentatives'),
+          503: errorResponse('E-mail du code impossible à envoyer'),
+        },
+      },
+    },
+    '/api/auth/login/verify': {
+      post: {
+        tags: ['Authentification'],
+        summary: 'Se connecter (étape 2 : code reçu par e-mail, double authentification)',
+        description:
+          'Le code est valable 10 minutes, ne sert qu’une fois et est annulé après 5 mauvais essais. Il faut le cookie temporaire déposé par l’étape 1.',
+        requestBody: jsonBody({
+          type: 'object',
+          required: ['code'],
+          properties: { code: { type: 'string', pattern: '^[0-9]{6}$', example: '482913' } },
+        }),
+        responses: {
+          200: jsonResponse('Connecté, cookie de connexion déposé', reference('Account')),
+          400: invalidData,
+          401: errorResponse('Code incorrect, expiré ou trop d’essais'),
           429: errorResponse('Trop de tentatives'),
         },
       },
@@ -131,7 +158,7 @@ export const openApiDocument = {
         tags: ['Comptes'],
         summary: 'Modifier son compte',
         description:
-          'Le mot de passe actuel (`current_password`) est obligatoire pour changer d’email ou de mot de passe.',
+          'Le mot de passe actuel (`current_password`) est obligatoire pour changer d’email, de mot de passe ou la double authentification.',
         security: requiresLogin,
         requestBody: jsonBody(reference('UpdateAccountInput')),
         responses: {
@@ -495,6 +522,10 @@ export const openApiDocument = {
           email: { type: 'string' },
           profile_image_url: { type: 'string', nullable: true },
           role: { type: 'string', enum: ['user', 'admin'] },
+          two_factor_enabled: {
+            type: 'boolean',
+            description: 'Double authentification par e-mail (toujours active pour un administrateur)',
+          },
           created_at: { type: 'string', format: 'date-time' },
         },
       },
@@ -516,6 +547,7 @@ export const openApiDocument = {
           profile_image_url: reference('ImageUrl'),
           current_password: { type: 'string' },
           new_password: { type: 'string', minLength: 8, maxLength: 72 },
+          two_factor_enabled: { type: 'boolean', description: 'Demande current_password' },
         },
       },
       ProductInput: {

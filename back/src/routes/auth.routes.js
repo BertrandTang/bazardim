@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { config } from '../config/config.js';
-import { getCurrentUser, login, logout, register } from '../controllers/auth.controller.js';
+import { getCurrentUser, login, logout, register, verifyLoginCode } from '../controllers/auth.controller.js';
 
 // Routes montées sur /api/auth (voir app.js).
 const router = Router();
@@ -19,6 +19,8 @@ const authenticationRateLimiter = rateLimit({
 
 router.post('/register', authenticationRateLimiter, register);
 router.post('/login', authenticationRateLimiter, login);
+// Deuxième étape de la connexion (double authentification) : même limite de tentatives.
+router.post('/login/verify', authenticationRateLimiter, verifyLoginCode);
 router.post('/logout', logout);
 // Pas de requireAuth : un visiteur reçoit null (ce n'est pas une erreur, voir getCurrentUser).
 router.get('/me', getCurrentUser);

@@ -16,7 +16,7 @@ Prérequis : Node.js 22+, Docker Desktop.
 
 ```bash
 cp .env.example .env                       # puis choisir POSTGRES_PASSWORD
-docker compose up -d                       # base de données PostgreSQL
+docker compose up -d                       # base PostgreSQL + Mailpit (e-mails de dev : http://localhost:8025)
 
 cd back
 cp .env.example .env                       # puis remplir DATABASE_URL, TEST_DATABASE_URL, JWT_SECRET et SEED_DEMO_PASSWORD

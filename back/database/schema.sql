@@ -16,8 +16,24 @@ CREATE TABLE users (
   password_hash     VARCHAR(255) NOT NULL,
   profile_image_url VARCHAR(500),
   role              VARCHAR(20)  NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  -- Double authentification par e-mail activée par l'utilisateur (toujours active pour un admin).
+  two_factor_enabled BOOLEAN     NOT NULL DEFAULT false,
   created_at        TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------
+-- Codes de double authentification envoyés par e-mail à la connexion.
+-- Un seul code en attente par utilisateur (user_id est la clé primaire) :
+-- une nouvelle connexion remplace l'ancien code.
+-- ---------------------------------------------------------------------
+CREATE TABLE two_factor_codes (
+  user_id       INTEGER      PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
+  -- Comme un mot de passe, le code n'est jamais stocké en clair : seulement son empreinte.
+  code_hash     VARCHAR(255) NOT NULL,
+  expires_at    TIMESTAMPTZ  NOT NULL,
+  -- Nombre de mauvais codes saisis : au-delà de la limite, le code est annulé.
+  attempt_count INTEGER      NOT NULL DEFAULT 0
 );
 
 -- ---------------------------------------------------------------------

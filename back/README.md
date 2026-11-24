@@ -55,6 +55,19 @@ Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@exa
 - **Journalisation (winston)** : le journal est configuré dans `config/logger.js`, avec trois niveaux (`info`, `warn`, `error`) et la date sur chaque ligne. Le middleware `middlewares/requestLogger.js` écrit une ligne par requête (méthode, adresse, code de réponse, durée) : `info` si tout va bien, `warn` pour un 4xx, `error` pour un 5xx. Les erreurs inattendues sont journalisées par `errorHandler` avec leur pile d'appels. Tout s'affiche dans le terminal, et les erreurs sont aussi écrites dans `back/logs/errors.log` (ignoré par git). Aucun log pendant les tests.
 - **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test. Stripe est simulé (`vi.mock`) : les tests ne l'appellent jamais.
 
+## Double authentification par e-mail
+
+Un utilisateur peut l'activer dans son profil (le mot de passe actuel est demandé pour l'activer ou la désactiver). Elle est **toujours active pour les administrateurs**.
+
+1. `POST /api/auth/login` : le mot de passe est bon, mais l'utilisateur n'est pas encore connecté. L'API envoie un **code à 6 chiffres** par e-mail, dépose un cookie temporaire (`bazardim_2fa`, 10 minutes) et répond `{ "two_factor_required": true }`.
+2. `POST /api/auth/login/verify` avec `{ code }` : si le code est bon, l'utilisateur est connecté.
+
+Le code est tiré avec `crypto.randomInt`, enregistré **haché** (table `two_factor_codes`), valable **10 minutes**, utilisable **une seule fois** et annulé après **5 mauvais essais**. Le cookie temporaire ne permet jamais d'être connecté à lui seul.
+
+**E-mails en développement : Mailpit.** `docker compose up -d` démarre aussi Mailpit, une boîte mail de développement : l'API lui envoie les e-mails (nodemailer, SMTP sur le port 1025) et on les lit sur [http://localhost:8025](http://localhost:8025). Aucun e-mail ne part réellement. En production, les variables `SMTP_*` de `.env` désignent un vrai service d'envoi.
+
+Le compte de démo `admin@example.com` étant administrateur, sa connexion demande le code reçu dans Mailpit.
+
 ## Images (multer)
 
 Les photos d'annonces et de profil sont choisies sur l'appareil de l'utilisateur, jamais saisies sous forme de lien :
@@ -116,39 +129,40 @@ Organisation **MVC** classique (la « vue » est le JSON renvoyé). Le trajet d'
 Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+ `details` par champ pour une erreur de validation 400).
 🔒 = connexion requise (cookie envoyé avec `credentials: 'include'` côté front).
 
-| Méthode   | Route                           | Description                                                                                                  |
-| --------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| GET       | `/api/health`                   | État de l'API et de la base                                                                                  |
-| POST      | `/api/auth/register`            | Inscription `{ username, email, password }` → 201 + cookie                                                   |
-| POST      | `/api/auth/login`               | Connexion `{ email, password }` → cookie                                                                     |
-| POST      | `/api/auth/logout`              | Déconnexion → 204                                                                                            |
-| GET 🔒    | `/api/auth/me`                  | Utilisateur connecté                                                                                         |
-| GET       | `/api/users/:id`                | Profil public (pseudo, image — pas d'email)                                                                  |
-| PATCH 🔒  | `/api/users/me`                 | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)                      |
-| DELETE 🔒 | `/api/users/me`                 | Supprimer son compte `{ current_password }` (RGPD)                                                           |
-| GET       | `/api/products`                 | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset`                     |
-| GET       | `/api/products/:id`             | Détail d'un produit                                                                                          |
-| POST 🔒   | `/api/products`                 | Créer une annonce                                                                                            |
-| PUT 🔒    | `/api/products/:id`             | Modifier son annonce (propriétaire ou admin)                                                                 |
-| DELETE 🔒 | `/api/products/:id`             | Supprimer son annonce (propriétaire ou admin)                                                                |
-| GET       | `/api/licences`                 | Licences utilisées par au moins une annonce                                                                  |
-| GET 🔒    | `/api/likes`                    | Produits mis en favoris                                                                                      |
-| PUT 🔒    | `/api/likes/:productId`         | Ajouter aux favoris (sans effet si déjà présent)                                                             |
-| DELETE 🔒 | `/api/likes/:productId`         | Retirer des favoris                                                                                          |
-| GET 🔒    | `/api/messages/received`        | Messages reçus (boîte de réception)                                                                          |
-| GET 🔒    | `/api/messages/sent`            | Messages envoyés                                                                                             |
-| GET 🔒    | `/api/messages/unread-count`    | Nombre de messages non lus `{ count }` (pastille de la barre de navigation)                                  |
-| POST 🔒   | `/api/uploads`                  | Envoyer une image (formulaire `multipart/form-data`, champ `image`) → `{ image_url: "/uploads/..." }`        |
-| GET       | `/uploads/:fichier`             | Image envoyée (fichier statique)                                                                             |
-| GET       | `/sitemap.xml`                  | Plan du site pour les moteurs de recherche : pages fixes + annonces en vente (adresse du site : `FRONT_URL`) |
-| POST 🔒   | `/api/messages`                 | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                                    |
-| PATCH 🔒  | `/api/messages/:id/read`        | Marquer un message reçu comme lu (destinataire uniquement)                                                   |
-| POST 🔒   | `/api/orders`                   | Commander `{ product_ids: [3, 8], shipping_address }` → `{ order_id, checkout_url }`                         |
-| GET 🔒    | `/api/orders`                   | Mes commandes (avec leurs articles)                                                                          |
-| GET 🔒    | `/api/orders/sales`             | Mes ventes : acheteur, adresse de livraison, date de paiement et d'expédition de chaque annonce vendue       |
-| PATCH 🔒  | `/api/orders/items/:id/shipped` | Marquer un article vendu comme expédié (vendeur de l'annonce, commande payée, une seule fois)                |
-| GET 🔒    | `/api/orders/:id`               | Une de mes commandes (vérifie le paiement auprès de Stripe si elle est en attente)                           |
-| POST      | `/api/stripe/webhook`           | Réservée à Stripe (signature vérifiée) : confirme un paiement                                                |
+| Méthode   | Route                           | Description                                                                                                   |
+| --------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| GET       | `/api/health`                   | État de l'API et de la base                                                                                   |
+| POST      | `/api/auth/register`            | Inscription `{ username, email, password }` → 201 + cookie                                                    |
+| POST      | `/api/auth/login`               | Connexion `{ email, password }` → cookie, ou `{ two_factor_required: true }` si un code est envoyé par e-mail |
+| POST      | `/api/auth/login/verify`        | Double authentification : `{ code }` reçu par e-mail → cookie de connexion                                    |
+| POST      | `/api/auth/logout`              | Déconnexion → 204                                                                                             |
+| GET 🔒    | `/api/auth/me`                  | Utilisateur connecté                                                                                          |
+| GET       | `/api/users/:id`                | Profil public (pseudo, image — pas d'email)                                                                   |
+| PATCH 🔒  | `/api/users/me`                 | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)                       |
+| DELETE 🔒 | `/api/users/me`                 | Supprimer son compte `{ current_password }` (RGPD)                                                            |
+| GET       | `/api/products`                 | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset`                      |
+| GET       | `/api/products/:id`             | Détail d'un produit                                                                                           |
+| POST 🔒   | `/api/products`                 | Créer une annonce                                                                                             |
+| PUT 🔒    | `/api/products/:id`             | Modifier son annonce (propriétaire ou admin)                                                                  |
+| DELETE 🔒 | `/api/products/:id`             | Supprimer son annonce (propriétaire ou admin)                                                                 |
+| GET       | `/api/licences`                 | Licences utilisées par au moins une annonce                                                                   |
+| GET 🔒    | `/api/likes`                    | Produits mis en favoris                                                                                       |
+| PUT 🔒    | `/api/likes/:productId`         | Ajouter aux favoris (sans effet si déjà présent)                                                              |
+| DELETE 🔒 | `/api/likes/:productId`         | Retirer des favoris                                                                                           |
+| GET 🔒    | `/api/messages/received`        | Messages reçus (boîte de réception)                                                                           |
+| GET 🔒    | `/api/messages/sent`            | Messages envoyés                                                                                              |
+| GET 🔒    | `/api/messages/unread-count`    | Nombre de messages non lus `{ count }` (pastille de la barre de navigation)                                   |
+| POST 🔒   | `/api/uploads`                  | Envoyer une image (formulaire `multipart/form-data`, champ `image`) → `{ image_url: "/uploads/..." }`         |
+| GET       | `/uploads/:fichier`             | Image envoyée (fichier statique)                                                                              |
+| GET       | `/sitemap.xml`                  | Plan du site pour les moteurs de recherche : pages fixes + annonces en vente (adresse du site : `FRONT_URL`)  |
+| POST 🔒   | `/api/messages`                 | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                                     |
+| PATCH 🔒  | `/api/messages/:id/read`        | Marquer un message reçu comme lu (destinataire uniquement)                                                    |
+| POST 🔒   | `/api/orders`                   | Commander `{ product_ids: [3, 8], shipping_address }` → `{ order_id, checkout_url }`                          |
+| GET 🔒    | `/api/orders`                   | Mes commandes (avec leurs articles)                                                                           |
+| GET 🔒    | `/api/orders/sales`             | Mes ventes : acheteur, adresse de livraison, date de paiement et d'expédition de chaque annonce vendue        |
+| PATCH 🔒  | `/api/orders/items/:id/shipped` | Marquer un article vendu comme expédié (vendeur de l'annonce, commande payée, une seule fois)                 |
+| GET 🔒    | `/api/orders/:id`               | Une de mes commandes (vérifie le paiement auprès de Stripe si elle est en attente)                            |
+| POST      | `/api/stripe/webhook`           | Réservée à Stripe (signature vérifiée) : confirme un paiement                                                 |
 
 Exemple de produit envoyé à `POST /api/products` :
 

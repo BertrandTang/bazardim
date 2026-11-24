@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { FAKE_TWO_FACTOR_CODE } from './fakeApi.js';
 import { PRODUCTS, TEST_PASSWORD } from './fixtures.js';
 import { AllProviders, loginAs, waitForDataToLoad } from './renderWithProviders.jsx';
 import { useAuth } from '../src/context/AuthContext.jsx';
@@ -35,6 +36,21 @@ describe('AuthContext', () => {
 
     await act(() => result.current.auth.logout());
     expect(result.current.auth.currentUser).toBeNull();
+  });
+
+  it('double authentification : pas connecté avant le code reçu par e-mail', async () => {
+    const { result } = await renderAllHooks();
+    // Un administrateur doit toujours saisir un code.
+    let loginResult;
+    await act(async () => {
+      loginResult = await result.current.auth.login('admin@example.com', TEST_PASSWORD);
+    });
+    expect(loginResult).toEqual({ twoFactorRequired: true });
+    expect(result.current.auth.currentUser).toBeNull();
+
+    await expect(result.current.auth.verifyLoginCode('000000')).rejects.toThrow('Code incorrect.');
+    await act(() => result.current.auth.verifyLoginCode(FAKE_TWO_FACTOR_CODE));
+    expect(result.current.auth.currentUser.username).toBe('Admin');
   });
 
   it('reconnaît un utilisateur déjà connecté au chargement de l’application', async () => {
@@ -139,7 +155,7 @@ describe('LikesContext', () => {
     expect(result.current.likes.isLiked(1)).toBe(true);
 
     // Un autre utilisateur se connecte : il ne voit pas les favoris du premier.
-    await act(() => result.current.auth.login('admin@example.com', TEST_PASSWORD));
+    await act(() => result.current.auth.login('figurineparadise@example.com', TEST_PASSWORD));
     await waitForDataToLoad();
     expect(result.current.likes.isLiked(1)).toBe(false);
 

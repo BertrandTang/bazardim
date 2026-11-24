@@ -9,6 +9,8 @@ export const updateAccountSchema = z.strictObject({
   // Obligatoire pour changer d'email ou de mot de passe (vérifié dans le contrôleur).
   current_password: z.string().optional(),
   new_password: passwordSchema.optional(),
+  // Activer / désactiver la double authentification par e-mail.
+  two_factor_enabled: z.boolean().optional(),
 });
 
 /** Corps de DELETE /api/users/me : on redemande le mot de passe avant une suppression définitive. */

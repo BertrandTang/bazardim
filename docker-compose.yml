@@ -1,6 +1,6 @@
-# Base de données PostgreSQL pour le développement et les tests (+ l'API en conteneur, en option).
+# Base de données PostgreSQL et boîte mail Mailpit pour le développement (+ l'API en conteneur, en option).
 #
-#   docker compose up -d     -> démarre la base en arrière-plan
+#   docker compose up -d     -> démarre la base et Mailpit en arrière-plan
 #   docker compose down      -> l'arrête (les données sont conservées dans le volume)
 #   docker compose down -v   -> l'arrête ET supprime les données
 #
@@ -34,6 +34,16 @@ services:
       timeout: 3s
       retries: 10
 
+  # Mailpit : boîte mail de DÉVELOPPEMENT. Elle reçoit les e-mails envoyés par l'API
+  # (codes de double authentification) et les affiche sur http://localhost:8025.
+  # Aucun e-mail ne part réellement sur Internet.
+  mailpit:
+    image: axllent/mailpit:v1.21
+    container_name: bazardim_mailpit
+    ports:
+      - '127.0.0.1:8025:8025' # interface web (lire les e-mails)
+      - '127.0.0.1:1025:1025' # serveur SMTP (l'API y envoie les e-mails)
+
   # API Bazardim dans un conteneur, comme en production.
   # "profiles" : ce service ne démarre QUE si on le demande (--profile api). Un simple
   # `docker compose up -d` lance seulement la base, pour développer avec `npm run dev`.
@@ -51,6 +61,8 @@ services:
       NODE_ENV: production
       # Dans le réseau Docker, la base s'appelle "database" (nom du service), pas "localhost".
       DATABASE_URL: postgres://bazardim:${POSTGRES_PASSWORD}@database:5432/bazardim
+      # Dans le réseau Docker, Mailpit s'appelle "mailpit" (nom du service).
+      SMTP_HOST: mailpit
     ports:
       - '127.0.0.1:3000:3000'
     volumes:
