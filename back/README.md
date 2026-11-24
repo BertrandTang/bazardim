@@ -177,11 +177,10 @@ Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+
 | POST 👑   | `/api/admin/licences/:id/aliases`        | Ajouter un synonyme `{ alias }`                                                                              |
 | DELETE 👑 | `/api/admin/licences/:id/aliases/:alias` | Supprimer un synonyme                                                                                        |
 
-Exemple de produit envoyé à `POST /api/products` :
+Exemple de produit envoyé à `POST /api/products` (pas de `title` : l'API le calcule, ici « Figurine articulée – Monkey D. Luffy (Bandai) ») :
 
 ```json
 {
-  "title": "Figurine S.H. Figuarts Luffy",
   "description": "Figurine articulée, accessoires inclus.",
   "price": 74.99,
   "category": "FIGURINE ARTICULÉE",

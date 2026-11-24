@@ -52,6 +52,7 @@ function buildStructuredData(product) {
 /**
  * Page de détail d'un produit (adresse : /product/:id).
  * Le vendeur peut y modifier ou supprimer son annonce ; les autres utilisateurs peuvent le contacter.
+ * Un administrateur peut supprimer l'annonce de n'importe quel vendeur (modération).
  */
 export default function Product() {
   // useParams lit la partie variable de l'URL : pour /product/12, id vaut "12".
@@ -82,6 +83,9 @@ export default function Product() {
   }
 
   const isOwner = currentUser !== null && currentUser.id === product.owner_id;
+  // Modération : un administrateur peut supprimer l'annonce d'un autre vendeur
+  // (annonce interdite, frauduleuse...). L'API le vérifie aussi (isOwnerOrAdmin).
+  const canModerate = !isOwner && currentUser?.role === 'admin';
 
   // En cas d'erreur de l'API, ProductForm affiche le message (voir son handleSubmit).
   async function handleSave(productFields) {
@@ -90,12 +94,16 @@ export default function Product() {
   }
 
   async function handleDelete() {
-    if (!window.confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
+    const confirmationMessage = isOwner
+      ? 'Voulez-vous vraiment supprimer cette annonce ?'
+      : `Supprimer l'annonce de ${product.owner_username} ? Cette action est définitive.`;
+    if (!window.confirm(confirmationMessage)) {
       return;
     }
     try {
       await deleteProduct(product.id);
-      navigate('/profile');
+      // Le vendeur retourne à ses annonces ; l'administrateur, à l'accueil.
+      navigate(isOwner ? '/profile' : '/');
     } catch (error) {
       setDeleteError(error.message);
     }
@@ -189,6 +197,11 @@ export default function Product() {
               ) : (
                 // Une annonce vendue ne peut plus être ajoutée au panier.
                 !product.sold_at && <AddToCartButton productId={product.id} />
+              )}
+              {canModerate && (
+                <Button variant="outlined" color="error" onClick={handleDelete}>
+                  Supprimer (modération)
+                </Button>
               )}
             </div>
             {deleteError && (
