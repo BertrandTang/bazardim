@@ -81,7 +81,8 @@ describe('ProductsContext', () => {
       });
     });
     expect(result.current.products.products).toHaveLength(PRODUCTS.length + 1);
-    expect(result.current.products.licences).toContain('Licence test');
+    // Licence inconnue : créée « en attente », elle n'apparaît pas dans le menu avant la validation d'un admin.
+    expect(result.current.products.licences).not.toContain('Licence test');
 
     await act(() => result.current.products.updateProduct(createdProduct.id, { title: 'Modifié' }));
     expect(result.current.products.findProductById(createdProduct.id).title).toBe('Modifié');

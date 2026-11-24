@@ -124,6 +124,40 @@ export function fetchProducts() {
   return request('/products?limit=100');
 }
 
+/** Licences validées par un administrateur (menu Licences, suggestions du formulaire de vente). */
+export function fetchLicences() {
+  return request('/licences');
+}
+
+// ----- Administration : modération des licences (administrateurs uniquement) -----
+
+/** Toutes les licences, celles en attente d'abord, avec leur nombre d'annonces et leurs synonymes. */
+export function fetchAdminLicences() {
+  return request('/admin/licences');
+}
+
+/** Renomme et/ou valide une licence. Exemple : updateLicence(4, { status: 'approved' }). */
+export function updateLicence(licenceId, changes) {
+  return request(`/admin/licences/${licenceId}`, { method: 'PATCH', body: changes });
+}
+
+/** Fusionne la licence `licenceId` (un doublon) dans la licence `targetLicenceId`. */
+export function mergeLicence(licenceId, targetLicenceId) {
+  return request(`/admin/licences/${licenceId}/merge`, {
+    method: 'POST',
+    body: { target_licence_id: targetLicenceId },
+  });
+}
+
+export function addLicenceAlias(licenceId, alias) {
+  return request(`/admin/licences/${licenceId}/aliases`, { method: 'POST', body: { alias } });
+}
+
+export function deleteLicenceAlias(licenceId, alias) {
+  // encodeURIComponent : un synonyme peut contenir des espaces ("kimetsu no yaiba").
+  return request(`/admin/licences/${licenceId}/aliases/${encodeURIComponent(alias)}`, { method: 'DELETE' });
+}
+
 export function createProduct(productFields) {
   return request('/products', { method: 'POST', body: productFields });
 }

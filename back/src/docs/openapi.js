@@ -68,6 +68,7 @@ export const openApiDocument = {
     { name: 'Commandes' },
     { name: 'Images' },
     { name: 'Supervision' },
+    { name: 'Administration' },
   ],
 
   paths: {
@@ -227,7 +228,7 @@ export const openApiDocument = {
     '/api/licences': {
       get: {
         tags: ['Annonces'],
-        summary: 'Licences utilisées par les annonces (One Piece, Naruto…)',
+        summary: 'Licences validées utilisées par les annonces (One Piece, Naruto…)',
         responses: { 200: jsonResponse('Noms des licences', { type: 'array', items: { type: 'string' } }) },
       },
     },
@@ -434,6 +435,106 @@ export const openApiDocument = {
       },
     },
 
+    // ----- Administration : modération des licences -----
+    '/api/admin/licences': {
+      get: {
+        tags: ['Administration'],
+        summary: 'Toutes les licences (en attente d’abord), avec leur nombre d’annonces et leurs synonymes',
+        security: requiresLogin,
+        responses: {
+          200: jsonResponse('Licences', { type: 'array', items: reference('AdminLicence') }),
+          401: notLoggedIn,
+          403: errorResponse('Réservé aux administrateurs'),
+        },
+      },
+    },
+    '/api/admin/licences/{id}': {
+      patch: {
+        tags: ['Administration'],
+        summary: 'Renommer et/ou valider une licence (l’ancien nom devient un synonyme)',
+        security: requiresLogin,
+        parameters: [idParameter('id', 'Identifiant de la licence')],
+        requestBody: jsonBody({
+          type: 'object',
+          properties: {
+            name: { type: 'string', maxLength: 100, example: 'Dragon Ball Super' },
+            status: { type: 'string', enum: ['approved'] },
+          },
+        }),
+        responses: {
+          200: jsonResponse('Licence modifiée', {
+            type: 'object',
+            properties: { id: { type: 'integer' }, name: { type: 'string' }, status: { type: 'string' } },
+          }),
+          400: invalidData,
+          401: notLoggedIn,
+          403: errorResponse('Réservé aux administrateurs'),
+          404: notFound,
+          409: errorResponse('Nom déjà utilisé par une autre licence ou un synonyme'),
+        },
+      },
+    },
+    '/api/admin/licences/{id}/merge': {
+      post: {
+        tags: ['Administration'],
+        summary: 'Fusionner un doublon dans une autre licence (annonces déplacées, nom gardé comme synonyme)',
+        security: requiresLogin,
+        parameters: [idParameter('id', 'Licence en double, qui sera supprimée')],
+        requestBody: jsonBody({
+          type: 'object',
+          required: ['target_licence_id'],
+          properties: { target_licence_id: { type: 'integer' } },
+        }),
+        responses: {
+          204: noContent,
+          400: errorResponse('Fusion d’une licence avec elle-même'),
+          401: notLoggedIn,
+          403: errorResponse('Réservé aux administrateurs'),
+          404: notFound,
+        },
+      },
+    },
+    '/api/admin/licences/{id}/aliases': {
+      post: {
+        tags: ['Administration'],
+        summary: 'Ajouter un synonyme à une licence (traduction, abréviation)',
+        security: requiresLogin,
+        parameters: [idParameter('id', 'Identifiant de la licence')],
+        requestBody: jsonBody({
+          type: 'object',
+          required: ['alias'],
+          properties: { alias: { type: 'string', maxLength: 100, example: 'Kimetsu no Yaiba' } },
+        }),
+        responses: {
+          201: jsonResponse('Synonyme ajouté (enregistré normalisé)', {
+            type: 'object',
+            properties: { normalized_alias: { type: 'string' }, licence_id: { type: 'integer' } },
+          }),
+          401: notLoggedIn,
+          403: errorResponse('Réservé aux administrateurs'),
+          404: notFound,
+          409: errorResponse('Synonyme ou nom déjà utilisé'),
+        },
+      },
+    },
+    '/api/admin/licences/{id}/aliases/{alias}': {
+      delete: {
+        tags: ['Administration'],
+        summary: 'Supprimer un synonyme',
+        security: requiresLogin,
+        parameters: [
+          idParameter('id', 'Identifiant de la licence'),
+          { name: 'alias', in: 'path', required: true, schema: { type: 'string' }, example: 'kimetsu no yaiba' },
+        ],
+        responses: {
+          204: noContent,
+          401: notLoggedIn,
+          403: errorResponse('Réservé aux administrateurs'),
+          404: notFound,
+        },
+      },
+    },
+
     // ----- Supervision -----
     '/api/health': {
       get: {
@@ -628,6 +729,17 @@ export const openApiDocument = {
               },
             },
           },
+        },
+      },
+      AdminLicence: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+          name: { type: 'string', example: 'Tensura' },
+          status: { type: 'string', enum: ['pending', 'approved'] },
+          product_count: { type: 'integer', description: 'Nombre d’annonces de cette licence' },
+          aliases: { type: 'array', items: { type: 'string' }, example: ['tensei shitara slime datta ken'] },
+          created_at: { type: 'string', format: 'date-time' },
         },
       },
       Sale: {

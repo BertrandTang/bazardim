@@ -2,6 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   addFakeMessage,
+  addFakePendingLicence,
   createOrder,
   fakeUserExists,
   fetchUnreadMessageCount,
@@ -20,6 +21,7 @@ import OrderConfirmation from '../src/pages/OrderConfirmation/OrderConfirmation.
 import Product from '../src/pages/Product/Product.jsx';
 import Profile from '../src/pages/Profile/Profile.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
+import AdminLicences from '../src/pages/AdminLicences/AdminLicences.jsx';
 import Footer from '../src/components/Footer/Footer.jsx';
 import LegalNotice from '../src/pages/Legal/LegalNotice.jsx';
 import PrivacyPolicy from '../src/pages/Legal/PrivacyPolicy.jsx';
@@ -568,5 +570,63 @@ describe('Pages légales', () => {
     expect(screen.getByRole('heading', { name: '5. Prix et frais de service' })).toBeInTheDocument();
     expect(screen.getByText(/0,70 € \+ 5 % du prix des articles/)).toBeInTheDocument();
     expect(screen.getByText(/mode test/)).toBeInTheDocument();
+  });
+});
+
+describe('AdminLicences (modération des licences)', () => {
+  const adminPage = (
+    <RequireAuth>
+      <AdminLicences />
+    </RequireAuth>
+  );
+
+  it('est réservée aux administrateurs', async () => {
+    loginAs(1);
+    await renderWithProviders(adminPage);
+    expect(screen.getByRole('alert')).toHaveTextContent('Réservé aux administrateurs.');
+  });
+
+  it('valide une licence en attente : elle rejoint les licences validées', async () => {
+    addFakePendingLicence('Chainsaw Man');
+    loginAs(8); // administrateur
+    const { user } = await renderWithProviders(adminPage);
+
+    expect(await screen.findByRole('heading', { name: 'En attente de validation (1)' })).toBeInTheDocument();
+    const pending = screen.getByRole('article', { name: 'Licence en attente : Chainsaw Man' });
+    await user.click(within(pending).getByRole('button', { name: 'Valider' }));
+
+    expect(await screen.findByText('« Chainsaw Man » est validée.')).toBeInTheDocument();
+    expect(screen.getByText('Aucune licence en attente.')).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Licence validée : Chainsaw Man' })).toBeInTheDocument();
+  });
+
+  it('fusionne un doublon dans une licence validée : son nom devient un synonyme', async () => {
+    addFakePendingLicence('OP');
+    loginAs(8);
+    const { user } = await renderWithProviders(adminPage);
+
+    const pending = await screen.findByRole('article', { name: 'Licence en attente : OP' });
+    await user.click(within(pending).getByRole('combobox', { name: 'C’est la même licence que…' }));
+    await user.click(screen.getByRole('option', { name: 'One Piece' }));
+    await user.click(within(pending).getByRole('button', { name: 'Fusionner' }));
+
+    expect(await screen.findByText(/« OP » a été fusionnée dans « One Piece »/)).toBeInTheDocument();
+    const onePiece = screen.getByRole('article', { name: 'Licence validée : One Piece' });
+    expect(within(onePiece).getByText('op')).toBeInTheDocument();
+  });
+
+  it('ajoute puis supprime un synonyme', async () => {
+    loginAs(8);
+    const { user } = await renderWithProviders(adminPage);
+
+    const naruto = await screen.findByRole('article', { name: 'Licence validée : Naruto' });
+    await user.type(within(naruto).getByLabelText('Ajouter un synonyme'), 'Naruto Shippuden');
+    await user.click(within(naruto).getByRole('button', { name: 'Ajouter' }));
+    expect(await within(naruto).findByText('naruto shippuden')).toBeInTheDocument();
+
+    // L'icône de suppression du « chip » MUI : on clique dessus pour retirer le synonyme.
+    const aliasChip = within(naruto).getByText('naruto shippuden').closest('.MuiChip-root');
+    await user.click(aliasChip.querySelector('.MuiChip-deleteIcon'));
+    await waitFor(() => expect(within(naruto).queryByText('naruto shippuden')).not.toBeInTheDocument());
   });
 });

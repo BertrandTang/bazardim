@@ -1,4 +1,5 @@
 import { query, withTransaction } from '../config/database.js';
+import { normalizeText } from '../utils/normalizeText.js';
 
 // Colonnes de la table products remplies à partir du formulaire.
 // Ces noms viennent de notre code (jamais de l'utilisateur) : on peut donc les insérer
@@ -29,20 +30,38 @@ function getEditableValues(fields) {
 }
 
 /**
- * Retourne l'id de la licence portant ce nom, en la créant si elle n'existe pas encore.
- * "ON CONFLICT ... DO UPDATE" permet à RETURNING de renvoyer l'id même si la licence existait.
+ * Retourne l'id de la licence saisie par le vendeur, en évitant les doublons :
+ * 1. une licence a déjà ce nom une fois normalisé ("one-piece" = "One Piece") → on la prend ;
+ * 2. sinon, ce nom est un synonyme connu ("tensura") → on prend la licence correspondante ;
+ * 3. sinon, c'est une licence inconnue → elle est créée "en attente" de validation par un admin.
  */
 async function findOrCreateLicenceId(transactionQuery, licenceName) {
   if (!licenceName) {
     return null;
   }
-  const rows = await transactionQuery(
-    `INSERT INTO licences (name) VALUES ($1)
-     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+  const normalizedName = normalizeText(licenceName);
+
+  const byName = await transactionQuery('SELECT id FROM licences WHERE normalized_name = $1', [normalizedName]);
+  if (byName.length > 0) {
+    return byName[0].id;
+  }
+
+  const byAlias = await transactionQuery('SELECT licence_id FROM licence_aliases WHERE normalized_alias = $1', [
+    normalizedName,
+  ]);
+  if (byAlias.length > 0) {
+    return byAlias[0].licence_id;
+  }
+
+  // "ON CONFLICT ... DO UPDATE" : si deux vendeurs créent la même licence au même instant,
+  // RETURNING renvoie quand même l'id de celle qui existe.
+  const created = await transactionQuery(
+    `INSERT INTO licences (name, normalized_name, status) VALUES ($1, $2, 'pending')
+     ON CONFLICT (normalized_name) DO UPDATE SET normalized_name = EXCLUDED.normalized_name
      RETURNING id`,
-    [licenceName],
+    [licenceName, normalizedName],
   );
-  return rows[0].id;
+  return created[0].id;
 }
 
 /** Remplace tous les tags d'un produit par la liste `tagNames`. */
@@ -68,6 +87,9 @@ async function replaceProductTags(transactionQuery, productId, tagNames) {
 export async function findProducts({ category, licence, search, owner_id: ownerId, limit, offset }) {
   // ILIKE = LIKE sans tenir compte des majuscules ; les % autour signifient « contient ».
   const searchPattern = search ? `%${search}%` : null;
+  // Pour chercher aussi dans les synonymes des licences (ex : "tensura"), enregistrés normalisés.
+  const normalizedSearch = search ? normalizeText(search) : '';
+  const aliasPattern = normalizedSearch ? `%${normalizedSearch}%` : null;
 
   return query(
     `SELECT * FROM product_details
@@ -81,10 +103,13 @@ export async function findProducts({ category, licence, search, owner_id: ownerI
             OR character_name ILIKE $4
             OR manufacturer ILIKE $4
             OR owner_username ILIKE $4
-            OR EXISTS (SELECT 1 FROM unnest(tags) AS tag WHERE tag ILIKE $4))
+            OR EXISTS (SELECT 1 FROM unnest(tags) AS tag WHERE tag ILIKE $4)
+            OR EXISTS (SELECT 1 FROM licence_aliases
+                       WHERE licence_aliases.licence_id = product_details.licence_id
+                         AND licence_aliases.normalized_alias LIKE $7))
      ORDER BY created_at DESC, id DESC
      LIMIT $5 OFFSET $6`,
-    [category ?? null, licence ?? null, ownerId ?? null, searchPattern, limit, offset],
+    [category ?? null, licence ?? null, ownerId ?? null, searchPattern, limit, offset, aliasPattern],
   );
 }
 
@@ -93,11 +118,15 @@ export async function findProductById(productId) {
   return rows[0] ?? null;
 }
 
-/** Noms des licences utilisées par au moins une annonce, par ordre alphabétique. */
+/**
+ * Noms des licences VALIDÉES utilisées par au moins une annonce, par ordre alphabétique
+ * (menu Licences et suggestions du formulaire). Les licences en attente n'y apparaissent pas.
+ */
 export async function findLicenceNames() {
   const rows = await query(
     `SELECT name FROM licences
-     WHERE EXISTS (SELECT 1 FROM products WHERE products.licence_id = licences.id)
+     WHERE status = 'approved'
+       AND EXISTS (SELECT 1 FROM products WHERE products.licence_id = licences.id)
      ORDER BY name`,
   );
   return rows.map((row) => row.name);

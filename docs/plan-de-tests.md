@@ -85,6 +85,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Suppression du compte (RGPD) | Bouton « Annuler » | Pop-up fermée, compte intact | Intégration | `pages.test.jsx` |
 | Profil | Onglets produits / likes | Bonnes listes affichées | Intégration | `pages.test.jsx` |
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
+| Modération des licences | Utilisateur ; admin : valider, fusionner, ajouter / supprimer un synonyme | « Réservé aux administrateurs. » ; licence déplacée dans « validées » ; doublon fusionné avec synonyme affiché ; synonyme ajouté puis retiré | Intégration | `pages.test.jsx` |
+| Barre de navigation | Lien « Admin » | Visible seulement pour un administrateur | Composant | `components.test.jsx` |
 | Pages légales | Pied de page, mentions légales, politique de confidentialité, conditions générales | Liens vers les trois pages (et vers les CGV dans le panier) ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD ; barème des frais de service | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 
@@ -96,6 +98,12 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Inscription | Email ou pseudo déjà pris | 409 avec message clair | `auth.test.js` |
 | Inscription | Champs invalides | 400 avec la liste des champs en erreur | `auth.test.js` |
 | Connexion | Bon / mauvais mot de passe, email inconnu | 200 / 401 (même message dans les deux cas d'échec) | `auth.test.js` |
+| Licences | Normalisation : majuscules, accents, ponctuation, japonais, « !!! » | « one piece », « pokemon », japonais conservé, chaîne vide | `licences.test.js` |
+| Licences | Vendeur : « one-PIECE » quand « One Piece » existe ; licence inconnue ; « !!! » | Même licence (pas de doublon) ; créée « en attente », absente du menu ; 400 | `licences.test.js` |
+| Licences (admin) | Visiteur / utilisateur sur les routes admin | 401 / 403 | `licences.test.js` |
+| Licences (admin) | Liste, valider, renommer | En attente d'abord avec le nombre d'annonces ; validée → dans le menu ; ancien nom gardé comme synonyme | `licences.test.js` |
+| Licences (admin) | Fusionner « Tensura » dans « Moi, quand je me réincarne en Slime » (et cas d'erreur) | Annonces déplacées, doublon supprimé, synonyme « tensura » ; « TENSURA » rangée automatiquement ensuite ; recherche « tensura » trouve les annonces ; 400 avec elle-même, 404 cible inconnue | `licences.test.js` |
+| Licences (admin) | Ajouter / supprimer un synonyme, doublons | 201 puis rangement automatique ; 409 si déjà utilisé (nom ou synonyme) ; 204 puis 404 | `licences.test.js` |
 | Session | Sans cookie, jeton falsifié, après déconnexion | `GET /api/auth/me` renvoie `null` (un visiteur n'est pas une erreur) ; une route protégée répond 401 | `auth.test.js` |
 | Produits | Créer une annonce | 201, appartient à l'utilisateur connecté | `products.test.js` |
 | Produits | Prix négatif, catégorie inconnue, image `javascript:` | 400 | `products.test.js` |

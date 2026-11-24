@@ -11,15 +11,20 @@ const ProductsContext = createContext(null);
  */
 export function ProductsProvider({ children }) {
   const [products, setProducts] = useState([]);
+  // Licences validées par un administrateur (les licences en attente n'apparaissent pas dans le menu).
+  const [approvedLicences, setApprovedLicences] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   // Message à afficher si la liste n'a pas pu être chargée (API arrêtée...).
   const [loadingError, setLoadingError] = useState('');
 
-  // Chargement des produits une seule fois, au démarrage de l'application.
+  // Chargement des produits et des licences une seule fois, au démarrage de l'application.
+  // Promise.all lance les deux appels en même temps et attend qu'ils soient tous les deux terminés.
   useEffect(() => {
-    api
-      .fetchProducts()
-      .then((loadedProducts) => setProducts(loadedProducts))
+    Promise.all([api.fetchProducts(), api.fetchLicences()])
+      .then(([loadedProducts, loadedLicences]) => {
+        setProducts(loadedProducts);
+        setApprovedLicences(loadedLicences);
+      })
       .catch((error) => setLoadingError(error.message))
       .finally(() => setIsLoading(false));
   }, []);
@@ -30,15 +35,19 @@ export function ProductsProvider({ children }) {
    * dans un useEffect sans le relancer en boucle (voir la page OrderConfirmation).
    */
   const reloadProducts = useCallback(() => {
-    return api.fetchProducts().then((loadedProducts) => setProducts(loadedProducts));
+    return Promise.all([api.fetchProducts(), api.fetchLicences()]).then(([loadedProducts, loadedLicences]) => {
+      setProducts(loadedProducts);
+      setApprovedLicences(loadedLicences);
+    });
   }, []);
 
   // Annonces encore en vente : celles qui n'ont pas de date de vente (sold_at).
   const availableProducts = products.filter((product) => !product.sold_at);
 
-  // Liste des licences des annonces en vente, sans doublons ("One Piece", "Naruto"...).
-  // `new Set()` supprime automatiquement les doublons, puis on le retransforme en tableau.
-  const licences = [...new Set(availableProducts.map((product) => product.licence_name).filter(Boolean))];
+  // Licences du menu : les licences validées qui ont au moins une annonce encore en vente.
+  const licences = approvedLicences.filter((licenceName) =>
+    availableProducts.some((product) => product.licence_name === licenceName),
+  );
 
   /** Retrouve un produit à partir de son identifiant (nombre, ou texte venant de l'URL). */
   function findProductById(productId) {

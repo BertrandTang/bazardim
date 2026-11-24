@@ -141,6 +141,17 @@ describe('NavBar', () => {
     expect(screen.getByTestId('current-location')).toHaveTextContent('/?q=luffy');
   });
 
+  it('affiche le lien « Admin » seulement aux administrateurs', async () => {
+    loginAs(1);
+    const { unmount } = await renderWithProviders(<NavBar />);
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    unmount();
+
+    loginAs(8);
+    await renderWithProviders(<NavBar />);
+    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin/licences');
+  });
+
   it('ouvre le menu des catégories au clavier et le ferme avec Échap', async () => {
     const { user } = await renderWithProviders(<NavBar />);
     const categoriesButton = screen.getByRole('button', { name: 'CATEGORIES' });

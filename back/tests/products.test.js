@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { query } from '../src/config/database.js';
 import { anonymous, buildProduct, createLoggedInUser, makeAdmin, useEmptyDatabase } from './helpers.js';
 
 useEmptyDatabase();
@@ -82,10 +83,12 @@ describe('GET /api/products', () => {
     await anonymous().get('/api/products/abc').expect(400);
   });
 
-  it('liste les licences utilisées', async () => {
+  it('liste les licences utilisées, une fois validées par un administrateur', async () => {
     await createCatalog();
-    const response = await anonymous().get('/api/licences').expect(200);
-    expect(response.body).toEqual(['Dragon Ball', 'Naruto', 'One Piece']);
+    // Saisies par des vendeurs : en attente, donc absentes du menu.
+    expect((await anonymous().get('/api/licences').expect(200)).body).toEqual([]);
+    await query("UPDATE licences SET status = 'approved'");
+    expect((await anonymous().get('/api/licences').expect(200)).body).toEqual(['Dragon Ball', 'Naruto', 'One Piece']);
   });
 });
 

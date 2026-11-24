@@ -194,12 +194,15 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
           <MenuItem value="no">Non</MenuItem>
         </TextField>
 
-        {/* Champ libre avec suggestions : les licences déjà existantes sont proposées */}
+        {/* Champ libre avec suggestions : les licences déjà existantes sont proposées.
+            L'API reconnaît les autres écritures ("one-piece") et les synonymes ("DBZ") ;
+            une licence vraiment nouvelle est vérifiée par un administrateur avant d'entrer dans le menu. */}
         <TextField
           label="Licence"
           name="licence_name"
           value={formValues.licence_name}
           onChange={handleChange}
+          helperText="Choisissez-la dans la liste si elle existe. Une nouvelle licence sera vérifiée par notre équipe."
           slotProps={{ htmlInput: { list: 'licence-suggestions' } }}
         />
         <datalist id="licence-suggestions">

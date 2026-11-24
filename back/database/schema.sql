@@ -25,8 +25,24 @@ CREATE TABLE users (
 -- le même texte dans chaque produit (normalisation, moins de redondance).
 -- ---------------------------------------------------------------------
 CREATE TABLE licences (
-  id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(100) NOT NULL UNIQUE
+  id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  -- Nom affiché ("One Piece").
+  name            VARCHAR(100) NOT NULL,
+  -- Nom normalisé ("one piece") : minuscules, sans accents ni ponctuation (src/utils/normalizeText.js).
+  -- UNIQUE : "One Piece" et "one-piece" ne peuvent pas devenir deux licences différentes.
+  normalized_name VARCHAR(100) NOT NULL UNIQUE,
+  -- Une licence inconnue saisie par un vendeur est créée "en attente" : elle n'apparaît dans
+  -- le menu Licences qu'une fois validée par un administrateur (page /admin/licences).
+  status          VARCHAR(20)  NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved')),
+  created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+-- Synonymes d'une licence ("tensura" → "Moi, quand je me réincarne en Slime") : traductions,
+-- abréviations, anciennes orthographes. Un vendeur qui tape un synonyme est rangé
+-- automatiquement dans la bonne licence. Le synonyme est enregistré sous sa forme normalisée.
+CREATE TABLE licence_aliases (
+  normalized_alias VARCHAR(100) PRIMARY KEY,
+  licence_id       INTEGER      NOT NULL REFERENCES licences (id) ON DELETE CASCADE
 );
 
 -- ---------------------------------------------------------------------
@@ -148,6 +164,7 @@ CREATE TABLE order_items (
 -- ---------------------------------------------------------------------
 CREATE INDEX products_owner_id_index    ON products (owner_id);
 CREATE INDEX products_licence_id_index  ON products (licence_id);
+CREATE INDEX licence_aliases_licence_id_index ON licence_aliases (licence_id);
 CREATE INDEX products_category_index    ON products (category);
 CREATE INDEX product_tags_tag_id_index  ON product_tags (tag_id);
 CREATE INDEX likes_product_id_index     ON likes (product_id);
@@ -169,6 +186,7 @@ SELECT
   products.price,
   products.category,
   licences.name AS licence_name,
+  products.licence_id,
   products.character_name,
   products.manufacturer,
   products.version,

@@ -140,6 +140,7 @@ front/
 | `/vendre` | `Sell` : mettre une annonce en vente | Connecté |
 | `/profile` | `Profile` : onglets Profil, Mes produits, Mes likes, Mes commandes | Connecté |
 | `/messages` | `Messages` : messages reçus et envoyés | Connecté |
+| `/admin/licences` | `AdminLicences` : modération des licences saisies par les vendeurs | Administrateur |
 | `/commande/confirmation` | Retour du paiement Stripe | Connecté |
 | `/mentions-legales`, `/confidentialite`, `/conditions-generales` | Pages légales | Tout le monde |
 | toute autre adresse | `NotFound` (erreur 404) | Tout le monde |
@@ -229,7 +230,7 @@ et l'annulation des requêtes devenues inutiles).
 
 ## Tests du front
 
-- **Outils** : Vitest + React Testing Library + jsdom. **93 tests**, environ **90 % de couverture**.
+- **Outils** : Vitest + React Testing Library + jsdom. **98 tests**, environ **90 % de couverture**.
 - **La fausse API** (`tests/fakeApi.js`) : pendant les tests, `src/services/api.js` est remplacé (`vi.mock` dans
   `tests/setup.js`) par une version qui travaille sur des données en mémoire (`tests/fixtures.js`).
   Les tests du front ne dépendent donc ni du serveur, ni de la base de données.
@@ -341,6 +342,7 @@ Ils sont déclarés dans `src/app.js`, **dans cet ordre** :
 
 Certaines routes ajoutent leurs propres middlewares :
 
+- **`requireAdmin`** (`middlewares/authentication.js`, après `requireAuth`) : réserve une route aux administrateurs (sinon **403**).
 - **`requireAuth`** (`middlewares/authentication.js`) : lit le cookie `bazardim_token`, vérifie le jeton JWT
   (signature et expiration), relit l'utilisateur en base et le place dans `request.user`. Sinon : **401**.
 - **`uploadImage`** (`middlewares/imageUpload.js`, multer) : accepte une seule image JPEG, PNG ou WebP de 2 Mo
@@ -417,6 +419,23 @@ Le gestionnaire central traduit aussi les erreurs connues :
 **winston** écrit chaque message avec sa date et son niveau : dans le terminal (en couleur) et, pour les erreurs,
 dans `back/logs/errors.log`. Rien n'est écrit pendant les tests.
 
+### Licences : normalisation, synonymes et modération (`utils/normalizeText.js`, `models/licences.model.js`)
+
+Problème : sans contrôle, la même série finirait sous plusieurs noms (« One Piece », « one-piece », « Tensura » /
+« Moi, quand je me réincarne en Slime »), ce qui pollue le menu Licences et casse la recherche.
+
+Quand un vendeur saisit une licence, l'API la range ainsi :
+
+1. elle compare le **nom normalisé** (minuscules, sans accents ni ponctuation : « ONE-PIECE » → « one piece ») ;
+2. sinon, elle cherche un **synonyme** (table `licence_aliases` : « dbz » → Dragon Ball Z) ;
+3. sinon, elle crée la licence **en attente** : l'annonce est publiée, mais la licence n'entre dans le menu
+   qu'après validation par un administrateur.
+
+Sur la page **`/admin/licences`** (lien « Admin » dans la barre, visible des administrateurs), l'admin peut
+**valider**, **renommer** (l'ancien nom devient un synonyme) ou **fusionner** un doublon dans une licence existante :
+ses annonces sont déplacées et son nom devient un synonyme. Le système « apprend » : la fois suivante, c'est automatique.
+Les routes `/api/admin/...` sont protégées par `requireAuth` puis `requireAdmin` (403 pour un non-administrateur).
+
 ### Paiement (`controllers/orders.controller.js`, `utils/serviceFee.js`)
 
 1. Le front envoie `POST /api/orders` avec les **identifiants** des annonces (jamais de prix) et l'adresse.
@@ -440,7 +459,8 @@ PostgreSQL 17, schéma complet dans `back/database/schema.sql`.
 | Table | Contenu | Liens |
 | --- | --- | --- |
 | `users` | Comptes : pseudo, email, empreinte du mot de passe, photo, rôle (`user` / `admin`) | |
-| `licences` | Licences (One Piece, Naruto...), sans doublon | |
+| `licences` | Licences (One Piece, Naruto...) : nom affiché, nom **normalisé** (`UNIQUE`), statut `pending` / `approved` | |
+| `licence_aliases` | Synonymes d'une licence (« dbz » → Dragon Ball Z), enregistrés normalisés | licences |
 | `products` | Annonces : titre, description, prix, catégorie, caractéristiques, image, `sold_at` (date de vente) | `owner_id` → users, `licence_id` → licences |
 | `tags`, `product_tags` | Étiquettes libres et leur lien avec les annonces (relation plusieurs-à-plusieurs) | |
 | `likes` | Favoris : qui aime quelle annonce | users, products |
@@ -463,6 +483,7 @@ et dans [`back/README.md`](../back/README.md). En résumé :
 | Authentification | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` |
 | Comptes | `GET /api/users/:id`, `PATCH /api/users/me`, `DELETE /api/users/me` |
 | Annonces | `GET /api/products` (filtres, recherche, pagination), `GET/PUT/DELETE /api/products/:id`, `POST /api/products`, `GET /api/licences` |
+| Administration | `GET /api/admin/licences`, `PATCH /api/admin/licences/:id`, `POST /api/admin/licences/:id/merge`, `POST/DELETE /api/admin/licences/:id/aliases` (administrateurs uniquement) |
 | Favoris | `GET /api/likes`, `PUT/DELETE /api/likes/:productId` |
 | Messagerie | `GET /api/messages/received`, `/sent`, `/unread-count`, `POST /api/messages`, `PATCH /api/messages/:id/read` |
 | Commandes | `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`, `GET /api/orders/sales`, `PATCH /api/orders/items/:id/shipped`, `POST /api/stripe/webhook` |
@@ -472,7 +493,7 @@ et dans [`back/README.md`](../back/README.md). En résumé :
 ## Tests du back
 
 - **Outils** : Vitest + supertest, sur une **vraie base PostgreSQL de test** (`bazardim_test`), vidée avant chaque test.
-  **64 tests**, environ **97 % de couverture**.
+  **75 tests**, environ **97 % de couverture**.
 - `tests/globalSetup.js` recrée les tables une fois avant tous les tests ; `tests/helpers.js` fournit
   `createLoggedInUser` (un utilisateur déjà connecté), `buildProduct` (une annonce valide)...
 - **Stripe est simulé** (`vi.mock`) : les tests n'appellent jamais les serveurs de Stripe.

@@ -29,6 +29,13 @@ export function resetFakeApi() {
     likes: [], // { userId, productId }
     messages: [],
     orders: [],
+    // Licences des données de test : toutes validées au départ (comme les licences de démo).
+    licences: [...new Set(PRODUCTS.map((product) => product.licence_name).filter(Boolean))].map((name, index) => ({
+      id: index + 1,
+      name,
+      status: 'approved',
+      aliases: [],
+    })),
     loggedInUserId: null,
   };
 }
@@ -182,8 +189,109 @@ export async function fetchProducts() {
   return structuredClone(database.products);
 }
 
+// ----- Licences (version simplifiée de l'API : comparaison sans majuscules ni espaces autour) -----
+
+const simplify = (text) => text.trim().toLowerCase();
+
+/** Nom officiel de la licence saisie : licence existante, synonyme, ou nouvelle licence « en attente ». */
+function resolveLicenceName(licenceName) {
+  if (!licenceName) {
+    return licenceName;
+  }
+  const existing = database.licences.find(
+    (licence) => simplify(licence.name) === simplify(licenceName) || licence.aliases.includes(simplify(licenceName)),
+  );
+  if (existing) {
+    return existing.name;
+  }
+  database.licences.push({ id: nextId(database.licences), name: licenceName, status: 'pending', aliases: [] });
+  return licenceName;
+}
+
+function findLicence(licenceId) {
+  const licence = database.licences.find((candidate) => candidate.id === licenceId);
+  if (!licence) {
+    throw new ApiError(404, 'Licence introuvable.');
+  }
+  return licence;
+}
+
+function checkAdmin() {
+  if (getLoggedInUser().role !== 'admin') {
+    throw new ApiError(403, 'Réservé aux administrateurs.');
+  }
+}
+
+export async function fetchLicences() {
+  return database.licences
+    .filter((licence) => licence.status === 'approved')
+    .map((licence) => licence.name)
+    .sort();
+}
+
+export async function fetchAdminLicences() {
+  checkAdmin();
+  return database.licences
+    .map((licence) => ({
+      ...structuredClone(licence),
+      product_count: database.products.filter((product) => product.licence_name === licence.name).length,
+    }))
+    .sort((first, second) => (first.status === 'pending' ? -1 : 1) - (second.status === 'pending' ? -1 : 1));
+}
+
+export async function updateLicence(licenceId, changes) {
+  checkAdmin();
+  const licence = findLicence(licenceId);
+  if (changes.name) {
+    database.products
+      .filter((product) => product.licence_name === licence.name)
+      .forEach((product) => (product.licence_name = changes.name));
+    licence.aliases.push(simplify(licence.name));
+    licence.name = changes.name;
+  }
+  if (changes.status) {
+    licence.status = changes.status;
+  }
+  return structuredClone(licence);
+}
+
+export async function mergeLicence(licenceId, targetLicenceId) {
+  checkAdmin();
+  const source = findLicence(licenceId);
+  const target = findLicence(targetLicenceId);
+  database.products
+    .filter((product) => product.licence_name === source.name)
+    .forEach((product) => (product.licence_name = target.name));
+  target.aliases.push(simplify(source.name), ...source.aliases);
+  database.licences = database.licences.filter((licence) => licence.id !== source.id);
+  return null;
+}
+
+export async function addLicenceAlias(licenceId, alias) {
+  checkAdmin();
+  const licence = findLicence(licenceId);
+  if (database.licences.some((candidate) => candidate.aliases.includes(simplify(alias)))) {
+    throw new ApiError(409, 'Ce synonyme existe déjà.');
+  }
+  licence.aliases.push(simplify(alias));
+  return { normalized_alias: simplify(alias), licence_id: licence.id };
+}
+
+export async function deleteLicenceAlias(licenceId, alias) {
+  checkAdmin();
+  const licence = findLicence(licenceId);
+  licence.aliases = licence.aliases.filter((candidate) => candidate !== alias);
+  return null;
+}
+
+/** Ajoute directement une licence en attente (pour préparer un test). */
+export function addFakePendingLicence(name) {
+  database.licences.push({ id: nextId(database.licences), name, status: 'pending', aliases: [] });
+}
+
 export async function createProduct(productFields) {
   const user = getLoggedInUser();
+  productFields = { ...productFields, licence_name: resolveLicenceName(productFields.licence_name) };
   const product = { ...productFields, id: nextId(database.products), owner_id: user.id, owner_username: user.username };
   database.products.push(product);
   return structuredClone(product);
@@ -196,6 +304,9 @@ export async function updateProduct(productId, productFields) {
     throw new ApiError(409, 'Cette annonce est vendue : elle ne peut plus être modifiée.');
   }
   Object.assign(product, productFields);
+  if (productFields.licence_name !== undefined) {
+    product.licence_name = resolveLicenceName(productFields.licence_name);
+  }
   return structuredClone(product);
 }
 

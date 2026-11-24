@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizeText } from '../utils/normalizeText.js';
 import { idSchema, imageUrlSchema } from './common.validator.js';
 
 export const CATEGORIES = ['FIGURINE', 'FIGURINE ARTICULÉE', 'STATUE'];
@@ -24,7 +25,11 @@ export const productSchema = z.object({
   description: z.string().trim().min(1).max(5000),
   price: z.number().positive().max(1_000_000),
   category: z.enum(CATEGORIES),
-  licence_name: optionalText(100),
+  // La licence doit contenir au moins une lettre ou un chiffre ("!!!" est refusé).
+  licence_name: optionalText(100).refine(
+    (licenceName) => licenceName === null || normalizeText(licenceName) !== '',
+    'La licence doit contenir au moins une lettre ou un chiffre.',
+  ),
   character_name: optionalText(100),
   manufacturer: optionalText(100),
   version: optionalText(100),

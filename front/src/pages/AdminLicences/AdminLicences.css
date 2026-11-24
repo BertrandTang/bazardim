@@ -1,0 +1,61 @@
+/* Page « Modération des licences » (administrateurs). */
+.admin-page {
+  max-width: 960px;
+  margin: 32px auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-page h1,
+.admin-page h2 {
+  margin: 0;
+}
+
+.admin-page h2 {
+  margin-top: 16px;
+  font-size: 1.3rem;
+}
+
+.admin-intro,
+.admin-empty {
+  margin: 0;
+  color: #555;
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Une licence : une carte avec son nom, son nombre d'annonces et les actions. */
+.admin-licence {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e3e3e3;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.admin-licence-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-licence-header a {
+  color: var(--color-primary);
+}
+
+.admin-aliases {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}

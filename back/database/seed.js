@@ -1,9 +1,19 @@
+import { query } from '../src/config/database.js';
 import { insertProduct } from '../src/models/products.model.js';
+import { normalizeText } from '../src/utils/normalizeText.js';
 import { productSchema } from '../src/validators/products.validator.js';
 import { insertUser } from '../src/models/users.model.js';
 import { hashPassword } from '../src/utils/passwords.js';
 import figuresData from './seed-data/figures.json' with { type: 'json' };
 import profilesData from './seed-data/profiles.json' with { type: 'json' };
+
+// Synonymes de démonstration : [synonyme, nom de la licence].
+const DEMO_LICENCE_ALIASES = [
+  ['DBZ', 'Dragon Ball Z'],
+  ['Kimetsu no Yaiba', 'Demon Slayer'],
+  ['Boku no Hero Academia', 'My Hero Academia'],
+  ['Bishoujo Senshi Sailor Moon', 'Sailor Moon'],
+];
 
 // Nombre d'images de démonstration dans front/public/img (img_1.jpg à img_11.jpg).
 const DEMO_IMAGE_COUNT = 11;
@@ -68,6 +78,19 @@ export async function seedDatabase() {
       tags: figure.tags,
     });
     await insertProduct(userIdByOldId.get(figure.owner_user_id), productFields);
+  }
+
+  // Les licences des données de démo sont des licences officielles : on les valide directement
+  // (une licence saisie par un vendeur, elle, reste « en attente » jusqu'à la validation d'un admin).
+  await query("UPDATE licences SET status = 'approved'");
+  // Quelques synonymes d'exemple : un vendeur qui tape "DBZ" ou "Kimetsu no Yaiba"
+  // est rangé automatiquement dans la bonne licence.
+  for (const [alias, licenceName] of DEMO_LICENCE_ALIASES) {
+    await query(
+      `INSERT INTO licence_aliases (normalized_alias, licence_id)
+       SELECT $1, id FROM licences WHERE name = $2`,
+      [normalizeText(alias), licenceName],
+    );
   }
 
   return { userCount: profilesData.profiles.length, productCount: figuresData.figures.length };
