@@ -27,6 +27,7 @@ et à quoi elle sert, le fonctionnement des modules importants et les commandes 
   - [Les modules importants](#les-modules-importants)
   - [La base de données](#la-base-de-données)
   - [Les routes de l'API](#les-routes-de-lapi)
+  - [L'administration](#ladministration)
   - [Tests du back](#tests-du-back)
   - [Commandes utiles du back](#commandes-utiles-du-back)
   - [⭐ Installer le projet avec Docker](#-installer-le-projet-avec-docker)
@@ -108,7 +109,8 @@ front/
 ├── src/
 │   ├── main.jsx            Point d'entrée : affiche <App /> dans la page
 │   ├── App.jsx             Les Providers (contextes) et toutes les routes
-│   ├── index.css           Styles globaux et couleurs de la charte (variables CSS)
+│   ├── index.css           Styles globaux, couleurs de la charte (variables CSS) et décor de fond
+│   ├── theme.js            Thème Material UI : les couleurs de la charte pour les composants MUI
 │   ├── pages/              Une page = un dossier (Home, Product, Cart, Profile...)
 │   ├── components/         Composants réutilisables (NavBar, ProductCard, PasswordField...)
 │   ├── context/            Données partagées par toute l'application (compte, panier, favoris...)
@@ -124,7 +126,7 @@ front/
 ### 1. Le démarrage
 
 1. Le navigateur charge `index.html`, qui charge `src/main.jsx`.
-2. `main.jsx` affiche le composant `<App />` dans `<div id="root">`.
+2. `main.jsx` affiche le composant `<App />` dans `<div id="root">`, entouré de `ThemeProvider` (le thème MUI de `theme.js`).
 3. `App.jsx` entoure l'application de ses **Providers** (contextes) puis déclare les **routes**.
 4. `Layout` affiche autour de chaque page : la barre de navigation, la page, le pied de page.
 
@@ -177,7 +179,7 @@ même sans être connecté.
 | Composant | Rôle |
 | --- | --- |
 | `Layout` | Structure commune : lien « Aller au contenu » (accessibilité), barre de navigation, page, pied de page |
-| `NavBar` (+ `NavBarDropdown`, `NavBarIcons`) | Logo, recherche, menus Catégories / Licences (souris, doigt et clavier), lien « Comment ça marche ? », liens du compte (et « Admin » pour un administrateur), pastille des messages, panier |
+| `NavBar` (+ `NavBarDropdown`, `NavBarIcons`) | Logo, recherche, menus Catégories / Licences (souris, doigt et clavier), lien « Comment ça marche ? », liens du compte, pastille des messages, panier. Mise en page en **grille CSS** sur deux lignes (une seule colonne réorganisée sur téléphone), sans défilement horizontal |
 | `Footer` | Copyright et liens vers les pages légales |
 | `ProductCard` | Carte d'une annonce : image, bandeau « Vendu », étiquettes, prix, cœur des favoris, bouton panier ; côté vendeur : Modifier / Supprimer, acheteur, adresse et bouton « Marquer comme expédié » |
 | `ProductForm` | Formulaire d'annonce, utilisé pour la mise en vente **et** pour la modification |
@@ -226,7 +228,7 @@ et l'annulation des requêtes devenues inutiles).
 | --- | --- |
 | **Sécurité** | Aucun mot de passe ni jeton dans le localStorage (cookie `httpOnly` illisible par le JavaScript) ; **CSP** ajoutée au build par un petit plugin dans `vite.config.js` (seuls les scripts du site et les appels vers notre API et l'API Adresse sont autorisés) ; React échappe automatiquement le texte affiché (protection XSS) |
 | **SEO** | `lang="fr"`, titre et description par page (`PageMetadata`), Open Graph, `robots.txt`, `sitemap.xml` généré par l'API, données structurées **schema.org Product** sur la fiche produit. Lighthouse SEO : 100 sur les pages publiques |
-| **Accessibilité** | Un `<h1>` par page, lien « Aller au contenu », menus utilisables au clavier, contrastes WCAG AA, libellés ARIA. Lighthouse accessibilité : 100 |
+| **Accessibilité** | Un `<h1>` par page, lien « Aller au contenu », menus utilisables au clavier, contrastes WCAG AA, libellés ARIA. Lighthouse accessibilité : 100. **Fond décoratif** (`body::before` dans `index.css`) : pastels assez clairs pour que tout texte garde au moins 4,5:1, y compris au survol ; supprimé si l'utilisateur demande plus de contraste (`prefers-contrast: more`) ou utilise un mode de couleurs forcées. **Thème MUI** (`theme.js`) : le bleu par défaut de Material UI (4:1 sur le fond pastel) est remplacé par le violet de la charte (au moins 5,6:1 partout) |
 | **Performance / éco-conception** | Pages chargées à la demande (`React.lazy`), images compressées (41 Mo → 2,3 Mo) et chargées seulement quand elles deviennent visibles (`loading="lazy"`) |
 | **Responsive** | Toutes les pages vérifiées à 320, 375 et 1280 px de large |
 
@@ -441,7 +443,7 @@ Quand un vendeur saisit une licence, l'API la range ainsi :
 3. sinon, elle crée la licence **en attente** : l'annonce est publiée, mais la licence n'entre dans le menu
    qu'après validation par un administrateur.
 
-Sur la page **`/admin/licences`** (lien « Admin » dans la barre, visible des administrateurs), l'admin peut
+Sur la page **`/admin/licences`** (adresse à taper directement, voir le [README](../README.md#liens-utiles-en-développement)), l'admin peut
 **valider**, **renommer** (l'ancien nom devient un synonyme) ou **fusionner** un doublon dans une licence existante :
 ses annonces sont déplacées et son nom devient un synonyme. Le système « apprend » : la fois suivante, c'est automatique.
 Les routes `/api/admin/...` sont protégées par `requireAuth` puis `requireAdmin` (403 pour un non-administrateur).
@@ -499,6 +501,96 @@ et dans [`back/README.md`](../back/README.md). En résumé :
 | Commandes | `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`, `GET /api/orders/sales`, `PATCH /api/orders/items/:id/shipped`, `POST /api/stripe/webhook` |
 | Images | `POST /api/uploads`, `GET /uploads/:fichier` |
 | Divers | `GET /api/health`, `GET /sitemap.xml`, `GET /api/docs` |
+
+## L'administration
+
+### Qui est administrateur ?
+
+Il n'y a **pas de table à part** pour les administrateurs : c'est la colonne `users.role`, qui vaut `'user'`
+(par défaut) ou `'admin'` (contrainte `CHECK` dans `schema.sql`). Personne ne peut devenir admin depuis le site :
+l'inscription crée toujours un `'user'`, et `PATCH /api/users/me` refuse un champ `role` (schéma zod strict : 400).
+
+- **Compte de démo** : `admin@example.com`, mot de passe = `SEED_DEMO_PASSWORD` de `back/.env` (créé par `npm run db:seed`).
+- **Donner le rôle à un compte existant**, directement en base (voir [Accéder à la base de données](#-accéder-à-la-base-de-données)) :
+
+```sql
+UPDATE users SET role = 'admin' WHERE email = 'quelquun@example.com';
+-- et pour le retirer :
+UPDATE users SET role = 'user'  WHERE email = 'quelquun@example.com';
+```
+
+Le changement est **immédiat**, sans se reconnecter : le jeton JWT ne contient que l'identifiant de l'utilisateur,
+et `requireAuth` relit le compte (donc son rôle) en base à chaque requête.
+
+### Comment l'API protège les routes d'administration
+
+Deux protections différentes, selon le besoin :
+
+| Mécanisme | Où | Effet |
+| --- | --- | --- |
+| `requireAuth` puis `requireAdmin` | `routes/admin.routes.js` : `router.use(requireAuth, requireAdmin)` | Toutes les routes `/api/admin/...` : **401** si non connecté, **403** « Réservé aux administrateurs. » si connecté sans être admin |
+| `isOwnerOrAdmin(user, ownerId)` | `controllers/products.controller.js` | Modifier / supprimer une annonce : le **propriétaire** ou un **admin** (sinon 403) |
+
+`router.use(...)` place les deux middlewares **devant toutes les routes du routeur** : impossible d'oublier la
+protection en ajoutant une nouvelle route admin dans ce fichier.
+
+### Les routes réservées aux administrateurs
+
+| Méthode | Route | Corps (JSON) | Rôle |
+| --- | --- | --- | --- |
+| GET | `/api/admin/licences` | — | Toutes les licences (**en attente d'abord**), avec leur nombre d'annonces et leurs synonymes |
+| PATCH | `/api/admin/licences/:id` | `{ "name": "One Piece" }` et/ou `{ "status": "approved" }` | **Renommer** (l'ancien nom devient un synonyme) et/ou **valider** une licence |
+| POST | `/api/admin/licences/:id/merge` | `{ "target_licence_id": 3 }` | **Fusionner** un doublon dans une autre licence : ses annonces y sont déplacées, son nom devient un synonyme, puis il est supprimé |
+| POST | `/api/admin/licences/:id/aliases` | `{ "alias": "DBZ" }` | **Ajouter un synonyme** (abréviation, traduction...) |
+| DELETE | `/api/admin/licences/:id/aliases/:alias` | — | **Supprimer un synonyme** |
+
+Et les routes ordinaires où l'admin a **plus de droits** qu'un utilisateur :
+
+| Méthode | Route | Ce que l'admin peut faire en plus |
+| --- | --- | --- |
+| PUT | `/api/products/:id` | Modifier l'annonce de **n'importe quel vendeur** (sauf une annonce vendue : 409 pour tout le monde) |
+| DELETE | `/api/products/:id` | Supprimer l'annonce de **n'importe quel vendeur** (modération d'une annonce interdite ou frauduleuse) |
+
+Codes de réponse à connaître : **400** données invalides (zod), **404** licence ou synonyme introuvable,
+**409** conflit (le nouveau nom ou synonyme appartient déjà à une autre licence : il faut plutôt fusionner).
+
+### Côté interface
+
+- La page **`/admin/licences`** (fichier `pages/AdminLicences/AdminLicences.jsx`) regroupe toutes les actions sur les licences :
+  - section **« En attente de validation »** : boutons *Valider*, *Renommer*, *Fusionner* ;
+  - section **« Licences validées »** : les synonymes sous forme de puces (supprimables), plus un champ pour en ajouter un.
+- **Pas de lien dans la barre de navigation** : l'admin tape l'adresse http://localhost:5173/admin/licences
+  (elle est notée dans le README, tableau « Liens utiles en développement »). Ce n'est pas une faille : cacher ou
+  montrer un lien **n'est pas une sécurité**. La vraie barrière, c'est `requireAdmin` côté API : un utilisateur qui
+  taperait `/admin/licences` verrait seulement « Réservé aux administrateurs. », et l'API lui répondrait 403.
+- **Modération des annonces** : sur la fiche d'une annonce d'un autre vendeur, l'admin voit un bouton
+  **« Supprimer (modération) »** (`pages/Product/Product.jsx`, variable `canModerate`). Après confirmation, l'annonce
+  est supprimée et l'admin revient à l'accueil. La modification des annonces des autres reste possible par l'API
+  seulement (Swagger), volontairement : un admin modère, il ne réécrit pas l'annonce d'un vendeur.
+
+### Tester les routes admin à la main
+
+Le plus simple : **Swagger** (http://localhost:3000/api/docs). Se connecter d'abord avec `POST /api/auth/login`
+(compte `admin@example.com`) : le cookie est déposé dans le navigateur, puis « Try it out » sur les routes `/api/admin`.
+
+Avec `curl`, en gardant le cookie dans un fichier :
+
+```bash
+# 1. Connexion : le cookie bazardim_token est enregistré dans cookies.txt
+curl -c cookies.txt -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"<SEED_DEMO_PASSWORD>"}' \
+  http://localhost:3000/api/auth/login
+
+# 2. Lister les licences (en attente d'abord)
+curl -b cookies.txt http://localhost:3000/api/admin/licences
+
+# 3. Valider la licence n° 12
+curl -b cookies.txt -X PATCH -H "Content-Type: application/json" \
+  -d '{"status":"approved"}' http://localhost:3000/api/admin/licences/12
+```
+
+Les tests automatiques correspondants sont dans `back/tests/licences.test.js` (droits 401 / 403, validation,
+renommage, fusion, synonymes) et `back/tests/products.test.js` (« un administrateur peut supprimer n'importe quelle annonce »).
 
 ## Tests du back
 
