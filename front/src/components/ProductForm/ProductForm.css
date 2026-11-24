@@ -21,3 +21,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Aperçu du titre calculé automatiquement (type – personnage (édition Ver.) ou fabricant). */
+.product-form-title-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--color-primary);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.product-form-title-preview span {
+  font-size: 13px;
+  color: #555;
+}

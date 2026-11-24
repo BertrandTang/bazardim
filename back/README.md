@@ -55,6 +55,28 @@ Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@exa
 - **Journalisation (winston)** : le journal est configuré dans `config/logger.js`, avec trois niveaux (`info`, `warn`, `error`) et la date sur chaque ligne. Le middleware `middlewares/requestLogger.js` écrit une ligne par requête (méthode, adresse, code de réponse, durée) : `info` si tout va bien, `warn` pour un 4xx, `error` pour un 5xx. Les erreurs inattendues sont journalisées par `errorHandler` avec leur pile d'appels. Tout s'affiche dans le terminal, et les erreurs sont aussi écrites dans `back/logs/errors.log` (ignoré par git). Aucun log pendant les tests.
 - **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test. Stripe est simulé (`vi.mock`) : les tests ne l'appellent jamais.
 
+## Titre des annonces : calculé automatiquement
+
+Le vendeur ne saisit pas de titre : l'API le construit à partir des caractéristiques (`utils/productTitle.js`, appelé par le validateur `productSchema`) :
+
+```
+<Type> – <Personnage> (<Édition> Ver.)   Figurine – Roronoa Zoro (Wano Ver.)
+<Type> – <Personnage> (<Fabricant>)      s'il n'y a pas d'édition : Statue – Luffy (Bandai)
+<Type> – <Personnage>                    s'il n'y a ni édition ni fabricant
+```
+
+« Ver. » (pour « version ») est la convention des figurines japonaises ; il n'est pas répété si le vendeur l'a déjà écrit. Le personnage est donc obligatoire. Un titre envoyé par le navigateur est ignoré, et le titre est recalculé à chaque modification. La licence n'est pas dans le titre : elle est déjà affichée sur la carte de l'annonce. Le formulaire du front affiche un aperçu avec le même calcul (`front/src/utils/productTitle.js`).
+
+## Licences : normalisation, synonymes et modération
+
+Pour éviter que la même série existe sous plusieurs noms (« One Piece », « one-piece », « Tensura » / « Moi, quand je me réincarne en Slime »), la licence saisie par un vendeur est rangée ainsi (`findOrCreateLicenceId` dans `models/products.model.js`) :
+
+1. **Nom normalisé** (`utils/normalizeText.js` : minuscules, sans accents, sans ponctuation) : « ONE-PIECE » retrouve « One Piece ». La colonne `licences.normalized_name` est `UNIQUE`.
+2. **Synonyme** (table `licence_aliases`) : « DBZ » retrouve « Dragon Ball Z ».
+3. Sinon, la licence est créée **en attente** (`status = 'pending'`) : l'annonce est publiée, mais la licence n'apparaît dans le menu qu'après validation.
+
+Un administrateur modère les licences sur la page `/admin/licences` : **valider**, **renommer** (l'ancien nom devient un synonyme) ou **fusionner** un doublon dans une licence existante (ses annonces sont déplacées et son nom devient un synonyme, reconnu automatiquement la fois suivante). La recherche tient aussi compte des synonymes.
+
 ## Images (multer)
 
 Les photos d'annonces et de profil sont choisies sur l'appareil de l'utilisateur, jamais saisies sous forme de lien :
@@ -114,41 +136,46 @@ Organisation **MVC** classique (la « vue » est le JSON renvoyé). Le trajet d'
 **Documentation interactive (Swagger)** : [http://localhost:3000/api/docs](http://localhost:3000/api/docs), API lancée. Chaque route y est décrite (paramètres, corps, réponses) et peut être essayée avec « Try it out ». La même description au format standard OpenAPI 3 (JSON) est disponible sur `/api/docs.json`, pour d'autres outils (Postman, Insomnia, générateurs de clients…). Elle est écrite dans `src/docs/openapi.js`.
 
 Toutes les réponses sont en JSON. En cas d'erreur : `{ "error": "message" }` (+ `details` par champ pour une erreur de validation 400).
-🔒 = connexion requise (cookie envoyé avec `credentials: 'include'` côté front).
+🔒 = connexion requise (cookie envoyé avec `credentials: 'include'` côté front). 👑 = administrateur uniquement (sinon 403).
 
-| Méthode   | Route                           | Description                                                                                                  |
-| --------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| GET       | `/api/health`                   | État de l'API et de la base                                                                                  |
-| POST      | `/api/auth/register`            | Inscription `{ username, email, password }` → 201 + cookie                                                   |
-| POST      | `/api/auth/login`               | Connexion `{ email, password }` → cookie                                                                     |
-| POST      | `/api/auth/logout`              | Déconnexion → 204                                                                                            |
-| GET 🔒    | `/api/auth/me`                  | Utilisateur connecté                                                                                         |
-| GET       | `/api/users/:id`                | Profil public (pseudo, image — pas d'email)                                                                  |
-| PATCH 🔒  | `/api/users/me`                 | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)                      |
-| DELETE 🔒 | `/api/users/me`                 | Supprimer son compte `{ current_password }` (RGPD)                                                           |
-| GET       | `/api/products`                 | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset`                     |
-| GET       | `/api/products/:id`             | Détail d'un produit                                                                                          |
-| POST 🔒   | `/api/products`                 | Créer une annonce                                                                                            |
-| PUT 🔒    | `/api/products/:id`             | Modifier son annonce (propriétaire ou admin)                                                                 |
-| DELETE 🔒 | `/api/products/:id`             | Supprimer son annonce (propriétaire ou admin)                                                                |
-| GET       | `/api/licences`                 | Licences utilisées par au moins une annonce                                                                  |
-| GET 🔒    | `/api/likes`                    | Produits mis en favoris                                                                                      |
-| PUT 🔒    | `/api/likes/:productId`         | Ajouter aux favoris (sans effet si déjà présent)                                                             |
-| DELETE 🔒 | `/api/likes/:productId`         | Retirer des favoris                                                                                          |
-| GET 🔒    | `/api/messages/received`        | Messages reçus (boîte de réception)                                                                          |
-| GET 🔒    | `/api/messages/sent`            | Messages envoyés                                                                                             |
-| GET 🔒    | `/api/messages/unread-count`    | Nombre de messages non lus `{ count }` (pastille de la barre de navigation)                                  |
-| POST 🔒   | `/api/uploads`                  | Envoyer une image (formulaire `multipart/form-data`, champ `image`) → `{ image_url: "/uploads/..." }`        |
-| GET       | `/uploads/:fichier`             | Image envoyée (fichier statique)                                                                             |
-| GET       | `/sitemap.xml`                  | Plan du site pour les moteurs de recherche : pages fixes + annonces en vente (adresse du site : `FRONT_URL`) |
-| POST 🔒   | `/api/messages`                 | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                                    |
-| PATCH 🔒  | `/api/messages/:id/read`        | Marquer un message reçu comme lu (destinataire uniquement)                                                   |
-| POST 🔒   | `/api/orders`                   | Commander `{ product_ids: [3, 8], shipping_address }` → `{ order_id, checkout_url }`                         |
-| GET 🔒    | `/api/orders`                   | Mes commandes (avec leurs articles)                                                                          |
-| GET 🔒    | `/api/orders/sales`             | Mes ventes : acheteur, adresse de livraison, date de paiement et d'expédition de chaque annonce vendue       |
-| PATCH 🔒  | `/api/orders/items/:id/shipped` | Marquer un article vendu comme expédié (vendeur de l'annonce, commande payée, une seule fois)                |
-| GET 🔒    | `/api/orders/:id`               | Une de mes commandes (vérifie le paiement auprès de Stripe si elle est en attente)                           |
-| POST      | `/api/stripe/webhook`           | Réservée à Stripe (signature vérifiée) : confirme un paiement                                                |
+| Méthode   | Route                                    | Description                                                                                                  |
+| --------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| GET       | `/api/health`                            | État de l'API et de la base                                                                                  |
+| POST      | `/api/auth/register`                     | Inscription `{ username, email, password }` → 201 + cookie                                                   |
+| POST      | `/api/auth/login`                        | Connexion `{ email, password }` → cookie                                                                     |
+| POST      | `/api/auth/logout`                       | Déconnexion → 204                                                                                            |
+| GET 🔒    | `/api/auth/me`                           | Utilisateur connecté                                                                                         |
+| GET       | `/api/users/:id`                         | Profil public (pseudo, image — pas d'email)                                                                  |
+| PATCH 🔒  | `/api/users/me`                          | Modifier son compte (`current_password` requis pour changer d'email ou de mot de passe)                      |
+| DELETE 🔒 | `/api/users/me`                          | Supprimer son compte `{ current_password }` (RGPD)                                                           |
+| GET       | `/api/products`                          | Liste ; filtres : `category`, `licence`, `search`, `owner_id`, `limit` (≤ 100), `offset`                     |
+| GET       | `/api/products/:id`                      | Détail d'un produit                                                                                          |
+| POST 🔒   | `/api/products`                          | Créer une annonce                                                                                            |
+| PUT 🔒    | `/api/products/:id`                      | Modifier son annonce (propriétaire ou admin)                                                                 |
+| DELETE 🔒 | `/api/products/:id`                      | Supprimer son annonce (propriétaire ou admin)                                                                |
+| GET       | `/api/licences`                          | Licences **validées** utilisées par au moins une annonce (menu, suggestions)                                 |
+| GET 🔒    | `/api/likes`                             | Produits mis en favoris                                                                                      |
+| PUT 🔒    | `/api/likes/:productId`                  | Ajouter aux favoris (sans effet si déjà présent)                                                             |
+| DELETE 🔒 | `/api/likes/:productId`                  | Retirer des favoris                                                                                          |
+| GET 🔒    | `/api/messages/received`                 | Messages reçus (boîte de réception)                                                                          |
+| GET 🔒    | `/api/messages/sent`                     | Messages envoyés                                                                                             |
+| GET 🔒    | `/api/messages/unread-count`             | Nombre de messages non lus `{ count }` (pastille de la barre de navigation)                                  |
+| POST 🔒   | `/api/uploads`                           | Envoyer une image (formulaire `multipart/form-data`, champ `image`) → `{ image_url: "/uploads/..." }`        |
+| GET       | `/uploads/:fichier`                      | Image envoyée (fichier statique)                                                                             |
+| GET       | `/sitemap.xml`                           | Plan du site pour les moteurs de recherche : pages fixes + annonces en vente (adresse du site : `FRONT_URL`) |
+| POST 🔒   | `/api/messages`                          | Envoyer `{ recipient_id, product_id, content }` (`product_id` facultatif)                                    |
+| PATCH 🔒  | `/api/messages/:id/read`                 | Marquer un message reçu comme lu (destinataire uniquement)                                                   |
+| POST 🔒   | `/api/orders`                            | Commander `{ product_ids: [3, 8], shipping_address }` → `{ order_id, checkout_url }`                         |
+| GET 🔒    | `/api/orders`                            | Mes commandes (avec leurs articles)                                                                          |
+| GET 🔒    | `/api/orders/sales`                      | Mes ventes : acheteur, adresse de livraison, date de paiement et d'expédition de chaque annonce vendue       |
+| PATCH 🔒  | `/api/orders/items/:id/shipped`          | Marquer un article vendu comme expédié (vendeur de l'annonce, commande payée, une seule fois)                |
+| GET 🔒    | `/api/orders/:id`                        | Une de mes commandes (vérifie le paiement auprès de Stripe si elle est en attente)                           |
+| POST      | `/api/stripe/webhook`                    | Réservée à Stripe (signature vérifiée) : confirme un paiement                                                |
+| GET 👑    | `/api/admin/licences`                    | Toutes les licences (en attente d'abord), nombre d'annonces, synonymes                                       |
+| PATCH 👑  | `/api/admin/licences/:id`                | Renommer (`name`, l'ancien nom devient un synonyme) et/ou valider (`status: "approved"`)                     |
+| POST 👑   | `/api/admin/licences/:id/merge`          | Fusionner un doublon `{ target_licence_id }` : annonces déplacées, nom gardé comme synonyme                  |
+| POST 👑   | `/api/admin/licences/:id/aliases`        | Ajouter un synonyme `{ alias }`                                                                              |
+| DELETE 👑 | `/api/admin/licences/:id/aliases/:alias` | Supprimer un synonyme                                                                                        |
 
 Exemple de produit envoyé à `POST /api/products` :
 

@@ -74,6 +74,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur non connecté | Message lisible, pas de plantage ; visiteur = `null` | Unitaire | `api.test.js` |
 | Panier | Ajouter deux fois la même annonce | Ajoutée une seule fois, bouton « DANS LE PANIER » (pièce unique) | Unitaire / Composant | `contexts.test.jsx`, `components.test.jsx` |
 | Panier | Afficher, retirer une annonce, vider | Détail articles / frais de service / total recalculé, pas de boutons de quantité | Intégration | `pages.test.jsx` |
+| Titre automatique | Type, personnage, édition ; « Ver. » déjà écrit ; sans édition (fabricant) ; personnage seul | « Figurine – Roronoa Zoro (Wano Ver.) », pas de « Ver. Ver. », « Statue – Luffy (Bandai) », « Figurine – Sasuke » | Unitaire | `productTitle.test.js` |
+| Formulaire d'annonce | Saisie du personnage et de l'édition | Aperçu du titre mis à jour ; aucun titre envoyé à l'API ; personnage obligatoire | Composant | `components.test.jsx` |
 | Frais de service | 40 €, 0 €, 55,50 €, 134,98 € d'articles | 0,70 € + 5 %, arrondi au centime (même calcul que l'API) | Unitaire | `serviceFee.test.js` |
 | Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `contexts.test.jsx` |
 | Livraison (API tierce) | Taper une adresse | Suggestions de l'API Adresse (BAN), adresse choisie enregistrée | Composant | `AddressAutocomplete.test.jsx` |
@@ -85,6 +87,9 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Suppression du compte (RGPD) | Bouton « Annuler » | Pop-up fermée, compte intact | Intégration | `pages.test.jsx` |
 | Profil | Onglets produits / likes | Bonnes listes affichées | Intégration | `pages.test.jsx` |
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
+| Modération des licences | Utilisateur ; admin : valider, fusionner, ajouter / supprimer un synonyme | « Réservé aux administrateurs. » ; licence déplacée dans « validées » ; doublon fusionné avec synonyme affiché ; synonyme ajouté puis retiré | Intégration | `pages.test.jsx` |
+| Barre de navigation | Lien « Admin » | Visible seulement pour un administrateur | Composant | `components.test.jsx` |
+| Comment ça marche ? | Ouvrir la page ; lien dans la barre de navigation | Étapes pour vendre et acheter, encadré « Pourquoi le titre est-il automatique ? », exemples de titres calculés ; lien « COMMENT ÇA MARCHE ? » | Intégration / Composant | `pages.test.jsx`, `components.test.jsx` |
 | Pages légales | Pied de page, mentions légales, politique de confidentialité, conditions générales | Liens vers les trois pages (et vers les CGV dans le panier) ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD ; barème des frais de service | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 
@@ -96,6 +101,13 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Inscription | Email ou pseudo déjà pris | 409 avec message clair | `auth.test.js` |
 | Inscription | Champs invalides | 400 avec la liste des champs en erreur | `auth.test.js` |
 | Connexion | Bon / mauvais mot de passe, email inconnu | 200 / 401 (même message dans les deux cas d'échec) | `auth.test.js` |
+| Licences | Normalisation : majuscules, accents, ponctuation, japonais, « !!! » | « one piece », « pokemon », japonais conservé, chaîne vide | `licences.test.js` |
+| Licences | Vendeur : « one-PIECE » quand « One Piece » existe ; licence inconnue ; « !!! » | Même licence (pas de doublon) ; créée « en attente », absente du menu ; 400 | `licences.test.js` |
+| Licences (admin) | Visiteur / utilisateur sur les routes admin | 401 / 403 | `licences.test.js` |
+| Licences (admin) | Liste, valider, renommer | En attente d'abord avec le nombre d'annonces ; validée → dans le menu ; ancien nom gardé comme synonyme | `licences.test.js` |
+| Licences (admin) | Fusionner « Tensura » dans « Moi, quand je me réincarne en Slime » (et cas d'erreur) | Annonces déplacées, doublon supprimé, synonyme « tensura » ; « TENSURA » rangée automatiquement ensuite ; recherche « tensura » trouve les annonces ; 400 avec elle-même, 404 cible inconnue | `licences.test.js` |
+| Licences (admin) | Ajouter / supprimer un synonyme, doublons | 201 puis rangement automatique ; 409 si déjà utilisé (nom ou synonyme) ; 204 puis 404 | `licences.test.js` |
+| Titre automatique | Annonce avec un titre envoyé, sans édition, personnage seul ; modification ; sans personnage | Titre envoyé ignoré, « Type – Personnage – Édition / Fabricant » ; recalculé à la modification ; 400 « Le personnage est obligatoire. » | `products.test.js` |
 | Session | Sans cookie, jeton falsifié, après déconnexion | `GET /api/auth/me` renvoie `null` (un visiteur n'est pas une erreur) ; une route protégée répond 401 | `auth.test.js` |
 | Produits | Créer une annonce | 201, appartient à l'utilisateur connecté | `products.test.js` |
 | Produits | Prix négatif, catégorie inconnue, image `javascript:` | 400 | `products.test.js` |

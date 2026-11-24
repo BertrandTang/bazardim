@@ -31,8 +31,11 @@ beforeEach(() => {
 async function createSellerAndBuyer() {
   const seller = await createLoggedInUser();
   const buyer = await createLoggedInUser();
-  const firstProduct = (await seller.agent.post('/api/products').send(buildProduct({ title: 'A', price: 20 }))).body;
-  const secondProduct = (await seller.agent.post('/api/products').send(buildProduct({ title: 'B', price: 35.5 }))).body;
+  const firstProduct = (await seller.agent.post('/api/products').send(buildProduct({ character_name: 'A', price: 20 })))
+    .body;
+  const secondProduct = (
+    await seller.agent.post('/api/products').send(buildProduct({ character_name: 'B', price: 35.5 }))
+  ).body;
   return { seller, buyer, firstProduct, secondProduct };
 }
 
@@ -73,8 +76,13 @@ describe('Commandes et paiement Stripe', () => {
       shipping_address: SHIPPING_ADDRESS,
     });
     expect(order.body.items).toEqual([
-      { product_id: context.firstProduct.id, product_title: 'A', price: 20, shipped_at: null },
-      { product_id: context.secondProduct.id, product_title: 'B', price: 35.5, shipped_at: null },
+      { product_id: context.firstProduct.id, product_title: 'Figurine – A (Gear 5 Ver.)', price: 20, shipped_at: null },
+      {
+        product_id: context.secondProduct.id,
+        product_title: 'Figurine – B (Gear 5 Ver.)',
+        price: 35.5,
+        shipped_at: null,
+      },
     ]);
     expect(order.body).not.toHaveProperty('stripe_session_id');
   });
@@ -188,7 +196,7 @@ describe('Commandes et paiement Stripe', () => {
     // L'annonce vendue ne peut plus être modifiée.
     const response = await context.seller.agent
       .put(`/api/products/${context.firstProduct.id}`)
-      .send(buildProduct({ title: 'Nouveau titre' }))
+      .send(buildProduct({ character_name: 'Nouveau personnage' }))
       .expect(409);
     expect(response.body.error).toContain('ne peut plus être modifiée');
   });

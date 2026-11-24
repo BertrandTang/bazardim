@@ -94,6 +94,8 @@ export default function NavBar() {
           ))}
         </NavBarDropdown>
 
+        <Link to="/comment-ca-marche">COMMENT ÇA MARCHE ?</Link>
+
         <Link to="/vendre" className="navbar-sell-button">
           VENDRE
         </Link>
@@ -113,6 +115,8 @@ export default function NavBar() {
                 {unreadCount > 0 && <span className="messages-badge">{unreadCount}</span>}
               </Link>
               <Link to="/profile">Profil</Link>
+              {/* Lien visible uniquement par les administrateurs (l'API vérifie aussi le rôle). */}
+              {currentUser.role === 'admin' && <Link to="/admin/licences">Admin</Link>}
               <button type="button" className="logout-button" onClick={logout}>
                 Déconnexion
               </button>

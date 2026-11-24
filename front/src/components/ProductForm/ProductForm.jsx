@@ -6,6 +6,7 @@ import TextField from '@mui/material/TextField';
 import ImageUploadField from '../ImageUploadField/ImageUploadField.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
 import { CATEGORIES } from '../../data/categories.js';
+import { buildProductTitle } from '../../utils/productTitle.js';
 import './ProductForm.css';
 
 // Valeurs par défaut d'un nouveau produit (formulaire de mise en vente).
@@ -23,9 +24,9 @@ const EMPTY_PRODUCT = {
 // les <TextField> avec .map(), au lieu de copier-coller 13 fois le même code.
 const DETAIL_FIELDS = [
   { name: 'price', label: 'Prix (€)', type: 'number', required: true },
-  { name: 'character_name', label: 'Personnage' },
+  { name: 'character_name', label: 'Personnage', required: true },
+  { name: 'version', label: 'Édition (ex : Gear 5, Collector)' },
   { name: 'manufacturer', label: 'Fabricant' },
-  { name: 'version', label: 'Version' },
   { name: 'material', label: 'Matière' },
   { name: 'tags', label: 'Tags (séparés par des virgules)' },
   { name: 'year_of_acquisition', label: "Année d'acquisition", type: 'number' },
@@ -44,7 +45,6 @@ const DETAIL_FIELDS = [
  */
 function productToFormValues(product) {
   return {
-    title: product.title ?? '',
     description: product.description ?? '',
     price: product.price ?? '',
     category: product.category ?? '',
@@ -71,8 +71,8 @@ function productToFormValues(product) {
  * Un champ texte vide est envoyé tel quel : l'API l'enregistre comme "non renseigné" (NULL).
  */
 function formValuesToProduct(formValues) {
+  // Pas de titre : l'API le calcule à partir du type, du personnage, de l'édition et du fabricant.
   return {
-    title: formValues.title.trim(),
     description: formValues.description.trim(),
     price: Number(formValues.price),
     category: formValues.category,
@@ -100,8 +100,8 @@ function formValuesToProduct(formValues) {
 
 /** Retourne un message d'erreur si le formulaire est invalide, sinon une chaîne vide. */
 function validateFormValues(formValues) {
-  if (!formValues.title.trim() || !formValues.description.trim()) {
-    return 'Le titre et la description sont obligatoires.';
+  if (!formValues.character_name.trim() || !formValues.description.trim()) {
+    return 'Le personnage et la description sont obligatoires.';
   }
   if (!(Number(formValues.price) > 0)) {
     return 'Le prix doit être supérieur à 0.';
@@ -168,7 +168,16 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
         imageUrl={formValues.image_url}
         onChange={(imageUrl) => setFormValues((previousValues) => ({ ...previousValues, image_url: imageUrl }))}
       />
-      <TextField label="Titre" name="title" required fullWidth value={formValues.title} onChange={handleChange} />
+      {/* Aperçu du titre, calculé à partir des champs ci-dessous et mis à jour à chaque frappe.
+          aria-live="polite" : un lecteur d'écran annonce le nouveau titre quand il change. */}
+      <p className="product-form-title-preview" aria-live="polite">
+        <span>Titre de l’annonce (créé automatiquement) :</span>
+        <strong>
+          {formValues.character_name.trim()
+            ? buildProductTitle(formValues)
+            : 'complétez le type, le personnage et l’édition ci-dessous'}
+        </strong>
+      </p>
       <TextField
         label="Description"
         name="description"
@@ -194,12 +203,15 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
           <MenuItem value="no">Non</MenuItem>
         </TextField>
 
-        {/* Champ libre avec suggestions : les licences déjà existantes sont proposées */}
+        {/* Champ libre avec suggestions : les licences déjà existantes sont proposées.
+            L'API reconnaît les autres écritures ("one-piece") et les synonymes ("DBZ") ;
+            une licence vraiment nouvelle est vérifiée par un administrateur avant d'entrer dans le menu. */}
         <TextField
           label="Licence"
           name="licence_name"
           value={formValues.licence_name}
           onChange={handleChange}
+          helperText="Choisissez-la dans la liste si elle existe. Une nouvelle licence sera vérifiée par notre équipe."
           slotProps={{ htmlInput: { list: 'licence-suggestions' } }}
         />
         <datalist id="licence-suggestions">

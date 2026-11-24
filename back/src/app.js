@@ -10,6 +10,7 @@ import { openApiDocument } from './docs/openapi.js';
 import { getSitemap } from './controllers/sitemap.controller.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { requestLogger } from './middlewares/requestLogger.js';
+import adminRoutes from './routes/admin.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import likesRoutes from './routes/likes.routes.js';
 import messagesRoutes from './routes/messages.routes.js';
@@ -64,6 +65,7 @@ app.get('/api/docs.json', (request, response) => response.json(openApiDocument))
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument, { customSiteTitle: 'API Bazardim' }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/likes', likesRoutes);
 app.use('/api/messages', messagesRoutes);

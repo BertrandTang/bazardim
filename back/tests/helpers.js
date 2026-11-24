@@ -50,15 +50,18 @@ export function anonymous() {
   return request(app);
 }
 
-/** Produit valide, à compléter ou modifier dans chaque test. */
+/**
+ * Produit valide, à compléter ou modifier dans chaque test.
+ * Pas de titre : l'API le calcule (« Figurine – Monkey D. Luffy (Gear 5 Ver.) »).
+ */
 export function buildProduct(overrides = {}) {
   return {
-    title: 'Figurine Luffy Gear 5',
     description: 'Figurine en excellent état.',
     price: 49.9,
     category: 'FIGURINE',
     licence_name: 'One Piece',
     character_name: 'Monkey D. Luffy',
+    version: 'Gear 5',
     has_box: true,
     image_url: '/uploads/photo-de-test.jpg',
     tags: ['bandai', 'SHF'],

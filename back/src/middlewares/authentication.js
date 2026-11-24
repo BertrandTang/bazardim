@@ -71,6 +71,18 @@ export async function requireAuth(request, response, next) {
   next();
 }
 
+/**
+ * Middleware à placer APRÈS requireAuth : réserve une route aux administrateurs (sinon 403).
+ *
+ * Utilisation : router.use(requireAuth, requireAdmin);
+ */
+export function requireAdmin(request, response, next) {
+  if (request.user.role !== 'admin') {
+    throw new HttpError(403, 'Réservé aux administrateurs.');
+  }
+  next();
+}
+
 /** Utilisateur connecté, ou null pour un visiteur (sans lever d'erreur). */
 export async function findLoggedInUser(request) {
   const { user } = await readSession(request);

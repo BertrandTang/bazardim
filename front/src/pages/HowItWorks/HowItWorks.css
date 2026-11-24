@@ -1,0 +1,120 @@
+/* Page « Comment ça marche ? » : tutoriel en étapes numérotées. */
+.how-page {
+  max-width: 860px;
+  margin: 32px auto;
+  padding: 0 16px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.how-page h2 {
+  margin-top: 36px;
+}
+
+.how-intro {
+  font-size: 1.05rem;
+}
+
+/* Étapes : une carte par étape, avec un numéro rond généré par le CSS (compteur). */
+.how-steps {
+  counter-reset: how-step;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.how-steps > li {
+  counter-increment: how-step;
+  position: relative;
+  padding: 16px 16px 16px 64px;
+  border-radius: 0 24px 0 24px;
+  background: var(--color-surface);
+}
+
+.how-steps > li::before {
+  content: counter(how-step);
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.how-steps h3 {
+  margin: 4px 0 6px;
+  font-size: 1.1rem;
+}
+
+.how-steps p {
+  margin: 0;
+}
+
+/* Exemples de titres automatiques. */
+.how-examples {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Encadré « Pourquoi le titre est-il automatique ? ». */
+.how-why {
+  margin-top: 24px;
+  padding: 4px 20px 12px;
+  border-left: 4px solid var(--color-accent);
+  border-radius: 8px;
+  background: #fff7fb;
+}
+
+.how-why h2 {
+  margin-top: 16px;
+  font-size: 1.25rem;
+}
+
+.how-terms {
+  margin-top: 28px;
+}
+
+.how-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.how-action-primary,
+.how-action-secondary {
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.how-action-primary {
+  background: var(--gradient-primary);
+  color: #fff;
+}
+
+.how-action-primary:hover {
+  color: #fff;
+}
+
+.how-action-secondary {
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+@media (max-width: 600px) {
+  .how-steps > li {
+    padding: 56px 14px 14px;
+  }
+}

@@ -10,6 +10,7 @@ const STATIC_PAGES = [
   { path: '/figurines-articulees', changefreq: 'daily', priority: '0.8' },
   { path: '/statue', changefreq: 'daily', priority: '0.8' },
   { path: '/licences', changefreq: 'weekly', priority: '0.6' },
+  { path: '/comment-ca-marche', changefreq: 'monthly', priority: '0.5' },
   { path: '/signup', changefreq: 'monthly', priority: '0.3' },
   { path: '/mentions-legales', changefreq: 'yearly', priority: '0.1' },
   { path: '/confidentialite', changefreq: 'yearly', priority: '0.1' },

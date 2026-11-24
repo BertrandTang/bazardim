@@ -13,7 +13,9 @@ import Home from './pages/Home/Home.jsx';
 // Chargement à la demande ("code splitting") : le code de ces pages n'est téléchargé
 // que lorsque l'utilisateur les ouvre. La page d'accueil, elle, est chargée tout de suite.
 // Pendant le téléchargement, <Suspense> (dans Layout.jsx) affiche "Chargement…".
+const AdminLicences = lazy(() => import('./pages/AdminLicences/AdminLicences.jsx'));
 const Auth = lazy(() => import('./pages/Auth/Auth.jsx'));
+const HowItWorks = lazy(() => import('./pages/HowItWorks/HowItWorks.jsx'));
 const LegalNotice = lazy(() => import('./pages/Legal/LegalNotice.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/Legal/PrivacyPolicy.jsx'));
 const TermsAndConditions = lazy(() => import('./pages/Legal/TermsAndConditions.jsx'));
@@ -86,6 +88,16 @@ export default function App() {
                       }
                     />
 
+                    {/* Administration : la page vérifie elle-même que l'utilisateur est administrateur. */}
+                    <Route
+                      path="/admin/licences"
+                      element={
+                        <RequireAuth>
+                          <AdminLicences />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route path="/comment-ca-marche" element={<HowItWorks />} />
                     <Route path="/mentions-legales" element={<LegalNotice />} />
                     <Route path="/confidentialite" element={<PrivacyPolicy />} />
                     <Route path="/conditions-generales" element={<TermsAndConditions />} />

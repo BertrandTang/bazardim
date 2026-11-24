@@ -2,6 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   addFakeMessage,
+  addFakePendingLicence,
   createOrder,
   fakeUserExists,
   fetchUnreadMessageCount,
@@ -20,6 +21,8 @@ import OrderConfirmation from '../src/pages/OrderConfirmation/OrderConfirmation.
 import Product from '../src/pages/Product/Product.jsx';
 import Profile from '../src/pages/Profile/Profile.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
+import AdminLicences from '../src/pages/AdminLicences/AdminLicences.jsx';
+import HowItWorks from '../src/pages/HowItWorks/HowItWorks.jsx';
 import Footer from '../src/components/Footer/Footer.jsx';
 import LegalNotice from '../src/pages/Legal/LegalNotice.jsx';
 import PrivacyPolicy from '../src/pages/Legal/PrivacyPolicy.jsx';
@@ -151,7 +154,7 @@ describe('Cart (panier)', () => {
     // Pièces uniques : pas de boutons de quantité.
     expect(screen.queryByRole('button', { name: '+' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Retirer Figurine S.H. Figuarts Vegeta/ }));
+    await user.click(screen.getByRole('button', { name: /Retirer Figurine – Vegeta/ }));
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
     expect(summaryLine('Total')).toHaveTextContent('79.44 €'); // 74.99 € + 4.45 € de frais
 
@@ -270,9 +273,10 @@ describe('Product (fiche produit)', () => {
     expect(screen.queryByRole('heading', { name: 'Contacter le vendeur' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Modifier' }));
-    const titleInput = screen.getByLabelText(/Titre/);
-    await user.clear(titleInput);
-    await user.type(titleInput, 'Vegeta modifié');
+    // Le titre est recalculé à partir du personnage modifié.
+    const characterInput = screen.getByLabelText(/Personnage/);
+    await user.clear(characterInput);
+    await user.type(characterInput, 'Vegeta modifié');
     await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Vegeta modifié');
 
@@ -309,7 +313,7 @@ describe('Sell (mise en vente)', () => {
   it('crée l’annonce puis ouvre sa page', async () => {
     loginAs(1);
     const { user } = await renderWithProviders(<Sell />, { route: '/vendre', path: '/vendre' });
-    await user.type(screen.getByLabelText(/Titre/), 'Statue Zoro');
+    await user.type(screen.getByLabelText(/Personnage/), 'Zoro');
     await user.type(screen.getByLabelText(/Description/), 'Statue en résine');
     await user.type(screen.getByLabelText(/Prix/), '120');
     await user.upload(
@@ -376,7 +380,7 @@ describe('Profile (mon profil)', () => {
     expect(screen.getAllByRole('article')).toHaveLength(myProductsCount - 1);
 
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
-    expect(screen.getByRole('heading', { name: 'Figurine S.H. Figuarts Luffy' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: PRODUCTS[1].title })).toBeInTheDocument();
   });
 
   it('une annonce vendue affiche son acheteur et ne peut plus être modifiée', async () => {
@@ -568,5 +572,77 @@ describe('Pages légales', () => {
     expect(screen.getByRole('heading', { name: '5. Prix et frais de service' })).toBeInTheDocument();
     expect(screen.getByText(/0,70 € \+ 5 % du prix des articles/)).toBeInTheDocument();
     expect(screen.getByText(/mode test/)).toBeInTheDocument();
+  });
+});
+
+describe('AdminLicences (modération des licences)', () => {
+  const adminPage = (
+    <RequireAuth>
+      <AdminLicences />
+    </RequireAuth>
+  );
+
+  it('est réservée aux administrateurs', async () => {
+    loginAs(1);
+    await renderWithProviders(adminPage);
+    expect(screen.getByRole('alert')).toHaveTextContent('Réservé aux administrateurs.');
+  });
+
+  it('valide une licence en attente : elle rejoint les licences validées', async () => {
+    addFakePendingLicence('Chainsaw Man');
+    loginAs(8); // administrateur
+    const { user } = await renderWithProviders(adminPage);
+
+    expect(await screen.findByRole('heading', { name: 'En attente de validation (1)' })).toBeInTheDocument();
+    const pending = screen.getByRole('article', { name: 'Licence en attente : Chainsaw Man' });
+    await user.click(within(pending).getByRole('button', { name: 'Valider' }));
+
+    expect(await screen.findByText('« Chainsaw Man » est validée.')).toBeInTheDocument();
+    expect(screen.getByText('Aucune licence en attente.')).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Licence validée : Chainsaw Man' })).toBeInTheDocument();
+  });
+
+  it('fusionne un doublon dans une licence validée : son nom devient un synonyme', async () => {
+    addFakePendingLicence('OP');
+    loginAs(8);
+    const { user } = await renderWithProviders(adminPage);
+
+    const pending = await screen.findByRole('article', { name: 'Licence en attente : OP' });
+    await user.click(within(pending).getByRole('combobox', { name: 'C’est la même licence que…' }));
+    await user.click(screen.getByRole('option', { name: 'One Piece' }));
+    await user.click(within(pending).getByRole('button', { name: 'Fusionner' }));
+
+    expect(await screen.findByText(/« OP » a été fusionnée dans « One Piece »/)).toBeInTheDocument();
+    const onePiece = screen.getByRole('article', { name: 'Licence validée : One Piece' });
+    expect(within(onePiece).getByText('op')).toBeInTheDocument();
+  });
+
+  it('ajoute puis supprime un synonyme', async () => {
+    loginAs(8);
+    const { user } = await renderWithProviders(adminPage);
+
+    const naruto = await screen.findByRole('article', { name: 'Licence validée : Naruto' });
+    await user.type(within(naruto).getByLabelText('Ajouter un synonyme'), 'Naruto Shippuden');
+    await user.click(within(naruto).getByRole('button', { name: 'Ajouter' }));
+    expect(await within(naruto).findByText('naruto shippuden')).toBeInTheDocument();
+
+    // L'icône de suppression du « chip » MUI : on clique dessus pour retirer le synonyme.
+    const aliasChip = within(naruto).getByText('naruto shippuden').closest('.MuiChip-root');
+    await user.click(aliasChip.querySelector('.MuiChip-deleteIcon'));
+    await waitFor(() => expect(within(naruto).queryByText('naruto shippuden')).not.toBeInTheDocument());
+  });
+});
+
+describe('HowItWorks (comment ça marche ?)', () => {
+  it('explique comment vendre et acheter, et pourquoi le titre est automatique', async () => {
+    await renderWithProviders(<HowItWorks />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Comment ça marche ?');
+    expect(screen.getByRole('heading', { name: 'Vendre une figurine' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Acheter une figurine' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Pourquoi le titre est-il automatique ?' })).toBeInTheDocument();
+    // Exemples calculés avec la même fonction que l'API.
+    expect(screen.getByText('Figurine – Roronoa Zoro (Wano Ver.)')).toBeInTheDocument();
+    expect(screen.getByText('Statue – Sephiroth (Square Enix)')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Mettre une figurine en vente' })).toHaveAttribute('href', '/vendre');
   });
 });

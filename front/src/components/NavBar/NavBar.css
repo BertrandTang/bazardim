@@ -31,6 +31,8 @@
 
 .navbar-left {
   flex: 1.6;
+  /* Comme pour la recherche : ce bloc peut rétrécir sous sa largeur « naturelle » si la place manque. */
+  min-width: 0;
   gap: 16px;
 }
 
@@ -61,6 +63,8 @@
 /* ----- Barre de recherche ----- */
 .navbar-search {
   flex: 1;
+  /* min-width: 0 autorise la recherche à rétrécir quand la place manque (sinon elle garde sa largeur minimale). */
+  min-width: 0;
   max-width: 520px;
   display: flex;
   align-items: center;
@@ -82,6 +86,7 @@
 
 .navbar-search input {
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none; /* le contour est déjà affiché sur tout le formulaire (:focus-within) */
   background: transparent;
@@ -97,6 +102,8 @@
 /* ----- Liens du milieu + menus déroulants ----- */
 .navbar-middle a {
   font-size: 16px;
+  /* Un lien reste sur une seule ligne ("COMMENT ÇA MARCHE ?") : c'est la recherche qui rétrécit. */
+  white-space: nowrap;
 }
 
 .navbar-dropdown {
@@ -239,11 +246,17 @@
   }
 
   .navbar-middle {
-    gap: 20px;
+    gap: 14px;
+  }
+
+  .navbar-middle a,
+  .navbar-dropdown-button {
+    font-size: 14px;
   }
 }
 
-@media (max-width: 768px) {
+/* Tablettes et téléphones : la barre passe sur plusieurs lignes (logo + recherche, liens, compte). */
+@media (max-width: 960px) {
   .navbar-container {
     flex-direction: column;
     align-items: stretch;
