@@ -3,12 +3,12 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `█████████████████░░░` 84 % (68 / 81 tâches)**
+**Progression globale : `█████████████████░░░` 84 % (70 / 83 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 2 — Front-end | `████████████████░░░░` 78 % | 28 / 36 |
-| Bloc 3 — Back-end | `███████████████████░` 94 % | 34 / 36 |
+| Bloc 3 — Back-end | `███████████████████░` 95 % | 36 / 38 |
 | RGPD dans l'application | `████████████████░░░░` 80 % | 4 / 5 |
 | Hygiène du projet et Git | `██████████░░░░░░░░░░` 50 % | 2 / 4 |
 
@@ -27,7 +27,7 @@ _Après avoir coché des cases : `node scripts/update-todo-progress.mjs`_
 | --- | --- |
 | Front-end (React) | ✅ Branché sur l'API : catalogue, filtres, recherche, fiche produit, panier (frais de service compris), favoris, vente / modification / suppression d'annonce, profil, inscription / connexion, messagerie, pages légales. Responsive mobile. |
 | Back-end | ✅ API REST Express + PostgreSQL (Docker) : authentification, comptes, annonces, favoris, messagerie, commandes et paiement Stripe (mode test), frais de service, sitemap. Documentation Swagger sur `/api/docs`. Dockerfile. |
-| Tests | ✅ Back : 77 tests, 97 % de couverture. ✅ Front : 100 tests, 90 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
+| Tests | ✅ Back : 77 tests, 97 % de couverture. ✅ Front : 103 tests, 90 % de couverture. Plan de tests : [docs/plan-de-tests.md](docs/plan-de-tests.md). |
 | CI / industrialisation | ✅ GitHub Actions : lint, formatage (Prettier), audit, tests avec couverture et build, front et back. |
 | Dossier écrit | ❌ À rédiger : voir la partie « Dossier écrit » en bas de ce fichier (hors progression). |
 
@@ -78,7 +78,7 @@ favoris, panier, messagerie simple (boîte de réception, sans discussion en dir
 
 ### C18 / E13 — Tests front ⚠️ couverture ≥ 50 % obligatoire
 
-- [x] **Vitest** + **React Testing Library** + couverture (`npm test`, `npm run test:coverage`) : 100 tests, 90 % des lignes, seuil bloquant à 50 %.
+- [x] **Vitest** + **React Testing Library** + couverture (`npm test`, `npm run test:coverage`) : 103 tests, 90 % des lignes, seuil bloquant à 50 %.
 - [x] **Plan de tests** front et back : [docs/plan-de-tests.md](docs/plan-de-tests.md).
 - [x] Tests unitaires : utilitaires, hook `useLocalStorageState`, contextes, service d'adresses, frais de service.
 - [x] Tests de composants et de pages : cartes, formulaires, barre de navigation, toutes les pages.
@@ -127,6 +127,8 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] **Messagerie** : contacter le vendeur, boîte de réception / messages envoyés, réponse, marquer comme lu, pastille des messages non lus.
 - [x] Envoi d'images avec **multer** (`POST /api/uploads`, JPEG/PNG/WebP, 2 Mo max, nom de fichier aléatoire) : photo d'annonce obligatoire et photo de profil.
 - [x] Annonce **vendue** : bandeau « Vendu », plus modifiable (409), le vendeur voit le pseudo et l'adresse de livraison de l'acheteur (`GET /api/orders/sales`).
+- [x] Page **« Comment ça marche ? »** (`/comment-ca-marche`, lien dans la barre de navigation) : tutoriel pour vendre et acheter, et explication du titre automatique.
+- [x] **Jeu de démonstration** : 15 figurines (5 figurines, 5 figurines articulées, 5 statues), éditions et fabricants cohérents, toutes les licences utilisées.
 - [x] **Titre automatique** des annonces : « Type – Personnage (Édition Ver.) » (ou le fabricant entre parenthèses), calculé par l'API, aperçu dans le formulaire ; personnage obligatoire.
 - [x] **Licences sans doublons** : nom normalisé (`UNIQUE`), synonymes (« DBZ » → Dragon Ball Z), licence inconnue créée « en attente » ; page admin `/admin/licences` pour valider, renommer ou fusionner (le doublon devient un synonyme). Bon argument pour C8 (règles de gestion des données, redondance minimale).
 - [x] **Expédition** : bouton « Marquer comme expédié » pour le vendeur (`PATCH /api/orders/items/:id/shipped`), suivi « En préparation » / « Expédié le … » dans « Mes commandes » de l'acheteur.

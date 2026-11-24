@@ -148,6 +148,11 @@ describe('NavBar', () => {
     expect(screen.getByTestId('current-location')).toHaveTextContent('/?q=luffy');
   });
 
+  it('donne accès à la page « Comment ça marche ? »', async () => {
+    await renderWithProviders(<NavBar />);
+    expect(screen.getByRole('link', { name: 'COMMENT ÇA MARCHE ?' })).toHaveAttribute('href', '/comment-ca-marche');
+  });
+
   it('affiche le lien « Admin » seulement aux administrateurs', async () => {
     loginAs(1);
     const { unmount } = await renderWithProviders(<NavBar />);

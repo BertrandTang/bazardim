@@ -89,6 +89,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | RGPD | Profil public d'un vendeur | L'email n'est pas affiché | Intégration | `pages.test.jsx` |
 | Modération des licences | Utilisateur ; admin : valider, fusionner, ajouter / supprimer un synonyme | « Réservé aux administrateurs. » ; licence déplacée dans « validées » ; doublon fusionné avec synonyme affiché ; synonyme ajouté puis retiré | Intégration | `pages.test.jsx` |
 | Barre de navigation | Lien « Admin » | Visible seulement pour un administrateur | Composant | `components.test.jsx` |
+| Comment ça marche ? | Ouvrir la page ; lien dans la barre de navigation | Étapes pour vendre et acheter, encadré « Pourquoi le titre est-il automatique ? », exemples de titres calculés ; lien « COMMENT ÇA MARCHE ? » | Intégration / Composant | `pages.test.jsx`, `components.test.jsx` |
 | Pages légales | Pied de page, mentions légales, politique de confidentialité, conditions générales | Liens vers les trois pages (et vers les CGV dans le panier) ; éditeur et hébergeur ; tableau des données, cookies et droits RGPD ; barème des frais de service | Intégration | `pages.test.jsx` |
 | Outils | Sauvegarde locale, prix, images | Valeurs attendues, y compris sauvegarde corrompue | Unitaire | `useLocalStorageState.test.js`, `productHelpers.test.js` |
 

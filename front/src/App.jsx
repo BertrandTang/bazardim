@@ -15,6 +15,7 @@ import Home from './pages/Home/Home.jsx';
 // Pendant le téléchargement, <Suspense> (dans Layout.jsx) affiche "Chargement…".
 const AdminLicences = lazy(() => import('./pages/AdminLicences/AdminLicences.jsx'));
 const Auth = lazy(() => import('./pages/Auth/Auth.jsx'));
+const HowItWorks = lazy(() => import('./pages/HowItWorks/HowItWorks.jsx'));
 const LegalNotice = lazy(() => import('./pages/Legal/LegalNotice.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/Legal/PrivacyPolicy.jsx'));
 const TermsAndConditions = lazy(() => import('./pages/Legal/TermsAndConditions.jsx'));
@@ -96,6 +97,7 @@ export default function App() {
                         </RequireAuth>
                       }
                     />
+                    <Route path="/comment-ca-marche" element={<HowItWorks />} />
                     <Route path="/mentions-legales" element={<LegalNotice />} />
                     <Route path="/confidentialite" element={<PrivacyPolicy />} />
                     <Route path="/conditions-generales" element={<TermsAndConditions />} />

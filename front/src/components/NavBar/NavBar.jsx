@@ -94,6 +94,8 @@ export default function NavBar() {
           ))}
         </NavBarDropdown>
 
+        <Link to="/comment-ca-marche">COMMENT ÇA MARCHE ?</Link>
+
         <Link to="/vendre" className="navbar-sell-button">
           VENDRE
         </Link>

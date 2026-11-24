@@ -142,6 +142,7 @@ front/
 | `/messages` | `Messages` : messages reçus et envoyés | Connecté |
 | `/admin/licences` | `AdminLicences` : modération des licences saisies par les vendeurs | Administrateur |
 | `/commande/confirmation` | Retour du paiement Stripe | Connecté |
+| `/comment-ca-marche` | `HowItWorks` : tutoriel pour vendre et acheter, et pourquoi le titre est automatique | Tout le monde |
 | `/mentions-legales`, `/confidentialite`, `/conditions-generales` | Pages légales | Tout le monde |
 | toute autre adresse | `NotFound` (erreur 404) | Tout le monde |
 
@@ -176,7 +177,7 @@ même sans être connecté.
 | Composant | Rôle |
 | --- | --- |
 | `Layout` | Structure commune : lien « Aller au contenu » (accessibilité), barre de navigation, page, pied de page |
-| `NavBar` (+ `NavBarDropdown`, `NavBarIcons`) | Logo, recherche, menus Catégories / Licences (souris, doigt et clavier), liens du compte, pastille des messages, panier |
+| `NavBar` (+ `NavBarDropdown`, `NavBarIcons`) | Logo, recherche, menus Catégories / Licences (souris, doigt et clavier), lien « Comment ça marche ? », liens du compte (et « Admin » pour un administrateur), pastille des messages, panier |
 | `Footer` | Copyright et liens vers les pages légales |
 | `ProductCard` | Carte d'une annonce : image, bandeau « Vendu », étiquettes, prix, cœur des favoris, bouton panier ; côté vendeur : Modifier / Supprimer, acheteur, adresse et bouton « Marquer comme expédié » |
 | `ProductForm` | Formulaire d'annonce, utilisé pour la mise en vente **et** pour la modification |
@@ -231,7 +232,7 @@ et l'annulation des requêtes devenues inutiles).
 
 ## Tests du front
 
-- **Outils** : Vitest + React Testing Library + jsdom. **100 tests**, environ **90 % de couverture**.
+- **Outils** : Vitest + React Testing Library + jsdom. **103 tests**, environ **90 % de couverture**.
 - **La fausse API** (`tests/fakeApi.js`) : pendant les tests, `src/services/api.js` est remplacé (`vi.mock` dans
   `tests/setup.js`) par une version qui travaille sur des données en mémoire (`tests/fixtures.js`).
   Les tests du front ne dépendent donc ni du serveur, ni de la base de données.

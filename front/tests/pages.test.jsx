@@ -22,6 +22,7 @@ import Product from '../src/pages/Product/Product.jsx';
 import Profile from '../src/pages/Profile/Profile.jsx';
 import RequireAuth from '../src/components/RequireAuth/RequireAuth.jsx';
 import AdminLicences from '../src/pages/AdminLicences/AdminLicences.jsx';
+import HowItWorks from '../src/pages/HowItWorks/HowItWorks.jsx';
 import Footer from '../src/components/Footer/Footer.jsx';
 import LegalNotice from '../src/pages/Legal/LegalNotice.jsx';
 import PrivacyPolicy from '../src/pages/Legal/PrivacyPolicy.jsx';
@@ -629,5 +630,19 @@ describe('AdminLicences (modération des licences)', () => {
     const aliasChip = within(naruto).getByText('naruto shippuden').closest('.MuiChip-root');
     await user.click(aliasChip.querySelector('.MuiChip-deleteIcon'));
     await waitFor(() => expect(within(naruto).queryByText('naruto shippuden')).not.toBeInTheDocument());
+  });
+});
+
+describe('HowItWorks (comment ça marche ?)', () => {
+  it('explique comment vendre et acheter, et pourquoi le titre est automatique', async () => {
+    await renderWithProviders(<HowItWorks />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Comment ça marche ?');
+    expect(screen.getByRole('heading', { name: 'Vendre une figurine' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Acheter une figurine' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Pourquoi le titre est-il automatique ?' })).toBeInTheDocument();
+    // Exemples calculés avec la même fonction que l'API.
+    expect(screen.getByText('Figurine – Roronoa Zoro (Wano Ver.)')).toBeInTheDocument();
+    expect(screen.getByText('Statue – Sephiroth (Square Enix)')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Mettre une figurine en vente' })).toHaveAttribute('href', '/vendre');
   });
 });
