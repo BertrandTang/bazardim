@@ -3,12 +3,12 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `████████████████░░░░` 82 % (65 / 79 tâches)**
+**Progression globale : `█████████████████░░░` 84 % (66 / 79 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 2 — Front-end | `████████████████░░░░` 78 % | 28 / 36 |
-| Bloc 3 — Back-end | `██████████████████░░` 91 % | 31 / 34 |
+| Bloc 3 — Back-end | `███████████████████░` 94 % | 32 / 34 |
 | RGPD dans l'application | `████████████████░░░░` 80 % | 4 / 5 |
 | Hygiène du projet et Git | `██████████░░░░░░░░░░` 50 % | 2 / 4 |
 
@@ -137,7 +137,7 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Modèle « pièce unique » (comme Vinted) : chaque annonce est ajoutée une seule fois au panier, sans quantité.
 - [x] **Monétisation** : frais de service payés par l'acheteur (0,70 € + 5 %), calculés par le back, affichés dans le panier avant le paiement, envoyés à Stripe comme une ligne à part et enregistrés dans `orders.service_fee`.
 - [x] Page **CGU / CGV** (`/conditions-generales`) : rôle d'intermédiaire, annonces, frais de service, paiement, livraison, rétractation entre particuliers, litiges ; lien dans le pied de page et dans le panier.
-- [ ] Faire un vrai paiement de test à la main (carte `4242 4242 4242 4242`) et garder des captures.
+- [x] Vrai paiement de test fait à la main (carte `4242 4242 4242 4242`), visible dans le tableau de bord Stripe (24/11/2026). Garder les captures pour le dossier.
 
 ### C24 / E18 — API sécurisée pour des services tiers
 

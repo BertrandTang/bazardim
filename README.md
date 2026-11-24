@@ -8,6 +8,7 @@ Projet fil rouge de la certification **Développeur Full Stack** (RNCP 38606).
 | --- | --- | --- |
 | [`front/`](front/) | Application React 19 + Vite + Material UI | [front/README.md](front/README.md) |
 | [`back/`](back/) | API REST Node.js + Express 5 + PostgreSQL | [back/README.md](back/README.md) |
+| [`docs/presentation.md`](docs/presentation.md) | Présentation détaillée : dépendances, modules, commandes, Docker, base de données | |
 | [`todo.md`](todo.md) | Ce qu'il reste à faire pour la certification | |
 
 ## Démarrage rapide
