@@ -621,16 +621,16 @@ export const openApiDocument = {
       },
       ProductInput: {
         type: 'object',
-        required: ['title', 'description', 'price', 'category', 'image_url'],
+        description: 'Pas de titre : il est calculé par l’API (<Type> – <Personnage> – <Édition ou Fabricant>).',
+        required: ['description', 'price', 'category', 'character_name', 'image_url'],
         properties: {
-          title: { type: 'string', maxLength: 150, example: 'Figurine S.H. Figuarts Luffy' },
           description: { type: 'string', maxLength: 5000 },
           price: { type: 'number', minimum: 0, exclusiveMinimum: true, example: 74.99 },
           category: reference('Category'),
           image_url: reference('ImageUrl'),
           licence_name: { type: 'string', maxLength: 100, example: 'One Piece' },
-          character_name: { type: 'string', maxLength: 100 },
-          manufacturer: { type: 'string', maxLength: 100 },
+          character_name: { type: 'string', minLength: 1, maxLength: 100, example: 'Monkey D. Luffy' },
+          manufacturer: { type: 'string', maxLength: 100, example: 'Bandai' },
           version: { type: 'string', maxLength: 100 },
           material: { type: 'string', maxLength: 100 },
           state_of_wear: { type: 'string', maxLength: 50 },
@@ -651,6 +651,11 @@ export const openApiDocument = {
             type: 'object',
             properties: {
               id: { type: 'integer' },
+              title: {
+                type: 'string',
+                description: 'Calculé par l’API',
+                example: 'Figurine articulée – Monkey D. Luffy – Gear 5',
+              },
               owner_id: { type: 'integer' },
               owner_username: { type: 'string' },
               sold_at: {

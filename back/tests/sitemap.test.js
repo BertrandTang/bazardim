@@ -7,8 +7,8 @@ useEmptyDatabase();
 describe('GET /sitemap.xml', () => {
   it('liste les pages fixes et les annonces en vente, mais pas les annonces vendues', async () => {
     const { agent } = await createLoggedInUser();
-    const available = (await agent.post('/api/products').send(buildProduct({ title: 'En vente' }))).body;
-    const sold = (await agent.post('/api/products').send(buildProduct({ title: 'Vendue' }))).body;
+    const available = (await agent.post('/api/products').send(buildProduct({ character_name: 'En vente' }))).body;
+    const sold = (await agent.post('/api/products').send(buildProduct({ character_name: 'Vendue' }))).body;
     await query('UPDATE products SET sold_at = now() WHERE id = $1', [sold.id]);
 
     const response = await anonymous().get('/sitemap.xml').expect(200);

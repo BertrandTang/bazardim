@@ -55,6 +55,18 @@ Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@exa
 - **Journalisation (winston)** : le journal est configuré dans `config/logger.js`, avec trois niveaux (`info`, `warn`, `error`) et la date sur chaque ligne. Le middleware `middlewares/requestLogger.js` écrit une ligne par requête (méthode, adresse, code de réponse, durée) : `info` si tout va bien, `warn` pour un 4xx, `error` pour un 5xx. Les erreurs inattendues sont journalisées par `errorHandler` avec leur pile d'appels. Tout s'affiche dans le terminal, et les erreurs sont aussi écrites dans `back/logs/errors.log` (ignoré par git). Aucun log pendant les tests.
 - **Tests** : Vitest + supertest, sur une vraie base PostgreSQL de test. Stripe est simulé (`vi.mock`) : les tests ne l'appellent jamais.
 
+## Titre des annonces : calculé automatiquement
+
+Le vendeur ne saisit pas de titre : l'API le construit à partir des caractéristiques (`utils/productTitle.js`, appelé par le validateur `productSchema`) :
+
+```
+<Type> – <Personnage> – <Édition>      Figurine articulée – Vegeta – Super Saiyan Blue
+<Type> – <Personnage> – <Fabricant>    s'il n'y a pas d'édition : Statue – Luffy – Bandai
+<Type> – <Personnage>                  s'il n'y a ni édition ni fabricant
+```
+
+Le personnage est donc obligatoire. Un titre envoyé par le navigateur est ignoré, et le titre est recalculé à chaque modification. La licence n'est pas dans le titre : elle est déjà affichée sur la carte de l'annonce. Le formulaire du front affiche un aperçu avec le même calcul (`front/src/utils/productTitle.js`).
+
 ## Licences : normalisation, synonymes et modération
 
 Pour éviter que la même série existe sous plusieurs noms (« One Piece », « one-piece », « Tensura » / « Moi, quand je me réincarne en Slime »), la licence saisie par un vendeur est rangée ainsi (`findOrCreateLicenceId` dans `models/products.model.js`) :

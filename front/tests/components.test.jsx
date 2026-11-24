@@ -69,9 +69,9 @@ describe('ProductForm', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Publier' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Le titre et la description sont obligatoires.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Le personnage et la description sont obligatoires.');
 
-    await user.type(screen.getByLabelText(/Titre/), 'Luffy');
+    await user.type(screen.getByLabelText(/Personnage/), 'Luffy');
     await user.type(screen.getByLabelText(/Description/), 'Très belle figurine');
     await user.click(screen.getByRole('button', { name: 'Publier' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Le prix doit être supérieur à 0.');
@@ -89,7 +89,10 @@ describe('ProductForm', () => {
       <ProductForm submitLabel="Publier" onSubmit={handleSubmit} onCancel={vi.fn()} />,
     );
 
-    await user.type(screen.getByLabelText(/Titre/), '  Luffy  ');
+    await user.type(screen.getByLabelText(/Personnage/), '  Luffy  ');
+    await user.type(screen.getByLabelText(/Édition/), 'Gear 5');
+    // Aperçu du titre, calculé pendant la saisie.
+    expect(screen.getByText('Figurine – Luffy – Gear 5')).toBeInTheDocument();
     await user.type(screen.getByLabelText(/Description/), 'Très belle figurine');
     await user.type(screen.getByLabelText(/Prix/), '49.9');
     await user.type(screen.getByLabelText(/Tags/), 'shf, bandai, ');
@@ -103,7 +106,8 @@ describe('ProductForm', () => {
 
     expect(handleSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: 'Luffy',
+        character_name: 'Luffy',
+        version: 'Gear 5',
         price: 49.9,
         tags: ['shf', 'bandai'],
         has_box: true,
@@ -112,6 +116,8 @@ describe('ProductForm', () => {
         image_url: expect.stringMatching(/^\/uploads\/.*luffy\.png$/),
       }),
     );
+    // Le titre n'est jamais envoyé : l'API le calcule.
+    expect(handleSubmit.mock.calls[0][0]).not.toHaveProperty('title');
   });
 
   it('affiche l’erreur renvoyée par l’API', async () => {
@@ -129,7 +135,8 @@ describe('ProductForm', () => {
     await renderWithProviders(
       <ProductForm initialProduct={vegeta} submitLabel="Enregistrer" onSubmit={vi.fn()} onCancel={vi.fn()} />,
     );
-    expect(screen.getByLabelText(/Titre/)).toHaveValue(vegeta.title);
+    expect(screen.getByLabelText(/Personnage/)).toHaveValue(vegeta.character_name);
+    expect(screen.getByText(`Figurine – ${vegeta.character_name} – ${vegeta.version}`)).toBeInTheDocument();
     expect(screen.getByLabelText(/Tags/)).toHaveValue('articulée, shf, bandai, premium');
   });
 });

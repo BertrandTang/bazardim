@@ -196,6 +196,7 @@ même sans être connecté.
 | Fichier | Rôle |
 | --- | --- |
 | `productHelpers.js` | `formatPrice` (« 59.99 € »), `getProductImage` (image ou image de démo) |
+| `productTitle.js` | Aperçu du titre automatique de l'annonce (type – personnage – édition ou fabricant). Le vrai calcul est fait par l'API. |
 | `serviceFee.js` | Calcul **affiché** des frais de service (0,70 € + 5 %). Le vrai calcul est fait par l'API. |
 | `formatDate.js` | Date au format français « 23/11/2026 » |
 | `redirect.js` | Redirection complète (vers Stripe, ou rechargement après suppression du compte) |
@@ -230,7 +231,7 @@ et l'annulation des requêtes devenues inutiles).
 
 ## Tests du front
 
-- **Outils** : Vitest + React Testing Library + jsdom. **98 tests**, environ **90 % de couverture**.
+- **Outils** : Vitest + React Testing Library + jsdom. **100 tests**, environ **90 % de couverture**.
 - **La fausse API** (`tests/fakeApi.js`) : pendant les tests, `src/services/api.js` est remplacé (`vi.mock` dans
   `tests/setup.js`) par une version qui travaille sur des données en mémoire (`tests/fixtures.js`).
   Les tests du front ne dépendent donc ni du serveur, ni de la base de données.
@@ -419,6 +420,14 @@ Le gestionnaire central traduit aussi les erreurs connues :
 **winston** écrit chaque message avec sa date et son niveau : dans le terminal (en couleur) et, pour les erreurs,
 dans `back/logs/errors.log`. Rien n'est écrit pendant les tests.
 
+### Titre automatique des annonces (`utils/productTitle.js`)
+
+Le vendeur ne choisit pas le titre : l'API le calcule à partir du **type**, du **personnage** et de l'**édition**
+(ou du **fabricant** s'il n'y a pas d'édition), par exemple « Figurine articulée – Vegeta – Super Saiyan Blue ».
+Les titres sont ainsi homogènes et faciles à chercher. Le calcul est fait dans le validateur zod (`.transform`),
+donc pour chaque création et modification ; un titre envoyé par le navigateur est ignoré. Le formulaire du front
+affiche un **aperçu** avec le même calcul (`front/src/utils/productTitle.js`).
+
 ### Licences : normalisation, synonymes et modération (`utils/normalizeText.js`, `models/licences.model.js`)
 
 Problème : sans contrôle, la même série finirait sous plusieurs noms (« One Piece », « one-piece », « Tensura » /
@@ -493,7 +502,7 @@ et dans [`back/README.md`](../back/README.md). En résumé :
 ## Tests du back
 
 - **Outils** : Vitest + supertest, sur une **vraie base PostgreSQL de test** (`bazardim_test`), vidée avant chaque test.
-  **75 tests**, environ **97 % de couverture**.
+  **77 tests**, environ **97 % de couverture**.
 - `tests/globalSetup.js` recrée les tables une fois avant tous les tests ; `tests/helpers.js` fournit
   `createLoggedInUser` (un utilisateur déjà connecté), `buildProduct` (une annonce valide)...
 - **Stripe est simulé** (`vi.mock`) : les tests n'appellent jamais les serveurs de Stripe.

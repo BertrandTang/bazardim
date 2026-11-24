@@ -74,6 +74,8 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur non connecté | Message lisible, pas de plantage ; visiteur = `null` | Unitaire | `api.test.js` |
 | Panier | Ajouter deux fois la même annonce | Ajoutée une seule fois, bouton « DANS LE PANIER » (pièce unique) | Unitaire / Composant | `contexts.test.jsx`, `components.test.jsx` |
 | Panier | Afficher, retirer une annonce, vider | Détail articles / frais de service / total recalculé, pas de boutons de quantité | Intégration | `pages.test.jsx` |
+| Titre automatique | Type, personnage, édition ; sans édition (fabricant) ; personnage seul | « Figurine articulée – Vegeta – Super Saiyan Blue », « Statue – Luffy – Bandai », « Figurine – Sasuke » | Unitaire | `productTitle.test.js` |
+| Formulaire d'annonce | Saisie du personnage et de l'édition | Aperçu du titre mis à jour ; aucun titre envoyé à l'API ; personnage obligatoire | Composant | `components.test.jsx` |
 | Frais de service | 40 €, 0 €, 55,50 €, 134,98 € d'articles | 0,70 € + 5 %, arrondi au centime (même calcul que l'API) | Unitaire | `serviceFee.test.js` |
 | Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `contexts.test.jsx` |
 | Livraison (API tierce) | Taper une adresse | Suggestions de l'API Adresse (BAN), adresse choisie enregistrée | Composant | `AddressAutocomplete.test.jsx` |
@@ -104,6 +106,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Licences (admin) | Liste, valider, renommer | En attente d'abord avec le nombre d'annonces ; validée → dans le menu ; ancien nom gardé comme synonyme | `licences.test.js` |
 | Licences (admin) | Fusionner « Tensura » dans « Moi, quand je me réincarne en Slime » (et cas d'erreur) | Annonces déplacées, doublon supprimé, synonyme « tensura » ; « TENSURA » rangée automatiquement ensuite ; recherche « tensura » trouve les annonces ; 400 avec elle-même, 404 cible inconnue | `licences.test.js` |
 | Licences (admin) | Ajouter / supprimer un synonyme, doublons | 201 puis rangement automatique ; 409 si déjà utilisé (nom ou synonyme) ; 204 puis 404 | `licences.test.js` |
+| Titre automatique | Annonce avec un titre envoyé, sans édition, personnage seul ; modification ; sans personnage | Titre envoyé ignoré, « Type – Personnage – Édition / Fabricant » ; recalculé à la modification ; 400 « Le personnage est obligatoire. » | `products.test.js` |
 | Session | Sans cookie, jeton falsifié, après déconnexion | `GET /api/auth/me` renvoie `null` (un visiteur n'est pas une erreur) ; une route protégée répond 401 | `auth.test.js` |
 | Produits | Créer une annonce | 201, appartient à l'utilisateur connecté | `products.test.js` |
 | Produits | Prix négatif, catégorie inconnue, image `javascript:` | 400 | `products.test.js` |

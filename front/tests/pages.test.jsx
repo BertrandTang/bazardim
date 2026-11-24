@@ -272,9 +272,10 @@ describe('Product (fiche produit)', () => {
     expect(screen.queryByRole('heading', { name: 'Contacter le vendeur' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Modifier' }));
-    const titleInput = screen.getByLabelText(/Titre/);
-    await user.clear(titleInput);
-    await user.type(titleInput, 'Vegeta modifié');
+    // Le titre est recalculé à partir du personnage modifié.
+    const characterInput = screen.getByLabelText(/Personnage/);
+    await user.clear(characterInput);
+    await user.type(characterInput, 'Vegeta modifié');
     await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Vegeta modifié');
 
@@ -311,7 +312,7 @@ describe('Sell (mise en vente)', () => {
   it('crée l’annonce puis ouvre sa page', async () => {
     loginAs(1);
     const { user } = await renderWithProviders(<Sell />, { route: '/vendre', path: '/vendre' });
-    await user.type(screen.getByLabelText(/Titre/), 'Statue Zoro');
+    await user.type(screen.getByLabelText(/Personnage/), 'Zoro');
     await user.type(screen.getByLabelText(/Description/), 'Statue en résine');
     await user.type(screen.getByLabelText(/Prix/), '120');
     await user.upload(

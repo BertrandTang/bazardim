@@ -5,6 +5,7 @@
 // mais elles lisent et modifient des données gardées en mémoire (copiées de fixtures.js).
 // Les règles importantes de la vraie API sont reproduites (connexion, droits du propriétaire...).
 // La vraie API est testée de son côté, dans back/tests/.
+import { buildProductTitle } from '../src/utils/productTitle.js';
 import { computeServiceFee } from '../src/utils/serviceFee.js';
 import { PRODUCTS, TEST_PASSWORD, USERS } from './fixtures.js';
 
@@ -291,7 +292,12 @@ export function addFakePendingLicence(name) {
 
 export async function createProduct(productFields) {
   const user = getLoggedInUser();
-  productFields = { ...productFields, licence_name: resolveLicenceName(productFields.licence_name) };
+  productFields = {
+    ...productFields,
+    licence_name: resolveLicenceName(productFields.licence_name),
+    // Comme l'API : le titre est calculé, jamais repris du formulaire.
+    title: buildProductTitle(productFields),
+  };
   const product = { ...productFields, id: nextId(database.products), owner_id: user.id, owner_username: user.username };
   database.products.push(product);
   return structuredClone(product);
@@ -304,6 +310,9 @@ export async function updateProduct(productId, productFields) {
     throw new ApiError(409, 'Cette annonce est vendue : elle ne peut plus être modifiée.');
   }
   Object.assign(product, productFields);
+  if (productFields.character_name !== undefined) {
+    product.title = buildProductTitle(product);
+  }
   if (productFields.licence_name !== undefined) {
     product.licence_name = resolveLicenceName(productFields.licence_name);
   }

@@ -75,7 +75,8 @@ describe('ProductsContext', () => {
     let createdProduct;
     await act(async () => {
       createdProduct = await result.current.products.addProduct({
-        title: 'Test',
+        category: 'STATUE',
+        character_name: 'Test',
         price: 10,
         licence_name: 'Licence test',
       });
@@ -84,8 +85,10 @@ describe('ProductsContext', () => {
     // Licence inconnue : créée « en attente », elle n'apparaît pas dans le menu avant la validation d'un admin.
     expect(result.current.products.licences).not.toContain('Licence test');
 
-    await act(() => result.current.products.updateProduct(createdProduct.id, { title: 'Modifié' }));
-    expect(result.current.products.findProductById(createdProduct.id).title).toBe('Modifié');
+    // Le titre est calculé à partir du type et du personnage.
+    expect(createdProduct.title).toBe('Statue – Test');
+    await act(() => result.current.products.updateProduct(createdProduct.id, { character_name: 'Modifié' }));
+    expect(result.current.products.findProductById(createdProduct.id).title).toBe('Statue – Modifié');
 
     await act(() => result.current.products.deleteProduct(createdProduct.id));
     expect(result.current.products.findProductById(createdProduct.id)).toBeNull();
