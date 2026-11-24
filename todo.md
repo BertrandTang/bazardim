@@ -3,12 +3,12 @@
 Projet fil rouge : **Bazardim**, marketplace de figurines entre collectionneurs.
 
 <!-- progression:debut -->
-**Progression globale : `█████████████████░░░` 84 % (66 / 79 tâches)**
+**Progression globale : `████████████████░░░░` 82 % (65 / 79 tâches)**
 
 | Partie | Progression | Tâches |
 | --- | --- | --- |
 | Bloc 2 — Front-end | `████████████████░░░░` 78 % | 28 / 36 |
-| Bloc 3 — Back-end | `███████████████████░` 94 % | 32 / 34 |
+| Bloc 3 — Back-end | `██████████████████░░` 91 % | 31 / 34 |
 | RGPD dans l'application | `████████████████░░░░` 80 % | 4 / 5 |
 | Hygiène du projet et Git | `██████████░░░░░░░░░░` 50 % | 2 / 4 |
 
@@ -116,7 +116,7 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] Contrôle d'accès : propriétaire ou admin pour modifier / supprimer une annonce ; messages visibles par l'expéditeur et le destinataire seulement.
 - [x] Journalisation avec **winston** (`src/config/logger.js`) : niveaux info / warn / error, erreurs écrites dans `back/logs/errors.log` ; une ligne par requête (`src/middlewares/requestLogger.js`) ; route `/api/health` pour la supervision.
 - [x] Configuration validée au démarrage (`src/config/config.js`), `.env` ignoré par Git, `.env.example` fourni.
-- [x] **Authentification forte** (C21) : double authentification par code envoyé par e-mail (nodemailer ; Mailpit en développement), facultative pour les utilisateurs, obligatoire pour les administrateurs. Code haché, valable 10 min, usage unique, 5 essais maximum.
+- [ ] ⏸ _Reporté (23/11)_ — **Authentification forte** (citée dans la C21) : double authentification par code TOTP (Google Authenticator), ou à défaut l'expliquer au jury.
 - [x] **Sauvegarde / restauration** de la base : `scripts/backup-database.sh` (`pg_dump`, 7 dernières sauvegardes gardées) et `scripts/restore-database.sh` (base d'essai ou remplacement confirmé) ; restauration testée (mêmes nombres d'utilisateurs, d'annonces et de commandes).
 
 ### C22 / E16 — Développement de l'API
@@ -210,7 +210,7 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [ ] **C17** — Justifier le format choisi (REST + JSON) et la gestion des erreurs réseau (message à l'utilisateur, état de chargement).
 - [ ] **C18 / C25** — Plans de tests ([docs/plan-de-tests.md](docs/plan-de-tests.md)) + captures des rapports de couverture front et back.
 - [ ] **C20** — Score Lighthouse SEO ; limite d'une SPA (contenu généré en JavaScript) et solution proposée (pré-rendu, ou framework SSR comme Next.js / React Router en mode framework) ; choix de l'outil de mesure d'audience.
-- [ ] **C21** — Authentification forte : expliquer la double authentification par e-mail (deux facteurs : ce que l'on sait + ce que l'on possède), ses protections (code haché, 10 min, usage unique, 5 essais) et l'alternative TOTP.
+- [ ] **C21** — Authentification forte : explication (2FA par code e-mail ou application TOTP), si elle n'est pas implémentée.
 - [ ] **C23** — Stratégie de monétisation : frais de service (0,70 € + 5 %, comparaison avec Vinted), pistes (mise en avant payante, abonnement vendeur pro), évolution vers **Stripe Connect** (reversement automatique aux vendeurs) ; captures du paiement de test.
 - [ ] **C22** — Évolutions prévues pour la production : stockage des images hors du serveur (stockage objet type S3 / OVH Object Storage), suppression des images inutilisées.
 - [ ] Diapositives de la soutenance : 10 min front-end + 10 min back-end, avec démonstration.

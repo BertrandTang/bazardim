@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   addFakeMessage,
   createOrder,
-  FAKE_TWO_FACTOR_CODE,
   fakeUserExists,
   fetchUnreadMessageCount,
   likeProduct,
@@ -94,35 +93,6 @@ describe('Auth (connexion)', () => {
     await user.type(screen.getByLabelText(/Mot de passe/), TEST_PASSWORD);
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
     expect(screen.getByTestId('current-location')).toHaveTextContent('/profile');
-  });
-});
-
-describe('Auth (double authentification)', () => {
-  it('demande le code reçu par e-mail, refuse un mauvais code puis connecte', async () => {
-    const { user } = await renderWithProviders(<Auth />, { route: '/auth', path: '/auth' });
-    await user.type(screen.getByLabelText(/Email/), 'admin@example.com');
-    await user.type(screen.getByLabelText(/Mot de passe/), TEST_PASSWORD);
-    await user.click(screen.getByRole('button', { name: 'Se connecter' }));
-
-    // Étape 2 : le mot de passe est bon, mais il faut le code envoyé à l'adresse.
-    expect(screen.getByText(/un code à 6 chiffres vient d’être envoyé/)).toHaveTextContent('admin@example.com');
-    await user.type(screen.getByLabelText(/Code reçu par e-mail/), '000000');
-    await user.click(screen.getByRole('button', { name: 'Valider le code' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Code incorrect.');
-
-    await user.clear(screen.getByLabelText(/Code reçu par e-mail/));
-    await user.type(screen.getByLabelText(/Code reçu par e-mail/), FAKE_TWO_FACTOR_CODE);
-    await user.click(screen.getByRole('button', { name: 'Valider le code' }));
-    expect(screen.getByTestId('current-location')).toHaveTextContent('/profile');
-  });
-
-  it('permet de recommencer pour recevoir un nouveau code', async () => {
-    const { user } = await renderWithProviders(<Auth />, { route: '/auth', path: '/auth' });
-    await user.type(screen.getByLabelText(/Email/), 'admin@example.com');
-    await user.type(screen.getByLabelText(/Mot de passe/), TEST_PASSWORD);
-    await user.click(screen.getByRole('button', { name: 'Se connecter' }));
-    await user.click(screen.getByRole('button', { name: 'Recevoir un nouveau code' }));
-    expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument();
   });
 });
 
@@ -382,32 +352,6 @@ describe('Profile (mon profil)', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
     expect(screen.getByText('Profil mis à jour.')).toBeInTheDocument();
-  });
-
-  it('active la double authentification avec le mot de passe actuel', async () => {
-    loginAs(1);
-    const { user } = await renderWithProviders(profilePage);
-    const twoFactorSwitch = screen.getByRole('switch', { name: 'Double authentification par e-mail' });
-    expect(twoFactorSwitch).not.toBeChecked();
-
-    // Sans le mot de passe actuel : refusé.
-    await user.click(twoFactorSwitch);
-    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Mot de passe actuel incorrect.');
-
-    await user.type(screen.getByLabelText('Mot de passe actuel'), TEST_PASSWORD);
-    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
-    expect(screen.getByText('Profil mis à jour.')).toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: 'Double authentification par e-mail' })).toBeChecked();
-  });
-
-  it('montre la double authentification toujours active pour un administrateur', async () => {
-    loginAs(8);
-    await renderWithProviders(profilePage);
-    const twoFactorSwitch = screen.getByRole('switch', { name: 'Double authentification par e-mail' });
-    expect(twoFactorSwitch).toBeChecked();
-    expect(twoFactorSwitch).toBeDisabled();
-    expect(screen.getByText('Toujours active pour les administrateurs.')).toBeInTheDocument();
   });
 
   it('refuse un changement d’email sans le mot de passe actuel', async () => {

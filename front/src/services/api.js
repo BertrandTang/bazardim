@@ -77,17 +77,8 @@ export function fetchCurrentUser() {
   return request('/auth/me');
 }
 
-/**
- * Première étape de la connexion. Renvoie le compte, ou { two_factor_required: true } si un code
- * a été envoyé par e-mail (double authentification) : il faut alors appeler verifyLoginCode.
- */
 export function login(email, password) {
   return request('/auth/login', { method: 'POST', body: { email, password } });
-}
-
-/** Deuxième étape de la connexion (double authentification) : le code à 6 chiffres reçu par e-mail. */
-export function verifyLoginCode(code) {
-  return request('/auth/login/verify', { method: 'POST', body: { code } });
 }
 
 export function register({ username, email, password }) {

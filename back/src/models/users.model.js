@@ -1,7 +1,7 @@
 import { query } from '../config/database.js';
 
 // Colonnes renvoyées pour l'utilisateur connecté. Le hash du mot de passe n'en fait JAMAIS partie.
-const ACCOUNT_COLUMNS = 'id, username, email, profile_image_url, role, two_factor_enabled, created_at';
+const ACCOUNT_COLUMNS = 'id, username, email, profile_image_url, role, created_at';
 
 /** Compte complet (sans mot de passe) d'un utilisateur, ou null. */
 export async function findUserById(userId) {
@@ -49,18 +49,17 @@ export async function insertUser({ username, email, passwordHash, role = 'user',
  * Met à jour un compte. COALESCE($n, colonne) garde l'ancienne valeur
  * quand on passe `undefined` / null : on ne modifie que les champs fournis.
  */
-export async function updateUserById(userId, { username, email, profileImageUrl, passwordHash, twoFactorEnabled }) {
+export async function updateUserById(userId, { username, email, profileImageUrl, passwordHash }) {
   const rows = await query(
     `UPDATE users SET
-       username           = COALESCE($2, username),
-       email              = COALESCE($3, email),
-       profile_image_url  = COALESCE($4, profile_image_url),
-       password_hash      = COALESCE($5, password_hash),
-       two_factor_enabled = COALESCE($6, two_factor_enabled),
-       updated_at         = now()
+       username          = COALESCE($2, username),
+       email             = COALESCE($3, email),
+       profile_image_url = COALESCE($4, profile_image_url),
+       password_hash     = COALESCE($5, password_hash),
+       updated_at        = now()
      WHERE id = $1
      RETURNING ${ACCOUNT_COLUMNS}`,
-    [userId, username ?? null, email ?? null, profileImageUrl ?? null, passwordHash ?? null, twoFactorEnabled ?? null],
+    [userId, username ?? null, email ?? null, profileImageUrl ?? null, passwordHash ?? null],
   );
   return rows[0];
 }

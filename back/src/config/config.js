@@ -17,14 +17,6 @@ const environmentSchema = z.object({
   STRIPE_SECRET_KEY: z.string().startsWith('sk_test_', 'doit être une clé de test Stripe (sk_test_...)'),
   // Secret du webhook Stripe (facultatif en local : voir back/README.md).
   STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_', 'doit commencer par whsec_').optional(),
-  // Envoi des e-mails (codes de double authentification). Par défaut : Mailpit, la boîte mail
-  // de développement lancée par Docker (http://localhost:8025), qui n'envoie aucun vrai e-mail.
-  // En production : les paramètres SMTP d'un service d'envoi (Brevo, Mailjet...).
-  SMTP_HOST: z.string().default('localhost'),
-  SMTP_PORT: z.coerce.number().int().positive().default(1025),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASSWORD: z.string().optional(),
-  MAIL_FROM: z.string().default('Bazardim <no-reply@bazardim.fr>'),
 });
 
 const parsedEnvironment = environmentSchema.safeParse(process.env);

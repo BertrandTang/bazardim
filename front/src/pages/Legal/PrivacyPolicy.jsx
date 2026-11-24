@@ -13,12 +13,6 @@ const DATA_PROCESSING = [
     retention: 'Jusqu’à la suppression de votre compte',
   },
   {
-    purpose: 'Sécuriser la connexion (double authentification)',
-    data: 'Adresse e-mail, code de connexion à 6 chiffres (enregistré chiffré)',
-    legalBasis: 'Exécution du contrat (sécurité du compte)',
-    retention: 'Le code est supprimé dès son utilisation, et au plus tard après 10 minutes',
-  },
-  {
     purpose: 'Publier des annonces',
     data: 'Photos, titre, description et caractéristiques des figurines',
     legalBasis: 'Exécution du contrat',
@@ -133,8 +127,7 @@ export default function PrivacyPolicy() {
       <p>
         Les mots de passe sont chiffrés avec l’algorithme bcrypt, les échanges avec le site sont chiffrés (HTTPS) et
         l’accès aux données est réservé à leur propriétaire : seul l’auteur d’une annonce peut la modifier, seuls
-        l’expéditeur et le destinataire d’un message peuvent le lire. Vous pouvez activer dans votre profil la double
-        authentification : à chaque connexion, un code est alors envoyé à votre adresse e-mail, en plus du mot de passe.
+        l’expéditeur et le destinataire d’un message peuvent le lire.
       </p>
 
       <h2>Vos droits</h2>

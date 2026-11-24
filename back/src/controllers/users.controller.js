@@ -29,12 +29,10 @@ export async function updateAccount(request, response) {
   const changes = updateAccountSchema.parse(request.body);
   const isChangingEmail = changes.email !== undefined && changes.email !== request.user.email;
   const isChangingPassword = changes.new_password !== undefined;
-  const isChangingTwoFactor =
-    changes.two_factor_enabled !== undefined && changes.two_factor_enabled !== request.user.two_factor_enabled;
 
-  // Changer d'email, de mot de passe ou la double authentification est sensible : si quelqu'un
-  // utilise un ordinateur resté connecté, il ne doit pas pouvoir s'approprier le compte.
-  if (isChangingEmail || isChangingPassword || isChangingTwoFactor) {
+  // Changer d'email ou de mot de passe est sensible : si quelqu'un utilise un ordinateur
+  // resté connecté, il ne doit pas pouvoir s'approprier le compte.
+  if (isChangingEmail || isChangingPassword) {
     await checkCurrentPassword(request.user.id, changes.current_password);
   }
 
@@ -43,7 +41,6 @@ export async function updateAccount(request, response) {
     email: changes.email,
     profileImageUrl: changes.profile_image_url,
     passwordHash: isChangingPassword ? await hashPassword(changes.new_password) : undefined,
-    twoFactorEnabled: changes.two_factor_enabled,
   });
   response.json(updatedUser);
 }

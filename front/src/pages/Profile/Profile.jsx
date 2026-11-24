@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, FormControlLabel, FormHelperText, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import DeleteAccountDialog from '../../components/DeleteAccountDialog/DeleteAccountDialog.jsx';
 import ImageUploadField from '../../components/ImageUploadField/ImageUploadField.jsx';
 import OrderSummary from '../../components/OrderSummary/OrderSummary.jsx';
@@ -74,12 +74,9 @@ function SettingsSection() {
     username: currentUser.username,
     email: currentUser.email,
     profile_image_url: currentUser.profile_image_url ?? '',
-    two_factor_enabled: currentUser.two_factor_enabled,
     current_password: '',
     new_password: '',
   });
-  // Pour un administrateur, la double authentification est toujours active (imposée par l'API).
-  const isAdmin = currentUser.role === 'admin';
   const [isSaved, setIsSaved] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -98,10 +95,6 @@ function SettingsSection() {
     // La photo n'est envoyée que si l'utilisateur en a une (l'API n'accepte que des images du site).
     if (formValues.profile_image_url) {
       changes.profile_image_url = formValues.profile_image_url;
-    }
-    // La double authentification n'est envoyée que si elle a changé (l'API demande alors le mot de passe).
-    if (formValues.two_factor_enabled !== currentUser.two_factor_enabled) {
-      changes.two_factor_enabled = formValues.two_factor_enabled;
     }
     // Les mots de passe ne sont envoyés que s'ils ont été saisis.
     // L'API exige le mot de passe actuel pour changer d'email ou de mot de passe.
@@ -150,31 +143,10 @@ function SettingsSection() {
           label="Mot de passe actuel"
           name="current_password"
           autoComplete="current-password"
-          helperText="Obligatoire pour changer d’email, de mot de passe ou la double authentification"
+          helperText="Obligatoire pour changer d’email ou de mot de passe"
           value={formValues.current_password}
           onChange={handleChange}
         />
-        {/* Double authentification : à la connexion, un code est envoyé par e-mail en plus du mot de passe. */}
-        <div>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isAdmin || formValues.two_factor_enabled}
-                disabled={isAdmin}
-                onChange={(event) => {
-                  setFormValues((previousValues) => ({ ...previousValues, two_factor_enabled: event.target.checked }));
-                  setIsSaved(false);
-                }}
-              />
-            }
-            label="Double authentification par e-mail"
-          />
-          <FormHelperText>
-            {isAdmin
-              ? 'Toujours active pour les administrateurs.'
-              : 'À chaque connexion, un code à 6 chiffres est envoyé à votre adresse e-mail.'}
-          </FormHelperText>
-        </div>
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         {isSaved && <Alert severity="success">Profil mis à jour.</Alert>}
         <Button type="submit" variant="contained">
