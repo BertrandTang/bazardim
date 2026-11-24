@@ -92,7 +92,7 @@ describe('ProductForm', () => {
     await user.type(screen.getByLabelText(/Personnage/), '  Luffy  ');
     await user.type(screen.getByLabelText(/Édition/), 'Gear 5');
     // Aperçu du titre, calculé pendant la saisie.
-    expect(screen.getByText('Figurine – Luffy – Gear 5')).toBeInTheDocument();
+    expect(screen.getByText('Figurine – Luffy (Gear 5 Ver.)')).toBeInTheDocument();
     await user.type(screen.getByLabelText(/Description/), 'Très belle figurine');
     await user.type(screen.getByLabelText(/Prix/), '49.9');
     await user.type(screen.getByLabelText(/Tags/), 'shf, bandai, ');
@@ -136,7 +136,7 @@ describe('ProductForm', () => {
       <ProductForm initialProduct={vegeta} submitLabel="Enregistrer" onSubmit={vi.fn()} onCancel={vi.fn()} />,
     );
     expect(screen.getByLabelText(/Personnage/)).toHaveValue(vegeta.character_name);
-    expect(screen.getByText(`Figurine – ${vegeta.character_name} – ${vegeta.version}`)).toBeInTheDocument();
+    expect(screen.getByText(`Figurine – ${vegeta.character_name} (${vegeta.version} Ver.)`)).toBeInTheDocument();
     expect(screen.getByLabelText(/Tags/)).toHaveValue('articulée, shf, bandai, premium');
   });
 });

@@ -1,10 +1,14 @@
 // Données utilisées par la fausse API des tests (voir fakeApi.js), au même format que la vraie API.
-// Ce sont les données de démonstration de back/database/seed-data, avec des identifiants 1, 2, 3...
+// Elles reprennent un ancien jeu de démonstration, avec des identifiants 1, 2, 3... (les tests
+// s'appuient sur leurs prix et leurs propriétaires). Comme dans l'API, le titre de chaque produit
+// est calculé à partir de son type, de son personnage et de son édition (voir buildProductTitle).
 //
 // Repères utilisés dans les tests :
 // - utilisateur 1 : CollectionneurDu92 (collectionneurdu92@example.com), vend le produit 1 (Vegeta) ;
 // - utilisateur 2 : FigurineParadise, vend le produit 2 (Luffy) ;
 // - utilisateur 8 : Admin (admin@example.com).
+
+import { buildProductTitle } from '../src/utils/productTitle.js';
 
 /** Mot de passe de tous les comptes de la fausse API (faux mot de passe, propre aux tests). */
 export const TEST_PASSWORD = 'mot-de-passe-de-test';
@@ -68,10 +72,9 @@ export const USERS = [
   },
 ];
 
-export const PRODUCTS = [
+const PRODUCTS_WITHOUT_TITLE = [
   {
     id: 1,
-    title: 'Figurine S.H. Figuarts Vegeta Super Saiyan Blue',
     description: 'Figurine articulée de haute qualité avec plusieurs visages et mains interchangeables. Taille : 15cm.',
     price: 59.99,
     category: 'FIGURINE',
@@ -95,7 +98,6 @@ export const PRODUCTS = [
   },
   {
     id: 2,
-    title: 'Figurine S.H. Figuarts Luffy',
     description: 'Figurine articulée détaillée, accessoires inclus, finition peinture premium.',
     price: 74.99,
     category: 'FIGURINE ARTICULÉE',
@@ -119,7 +121,6 @@ export const PRODUCTS = [
   },
   {
     id: 3,
-    title: 'Figurine Sasuke - Édition Collector',
     description: 'Figurine collector avec socle diorama et finitions métalliques.',
     price: 99.99,
     category: 'FIGURINE',
@@ -143,7 +144,6 @@ export const PRODUCTS = [
   },
   {
     id: 4,
-    title: 'Figurine Inosuke - Pose Dynamique',
     description: 'Statue dynamique en PVC, très détaillée et expression agressive.',
     price: 64.5,
     category: 'STATUE',
@@ -167,7 +167,6 @@ export const PRODUCTS = [
   },
   {
     id: 5,
-    title: 'Figurine Deku - Edition Battle',
     description: 'Figurine articulée avec plusieurs mains et visages, finition mate.',
     price: 69.99,
     category: 'FIGURINE',
@@ -191,7 +190,6 @@ export const PRODUCTS = [
   },
   {
     id: 6,
-    title: 'Figurine Sailor Mercury - 1/8',
     description: "Figurine à l'échelle 1/8, sculpture fine et peinture douce.",
     price: 54.0,
     category: 'FIGURINE',
@@ -215,7 +213,6 @@ export const PRODUCTS = [
   },
   {
     id: 7,
-    title: 'Play Arts Kai Cloud - Version Deluxe',
     description: 'Figurine articulée Play Arts Kai, accessoires et épée inclus.',
     price: 119.99,
     category: 'FIGURINE ARTICULÉE',
@@ -239,7 +236,6 @@ export const PRODUCTS = [
   },
   {
     id: 8,
-    title: 'Peluche Eevee - Grande Taille',
     description: 'Peluche douce et officielle, parfaite pour décoration et cadeaux.',
     price: 29.5,
     category: 'FIGURINE',
@@ -263,7 +259,6 @@ export const PRODUCTS = [
   },
   {
     id: 9,
-    title: 'Figurine Saitama - Vinyl Art',
     description: 'Figurine vinyl au style épuré, idéale pour collections modernes.',
     price: 24.99,
     category: 'FIGURINE',
@@ -287,7 +282,6 @@ export const PRODUCTS = [
   },
   {
     id: 10,
-    title: 'Figurine Ichigo - Edition Zangetsu',
     description: 'Figurine haute qualité représentant Ichigo avec sa lame Zangetsu.',
     price: 84.99,
     category: 'STATUE',
@@ -311,7 +305,6 @@ export const PRODUCTS = [
   },
   {
     id: 11,
-    title: 'Figurine Ichigo - Edition Zangetsu',
     description: 'Figurine haute qualité représentant Ichigo avec sa lame Zangetsu.',
     price: 84.99,
     category: 'FIGURINE',
@@ -334,3 +327,6 @@ export const PRODUCTS = [
     tags: ['statue', 'anime', 'premium'],
   },
 ];
+
+/** Produits de la fausse API, avec le titre calculé comme le fait l'API. */
+export const PRODUCTS = PRODUCTS_WITHOUT_TITLE.map((product) => ({ ...product, title: buildProductTitle(product) }));

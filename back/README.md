@@ -60,12 +60,12 @@ Comptes de démo : `collectionneurdu92@example.com`, administrateur : `admin@exa
 Le vendeur ne saisit pas de titre : l'API le construit à partir des caractéristiques (`utils/productTitle.js`, appelé par le validateur `productSchema`) :
 
 ```
-<Type> – <Personnage> – <Édition>      Figurine articulée – Vegeta – Super Saiyan Blue
-<Type> – <Personnage> – <Fabricant>    s'il n'y a pas d'édition : Statue – Luffy – Bandai
-<Type> – <Personnage>                  s'il n'y a ni édition ni fabricant
+<Type> – <Personnage> (<Édition> Ver.)   Figurine – Roronoa Zoro (Wano Ver.)
+<Type> – <Personnage> (<Fabricant>)      s'il n'y a pas d'édition : Statue – Luffy (Bandai)
+<Type> – <Personnage>                    s'il n'y a ni édition ni fabricant
 ```
 
-Le personnage est donc obligatoire. Un titre envoyé par le navigateur est ignoré, et le titre est recalculé à chaque modification. La licence n'est pas dans le titre : elle est déjà affichée sur la carte de l'annonce. Le formulaire du front affiche un aperçu avec le même calcul (`front/src/utils/productTitle.js`).
+« Ver. » (pour « version ») est la convention des figurines japonaises ; il n'est pas répété si le vendeur l'a déjà écrit. Le personnage est donc obligatoire. Un titre envoyé par le navigateur est ignoré, et le titre est recalculé à chaque modification. La licence n'est pas dans le titre : elle est déjà affichée sur la carte de l'annonce. Le formulaire du front affiche un aperçu avec le même calcul (`front/src/utils/productTitle.js`).
 
 ## Licences : normalisation, synonymes et modération
 

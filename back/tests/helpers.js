@@ -52,7 +52,7 @@ export function anonymous() {
 
 /**
  * Produit valide, à compléter ou modifier dans chaque test.
- * Pas de titre : l'API le calcule (« Figurine – Monkey D. Luffy – Gear 5 »).
+ * Pas de titre : l'API le calcule (« Figurine – Monkey D. Luffy (Gear 5 Ver.) »).
  */
 export function buildProduct(overrides = {}) {
   return {

@@ -127,7 +127,7 @@ Détails et liste des routes : [back/README.md](back/README.md).
 - [x] **Messagerie** : contacter le vendeur, boîte de réception / messages envoyés, réponse, marquer comme lu, pastille des messages non lus.
 - [x] Envoi d'images avec **multer** (`POST /api/uploads`, JPEG/PNG/WebP, 2 Mo max, nom de fichier aléatoire) : photo d'annonce obligatoire et photo de profil.
 - [x] Annonce **vendue** : bandeau « Vendu », plus modifiable (409), le vendeur voit le pseudo et l'adresse de livraison de l'acheteur (`GET /api/orders/sales`).
-- [x] **Titre automatique** des annonces : « Type – Personnage – Édition » (ou Fabricant), calculé par l'API, aperçu dans le formulaire ; personnage obligatoire.
+- [x] **Titre automatique** des annonces : « Type – Personnage (Édition Ver.) » (ou le fabricant entre parenthèses), calculé par l'API, aperçu dans le formulaire ; personnage obligatoire.
 - [x] **Licences sans doublons** : nom normalisé (`UNIQUE`), synonymes (« DBZ » → Dragon Ball Z), licence inconnue créée « en attente » ; page admin `/admin/licences` pour valider, renommer ou fusionner (le doublon devient un synonyme). Bon argument pour C8 (règles de gestion des données, redondance minimale).
 - [x] **Expédition** : bouton « Marquer comme expédié » pour le vendeur (`PATCH /api/orders/items/:id/shipped`), suivi « En préparation » / « Expédié le … » dans « Mes commandes » de l'acheteur.
 

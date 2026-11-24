@@ -22,7 +22,7 @@
   }
 }
 
-/* Aperçu du titre calculé automatiquement (type – personnage – édition ou fabricant). */
+/* Aperçu du titre calculé automatiquement (type – personnage (édition Ver.) ou fabricant). */
 .product-form-title-preview {
   display: flex;
   flex-direction: column;

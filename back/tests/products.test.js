@@ -10,8 +10,8 @@ describe('POST /api/products', () => {
     const response = await agent.post('/api/products').send(buildProduct()).expect(201);
 
     expect(response.body).toMatchObject({
-      // Titre calculé par l'API : <Type> – <Personnage> – <Édition>
-      title: 'Figurine – Monkey D. Luffy – Gear 5',
+      // Titre calculé par l'API : <Type> – <Personnage> (<Édition> Ver.)
+      title: 'Figurine – Monkey D. Luffy (Gear 5 Ver.)',
       price: 49.9,
       licence_name: 'One Piece',
       owner_id: user.id,
@@ -29,13 +29,20 @@ describe('POST /api/products', () => {
       .post('/api/products')
       .send(buildProduct({ title: 'WOW RARE !!!', category: 'FIGURINE ARTICULÉE' }))
       .expect(201);
-    expect(withSentTitle.body.title).toBe('Figurine articulée – Monkey D. Luffy – Gear 5');
+    expect(withSentTitle.body.title).toBe('Figurine articulée – Monkey D. Luffy (Gear 5 Ver.)');
 
     const withManufacturer = await agent
       .post('/api/products')
       .send(buildProduct({ category: 'STATUE', version: '', manufacturer: 'Bandai' }))
       .expect(201);
-    expect(withManufacturer.body.title).toBe('Statue – Monkey D. Luffy – Bandai');
+    expect(withManufacturer.body.title).toBe('Statue – Monkey D. Luffy (Bandai)');
+
+    // « Ver. » n'est pas répété si le vendeur l'a déjà écrit.
+    const withVersionWord = await agent
+      .post('/api/products')
+      .send(buildProduct({ version: 'Wano version' }))
+      .expect(201);
+    expect(withVersionWord.body.title).toBe('Figurine – Monkey D. Luffy (Wano Ver.)');
 
     const characterOnly = await agent
       .post('/api/products')
@@ -141,7 +148,7 @@ describe('PUT et DELETE /api/products/:id', () => {
       .send(buildProduct({ character_name: 'Zoro', version: 'Wano', price: 10, tags: ['nouveau'] }))
       .expect(200);
     // Le titre est recalculé avec les nouvelles caractéristiques.
-    expect(response.body).toMatchObject({ title: 'Figurine – Zoro – Wano', price: 10, tags: ['nouveau'] });
+    expect(response.body).toMatchObject({ title: 'Figurine – Zoro (Wano Ver.)', price: 10, tags: ['nouveau'] });
   });
 
   it('un autre utilisateur ne peut ni modifier ni supprimer (403)', async () => {

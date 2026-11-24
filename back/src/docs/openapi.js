@@ -621,7 +621,8 @@ export const openApiDocument = {
       },
       ProductInput: {
         type: 'object',
-        description: 'Pas de titre : il est calculé par l’API (<Type> – <Personnage> – <Édition ou Fabricant>).',
+        description:
+          'Pas de titre : il est calculé par l’API (<Type> – <Personnage> (<Édition> Ver.), ou le fabricant entre parenthèses sans édition).',
         required: ['description', 'price', 'category', 'character_name', 'image_url'],
         properties: {
           description: { type: 'string', maxLength: 5000 },
@@ -654,7 +655,7 @@ export const openApiDocument = {
               title: {
                 type: 'string',
                 description: 'Calculé par l’API',
-                example: 'Figurine articulée – Monkey D. Luffy – Gear 5',
+                example: 'Figurine articulée – Monkey D. Luffy (Gear 5 Ver.)',
               },
               owner_id: { type: 'integer' },
               owner_username: { type: 'string' },

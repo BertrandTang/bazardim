@@ -1,9 +1,11 @@
 /**
  * Titre d'une annonce, construit automatiquement à partir de ses caractéristiques :
  *
- *   <Type> – <Personnage> – <Édition>      "Figurine articulée – Vegeta – Super Saiyan Blue"
- *   <Type> – <Personnage> – <Fabricant>    s'il n'y a pas d'édition : "Statue – Luffy – Bandai"
- *   <Type> – <Personnage>                  s'il n'y a ni édition ni fabricant
+ *   <Type> – <Personnage> (<Édition> Ver.)   "Figurine – Roronoa Zoro (Wano Ver.)"
+ *   <Type> – <Personnage> (<Fabricant>)      s'il n'y a pas d'édition : "Figurine – Roronoa Zoro (Banpresto)"
+ *   <Type> – <Personnage>                    s'il n'y a ni édition ni fabricant
+ *
+ * « Ver. » (pour « version ») est la convention des figurines japonaises.
  *
  * La licence n'est pas dans le titre : elle est déjà affichée sur la carte de l'annonce.
  *
@@ -22,12 +24,20 @@ export const CATEGORY_LABELS = {
 // Longueur maximale d'un titre (colonne products.title, VARCHAR(150)).
 const MAXIMUM_TITLE_LENGTH = 150;
 
+// « Ver. », « ver », « version » écrit à la fin de l'édition par le vendeur (pour ne pas l'écrire deux fois).
+const VERSION_SUFFIX = /\s*\b(ver\.?|version)\s*$/i;
+
 /**
  * @param {object} product - Les champs de l'annonce : category, character_name, version, manufacturer.
- * @returns {string} Le titre, ex : "Figurine – Sasuke Uchiha – Collector".
+ * @returns {string} Le titre, ex : "Figurine – Sasuke Uchiha (Collector Ver.)".
  */
 export function buildProductTitle({ category, character_name: characterName, version, manufacturer }) {
-  const parts = [CATEGORY_LABELS[category], characterName, version || manufacturer];
-  // filter(Boolean) retire les morceaux vides (pas d'édition ni de fabricant).
-  return parts.filter(Boolean).join(' – ').slice(0, MAXIMUM_TITLE_LENGTH);
+  const title = [CATEGORY_LABELS[category], characterName].filter(Boolean).join(' – ');
+
+  // Entre parenthèses : l'édition suivie de « Ver. » ("Wano version" devient "Wano Ver."),
+  // ou à défaut le fabricant, ou rien.
+  const edition = version ? version.replace(VERSION_SUFFIX, '') : '';
+  const details = edition ? `${edition} Ver.` : manufacturer;
+
+  return (details ? `${title} (${details})` : title).slice(0, MAXIMUM_TITLE_LENGTH);
 }

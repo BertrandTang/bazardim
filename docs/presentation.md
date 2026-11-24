@@ -196,7 +196,7 @@ même sans être connecté.
 | Fichier | Rôle |
 | --- | --- |
 | `productHelpers.js` | `formatPrice` (« 59.99 € »), `getProductImage` (image ou image de démo) |
-| `productTitle.js` | Aperçu du titre automatique de l'annonce (type – personnage – édition ou fabricant). Le vrai calcul est fait par l'API. |
+| `productTitle.js` | Aperçu du titre automatique de l'annonce (« Type – Personnage (Édition Ver.) », ou le fabricant). Le vrai calcul est fait par l'API. |
 | `serviceFee.js` | Calcul **affiché** des frais de service (0,70 € + 5 %). Le vrai calcul est fait par l'API. |
 | `formatDate.js` | Date au format français « 23/11/2026 » |
 | `redirect.js` | Redirection complète (vers Stripe, ou rechargement après suppression du compte) |
@@ -423,7 +423,7 @@ dans `back/logs/errors.log`. Rien n'est écrit pendant les tests.
 ### Titre automatique des annonces (`utils/productTitle.js`)
 
 Le vendeur ne choisit pas le titre : l'API le calcule à partir du **type**, du **personnage** et de l'**édition**
-(ou du **fabricant** s'il n'y a pas d'édition), par exemple « Figurine articulée – Vegeta – Super Saiyan Blue ».
+(ou du **fabricant** s'il n'y a pas d'édition), par exemple « Figurine – Roronoa Zoro (Wano Ver.) ».
 Les titres sont ainsi homogènes et faciles à chercher. Le calcul est fait dans le validateur zod (`.transform`),
 donc pour chaque création et modification ; un titre envoyé par le navigateur est ignoré. Le formulaire du front
 affiche un **aperçu** avec le même calcul (`front/src/utils/productTitle.js`).

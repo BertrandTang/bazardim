@@ -153,7 +153,7 @@ describe('Cart (panier)', () => {
     // Pièces uniques : pas de boutons de quantité.
     expect(screen.queryByRole('button', { name: '+' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Retirer Figurine S.H. Figuarts Vegeta/ }));
+    await user.click(screen.getByRole('button', { name: /Retirer Figurine – Vegeta/ }));
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
     expect(summaryLine('Total')).toHaveTextContent('79.44 €'); // 74.99 € + 4.45 € de frais
 
@@ -379,7 +379,7 @@ describe('Profile (mon profil)', () => {
     expect(screen.getAllByRole('article')).toHaveLength(myProductsCount - 1);
 
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
-    expect(screen.getByRole('heading', { name: 'Figurine S.H. Figuarts Luffy' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: PRODUCTS[1].title })).toBeInTheDocument();
   });
 
   it('une annonce vendue affiche son acheteur et ne peut plus être modifiée', async () => {

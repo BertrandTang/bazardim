@@ -56,9 +56,9 @@ export async function seedDatabase() {
 
   for (const [index, figure] of figuresData.figures.entries()) {
     const productFields = productSchema.parse({
+      // Pas de titre : il est calculé par le validateur (« Figurine – Roronoa Zoro (Wano Ver.) »).
       // La photo est obligatoire : on donne à chaque produit de démo une des images de front/public/img.
       image_url: `/img/img_${((index + 1) % DEMO_IMAGE_COUNT) + 1}.jpg`,
-      title: figure.title,
       description: figure.description,
       price: figure.price,
       category: figure.category,

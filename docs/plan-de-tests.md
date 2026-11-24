@@ -74,7 +74,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Appels à l'API | Erreur de validation, réponse vide, serveur injoignable, visiteur non connecté | Message lisible, pas de plantage ; visiteur = `null` | Unitaire | `api.test.js` |
 | Panier | Ajouter deux fois la même annonce | Ajoutée une seule fois, bouton « DANS LE PANIER » (pièce unique) | Unitaire / Composant | `contexts.test.jsx`, `components.test.jsx` |
 | Panier | Afficher, retirer une annonce, vider | Détail articles / frais de service / total recalculé, pas de boutons de quantité | Intégration | `pages.test.jsx` |
-| Titre automatique | Type, personnage, édition ; sans édition (fabricant) ; personnage seul | « Figurine articulée – Vegeta – Super Saiyan Blue », « Statue – Luffy – Bandai », « Figurine – Sasuke » | Unitaire | `productTitle.test.js` |
+| Titre automatique | Type, personnage, édition ; « Ver. » déjà écrit ; sans édition (fabricant) ; personnage seul | « Figurine – Roronoa Zoro (Wano Ver.) », pas de « Ver. Ver. », « Statue – Luffy (Bandai) », « Figurine – Sasuke » | Unitaire | `productTitle.test.js` |
 | Formulaire d'annonce | Saisie du personnage et de l'édition | Aperçu du titre mis à jour ; aucun titre envoyé à l'API ; personnage obligatoire | Composant | `components.test.jsx` |
 | Frais de service | 40 €, 0 €, 55,50 €, 134,98 € d'articles | 0,70 € + 5 %, arrondi au centime (même calcul que l'API) | Unitaire | `serviceFee.test.js` |
 | Panier | Produit supprimé entre-temps | Il disparaît du panier | Unitaire | `contexts.test.jsx` |
