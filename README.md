@@ -1,64 +1,97 @@
 # Bazardim
 
-Marketplace entre collectionneurs pour acheter et vendre des figurines, figurines articulées et statues.
+**La marketplace des collectionneurs de figurines.**
 
-Projet fil rouge de la certification **Développeur Full Stack** (RNCP 38606).
+Revendre une figurine sur un site généraliste, c'est souvent la noyer parmi des milliers d'annonces
+écrites chacune à sa façon : l'un met le nom du personnage, l'autre celui de la série, un troisième
+oublie l'édition. Et pour l'acheteur, retrouver la pièce qu'il cherche devient un casse-tête.
 
-| Dossier | Contenu | Documentation |
-| --- | --- | --- |
-| [`front/`](front/) | Application React 19 + Vite + Material UI | [front/README.md](front/README.md) |
-| [`back/`](back/) | API REST Node.js + Express 5 + PostgreSQL | [back/README.md](back/README.md) |
-| [`docs/presentation.md`](docs/presentation.md) | Présentation détaillée : dépendances, modules, commandes, Docker, base de données | |
-| [`todo.md`](todo.md) | Ce qu'il reste à faire pour la certification | |
+Bazardim est né de ce constat. C'est une marketplace dédiée aux figurines, figurines articulées et
+statues d'occasion, où chaque annonce suit le même format et où une licence est reconnue quelle que
+soit son orthographe (« One Piece », « one-piece » ou « ONE PIECE », c'est la même chose).
 
-## Démarrage rapide
+> Projet réalisé pour la certification **Développeur Full Stack** (RNCP 38606).
+> Les paiements fonctionnent en mode test : aucune somme réelle n'est débitée.
 
-Prérequis : Node.js 22+, Docker Desktop.
+## Ce qu'on peut y faire
+
+- **Vendre** une figurine en quelques champs : le titre de l'annonce se construit tout seul
+  (« Figurine – Monkey D. Luffy (Gear 5 Ver.) »), et on peut recadrer la photo.
+- **Chercher** par mot-clé, catégorie ou licence, et garder ses coups de cœur en favoris.
+- **Acheter** : panier, adresse de livraison suggérée par l'API Adresse de l'État, paiement par Stripe.
+- **Échanger** avec le vendeur grâce à la messagerie.
+- **Expédier** : le vendeur voit à qui envoyer le colis et indique quand il l'a expédié.
+- **Modérer** : un administrateur valide les nouvelles licences et peut retirer une annonce.
+
+## Sous le capot
+
+| | |
+| --- | --- |
+| **Front-end** ([`front/`](front/)) | React 19, Vite, Material UI, React Router |
+| **Back-end** ([`back/`](back/)) | Node.js 22, Express 5, API REST documentée avec Swagger |
+| **Base de données** | PostgreSQL 17, dans Docker |
+| **Paiement** | Stripe Checkout et webhook signé |
+| **Qualité** | Vitest, ESLint, Prettier, intégration continue avec GitHub Actions |
+
+Chaque dossier a son propre README, et [`docs/presentation.md`](docs/presentation.md) raconte
+le projet en détail : architecture, dépendances, base de données, Docker.
+
+## Lancer le projet
+
+Il vous faut **Node.js 22** (ou plus récent) et **Docker Desktop**.
 
 ```bash
-cp .env.example .env                       # puis choisir POSTGRES_PASSWORD
-docker compose up -d                       # base de données PostgreSQL
+# 1. La base de données
+cp .env.example .env          # choisissez un mot de passe pour POSTGRES_PASSWORD
+docker compose up -d
 
+# 2. L'API (premier terminal)
 cd back
-cp .env.example .env                       # puis remplir DATABASE_URL, TEST_DATABASE_URL, JWT_SECRET et SEED_DEMO_PASSWORD
-npm install && npm run db:reset && npm run dev   # API sur http://localhost:3000
+cp .env.example .env          # remplissez les variables indiquées dans le fichier
+npm install
+npm run db:reset              # crée les tables et un jeu de démonstration de 15 figurines
+npm run dev                   # http://localhost:3000
 
-cd ../front
-npm install && npm run dev                 # site sur http://localhost:5173
+# 3. Le site (second terminal)
+cd front
+npm install
+npm run dev                   # http://localhost:5173
 ```
 
-L'API et le front doivent tourner **en même temps** (deux terminaux) : en développement,
-le front transmet à l'API toutes les requêtes `/api/...` (voir `front/vite.config.js`).
+L'API et le site tournent en même temps : en développement, le site transmet à l'API toutes ses
+requêtes `/api/...`.
 
-Comptes de démonstration : `collectionneurdu92@example.com`, administrateur : `admin@example.com`.
+### Se connecter
+
+Le jeu de démonstration crée plusieurs comptes, dont :
+
+- `collectionneurdu92@example.com`, un vendeur ;
+- `admin@example.com`, l'administrateur.
+
 Leur mot de passe est celui que vous avez choisi dans `back/.env` (`SEED_DEMO_PASSWORD`).
-Pour repartir des données d'origine : `npm run db:reset` dans `back/`.
+Pour revenir aux données d'origine à tout moment : `npm run db:reset` dans `back/`.
 
-## Liens utiles en développement
+### Pour payer en mode test
 
-Une fois `docker compose up -d` lancé et l'API et le front démarrés :
+Utilisez la carte `4242 4242 4242 4242`, n'importe quelle date future et n'importe quel code.
 
-| Lien | Contenu |
+## Les adresses utiles
+
+| Adresse | Ce qu'on y trouve |
 | --- | --- |
-| [http://localhost:5173](http://localhost:5173) | Le site Bazardim (front React) |
-| [http://localhost:3000/api/docs](http://localhost:3000/api/docs) | Documentation interactive de l'API (Swagger) |
-| [http://localhost:3000/api/health](http://localhost:3000/api/health) | État de l'API et de la base de données (`{ "status": "ok" }`) |
-| [http://localhost:5173/sitemap.xml](http://localhost:5173/sitemap.xml) | Plan du site pour les moteurs de recherche (généré par l'API) |
-| [http://localhost:5173/admin/licences](http://localhost:5173/admin/licences) | Administration : modération des licences (compte `admin@example.com` ; lien « MODÉRATION » dans la barre de navigation) |
+| [localhost:5173](http://localhost:5173) | Le site |
+| [localhost:5173/admin/licences](http://localhost:5173/admin/licences) | L'espace de modération (lien « MODÉRATION » une fois connecté en administrateur) |
+| [localhost:3000/api/docs](http://localhost:3000/api/docs) | La documentation de l'API, où l'on peut essayer chaque route |
+| [localhost:3000/api/health](http://localhost:3000/api/health) | L'état de l'API et de la base |
+| [localhost:5173/sitemap.xml](http://localhost:5173/sitemap.xml) | Le plan du site pour les moteurs de recherche |
 
-## Secrets
-
-Aucun mot de passe ni clé secrète n'est commité : ils sont dans les fichiers `.env`
-(racine et `back/`), ignorés par Git. Les fichiers `.env.example` montrent les variables à remplir.
-
-## Sauvegarde et restauration de la base
+## Sauvegarder la base
 
 ```bash
-./scripts/backup-database.sh                                  # crée backups/bazardim-<date>.dump (7 dernières gardées)
-./scripts/restore-database.sh backups/<fichier>.dump essai    # vérifie la sauvegarde dans une base d'essai
+./scripts/backup-database.sh                                  # crée backups/bazardim-<date>.dump (garde les 7 dernières)
+./scripts/restore-database.sh backups/<fichier>.dump essai    # restaure dans une base d'essai pour vérifier
 ./scripts/restore-database.sh backups/<fichier>.dump          # ⚠️ remplace la base bazardim (confirmation demandée)
 ```
 
-`pg_dump` et `pg_restore` sont lancés dans le conteneur de la base : rien à installer.
-Le dossier `backups/` contient des données personnelles : il est ignoré par Git.
-En production, la sauvegarde est planifiée chaque nuit (cron) et copiée sur un autre serveur.
+Rien à installer : les outils de PostgreSQL tournent dans le conteneur. Une fois le site en ligne,
+la sauvegarde serait lancée chaque nuit et copiée sur un autre serveur.
