@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import TextField from '@mui/material/TextField';
 import AddressAutocomplete from '../../components/AddressAutocomplete/AddressAutocomplete.jsx';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -17,6 +18,12 @@ export default function Cart() {
   const { cartProducts, totalPrice, removeFromCart, clearCart } = useCart();
   // Adresse de livraison choisie, gardée d'une visite à l'autre (null tant qu'aucune n'est choisie).
   const [shippingAddress, setShippingAddress] = useLocalStorageState('shippingAddress', null);
+  // Destinataire du colis : gardés seulement le temps de la page (pas dans le navigateur).
+  const [shippingName, setShippingName] = useState('');
+  const [shippingPhone, setShippingPhone] = useState('');
+  // Le bouton « Commander » reste désactivé tant que la livraison n'est pas complète.
+  // Le format du téléphone est vérifié par l'API, qui renvoie un message clair s'il est invalide.
+  const isShippingComplete = Boolean(shippingName.trim() && shippingPhone.trim() && shippingAddress);
   const [orderError, setOrderError] = useState('');
   // Vrai pendant la création de la commande : évite un double clic sur "Commander".
   const [isOrdering, setIsOrdering] = useState(false);
@@ -35,6 +42,8 @@ export default function Cart() {
       const { checkout_url: checkoutUrl } = await createOrder({
         // On n'envoie que les identifiants des annonces : le back relit les prix.
         product_ids: cartProducts.map((product) => product.id),
+        shipping_name: shippingName.trim(),
+        shipping_phone: shippingPhone.trim(),
         shipping_address: shippingAddress.label,
       });
       redirectTo(checkoutUrl);
@@ -94,6 +103,24 @@ export default function Cart() {
 
       <section className="cart-shipping" aria-labelledby="cart-shipping-title">
         <h2 id="cart-shipping-title">Livraison</h2>
+        <div className="cart-shipping-recipient">
+          <TextField
+            label="Nom et prénom du destinataire"
+            autoComplete="name"
+            required
+            value={shippingName}
+            onChange={(event) => setShippingName(event.target.value)}
+          />
+          <TextField
+            label="Téléphone"
+            type="tel"
+            autoComplete="tel"
+            helperText="Pour le transporteur (ex : 06 12 34 56 78)"
+            required
+            value={shippingPhone}
+            onChange={(event) => setShippingPhone(event.target.value)}
+          />
+        </div>
         <AddressAutocomplete value={shippingAddress} onChange={setShippingAddress} />
       </section>
 
@@ -118,7 +145,7 @@ export default function Cart() {
             type="button"
             className="cart-checkout-button"
             onClick={handleOrder}
-            disabled={!shippingAddress || isOrdering}
+            disabled={!isShippingComplete || isOrdering}
           >
             {isOrdering ? 'Redirection vers le paiement…' : 'Commander et payer'}
           </button>
@@ -129,8 +156,8 @@ export default function Cart() {
           </Link>
         )}
       </div>
-      {currentUser && !shippingAddress && (
-        <p className="cart-hint">Choisissez une adresse de livraison pour pouvoir commander.</p>
+      {currentUser && !isShippingComplete && (
+        <p className="cart-hint">Renseignez le destinataire, son téléphone et l’adresse de livraison pour commander.</p>
       )}
       {orderError && (
         <p className="form-error" role="alert">

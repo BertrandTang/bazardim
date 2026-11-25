@@ -364,7 +364,12 @@ export function markFakeProductAsSold(productId) {
   findProduct(productId).sold_at = new Date().toISOString();
 }
 
-export async function createOrder({ product_ids: productIds, shipping_address: shippingAddress }) {
+export async function createOrder({
+  product_ids: productIds,
+  shipping_name: shippingName,
+  shipping_phone: shippingPhone,
+  shipping_address: shippingAddress,
+}) {
   const user = getLoggedInUser();
   if (productIds.length === 0) {
     throw new ApiError(400, 'Le panier est vide.');
@@ -394,6 +399,8 @@ export async function createOrder({ product_ids: productIds, shipping_address: s
     status: 'pending',
     service_fee: serviceFee,
     total_price: (itemsTotalInCents + Math.round(serviceFee * 100)) / 100,
+    shipping_name: shippingName,
+    shipping_phone: shippingPhone,
     shipping_address: shippingAddress,
     created_at: new Date().toISOString(),
     paid_at: null,
@@ -421,6 +428,8 @@ export async function fetchSales() {
           product_id: item.product_id,
           buyer_id: order.buyer_id,
           buyer_username: buyer.username,
+          shipping_name: order.shipping_name,
+          shipping_phone: order.shipping_phone,
           shipping_address: order.shipping_address,
           paid_at: order.paid_at,
           shipped_at: item.shipped_at,

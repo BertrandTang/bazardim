@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Checkbox, FormControlLabel, Paper, Stack, TextField, Typography } from '@mui/material';
 import PageMetadata from '../../components/PageMetadata/PageMetadata.jsx';
 import PasswordField from '../../components/PasswordField/PasswordField.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -18,6 +18,9 @@ function validateSignUp(formValues) {
   if (formValues.password !== formValues.confirmPassword) {
     return 'Les deux mots de passe ne correspondent pas.';
   }
+  if (!formValues.acceptTerms) {
+    return 'Tu dois accepter les conditions générales et la politique de confidentialité.';
+  }
   return '';
 }
 
@@ -30,13 +33,15 @@ export default function SignUp() {
     email: '',
     password: '',
     confirmPassword: '',
+    acceptTerms: false,
   });
   const [errorMessage, setErrorMessage] = useState('');
 
   // Un seul gestionnaire pour tous les champs : l'attribut `name` indique quel champ a changé.
+  // Pour la case à cocher, la valeur utile est `checked` (true / false) et non `value`.
   function handleChange(event) {
-    const { name, value } = event.target;
-    setFormValues((previousValues) => ({ ...previousValues, [name]: value }));
+    const { name, value, type, checked } = event.target;
+    setFormValues((previousValues) => ({ ...previousValues, [name]: type === 'checkbox' ? checked : value }));
   }
 
   async function handleSubmit(event) {
@@ -115,6 +120,25 @@ export default function SignUp() {
               fullWidth
               value={formValues.confirmPassword}
               onChange={handleChange}
+            />
+            {/* Liens ouverts dans un nouvel onglet : le formulaire déjà rempli n'est pas perdu. */}
+            <FormControlLabel
+              control={
+                <Checkbox name="acceptTerms" checked={formValues.acceptTerms} onChange={handleChange} required />
+              }
+              label={
+                <Typography variant="body2" component="span">
+                  J’accepte les{' '}
+                  <Link to="/conditions-generales" target="_blank" rel="noopener noreferrer">
+                    conditions générales d’utilisation et de vente
+                  </Link>{' '}
+                  et la{' '}
+                  <Link to="/confidentialite" target="_blank" rel="noopener noreferrer">
+                    politique de confidentialité
+                  </Link>
+                  .
+                </Typography>
+              }
             />
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
             <Button type="submit" variant="contained" size="large" fullWidth>

@@ -38,3 +38,33 @@
   font-size: 13px;
   color: #555;
 }
+
+/* Cadrage de la photo : curseur entre les libellés « Haut » et « Bas », sous l'aperçu. */
+.product-form-framing {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 320px;
+}
+
+.product-form-framing > span {
+  font-weight: 600;
+}
+
+.product-form-framing-slider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #555;
+  font-size: 14px;
+}
+
+/* Le curseur prend la place restante entre « Haut » et « Bas » (sinon il pousse « Bas » hors du cadre). */
+.product-form-framing-slider .MuiSlider-root {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-form-framing-slider > span[aria-hidden='true'] {
+  flex-shrink: 0;
+}

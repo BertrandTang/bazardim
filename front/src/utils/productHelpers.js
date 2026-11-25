@@ -25,6 +25,18 @@ export function getProductImage(product) {
 }
 
 /**
+ * Cadrage de la photo d'un produit, à passer à la propriété CSS object-position.
+ * Les photos remplissent un cadre plus large que haut (object-fit: cover) : une figurine photographiée
+ * en hauteur est donc rognée en haut et en bas. Le vendeur choisit la partie visible (0 = haut, 100 = bas).
+ *
+ * @param {object} product - Le produit (ou les valeurs du formulaire).
+ * @returns {string} Ex : "50% 20%" (centré horizontalement, 20 % depuis le haut).
+ */
+export function getImageObjectPosition(product) {
+  return `50% ${product.image_position_y ?? 50}%`;
+}
+
+/**
  * Formate un prix pour l'affichage : 59.9 devient "59.90 €".
  *
  * @param {number} price - Le prix en euros.

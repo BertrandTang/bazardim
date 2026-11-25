@@ -55,6 +55,8 @@ export const productSchema = z
     scale: optionalText(20),
     // Photo obligatoire : une annonce sans photo n'inspire pas confiance.
     image_url: imageUrlSchema,
+    // Cadrage vertical de la photo, en pourcentage (0 = haut, 100 = bas) ; centrée par défaut.
+    image_position_y: z.number().int().min(0).max(100).default(50),
     // Tags en minuscules et sans doublons : ["SHF", "shf "] devient ["shf"].
     tags: z
       .array(z.string().trim().toLowerCase().min(1).max(30))

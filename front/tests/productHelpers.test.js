@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { formatPrice, getProductImage } from '../src/utils/productHelpers.js';
+import { formatPrice, getImageObjectPosition, getProductImage } from '../src/utils/productHelpers.js';
+
+describe('getImageObjectPosition', () => {
+  it('centre la photo par défaut et applique le cadrage vertical choisi', () => {
+    expect(getImageObjectPosition({})).toBe('50% 50%');
+    expect(getImageObjectPosition({ image_position_y: 0 })).toBe('50% 0%');
+    expect(getImageObjectPosition({ image_position_y: 20 })).toBe('50% 20%');
+  });
+});
 
 describe('getProductImage', () => {
   it('garde une image utilisable (URL http(s) ou chemin du site)', () => {

@@ -9,7 +9,7 @@ import SellerLink from '../../components/SellerLink/SellerLink.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
 import { sendMessage } from '../../services/api.js';
-import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
+import { formatPrice, getImageObjectPosition, getProductImage } from '../../utils/productHelpers.js';
 import './Product.css';
 
 /** Transforme la taille du produit en texte lisible : "18 cm • 25 cm • 1/8". */
@@ -143,7 +143,11 @@ export default function Product() {
         <h1 className="product-detail-title">{product.title}</h1>
 
         <div className="product-detail-media">
-          <img src={getProductImage(product)} alt={product.title} />
+          <img
+            src={getProductImage(product)}
+            alt={product.title}
+            style={{ objectPosition: getImageObjectPosition(product) }}
+          />
           {product.sold_at && <span className="product-sold-badge">Vendu</span>}
         </div>
 

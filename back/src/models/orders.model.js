@@ -9,6 +9,8 @@ const ORDER_SELECT = `
     orders.status,
     orders.total_price,
     orders.service_fee,
+    orders.shipping_name,
+    orders.shipping_phone,
     orders.shipping_address,
     orders.stripe_session_id,
     orders.created_at,
@@ -32,13 +34,13 @@ const ORDER_SELECT = `
  * Crée une commande "en attente de paiement" et ses articles, dans une transaction
  * (soit tout est enregistré, soit rien). Retourne l'id de la commande.
  */
-export async function insertOrder({ buyerId, shippingAddress, totalPrice, serviceFee, lines }) {
+export async function insertOrder({ buyerId, shipping, totalPrice, serviceFee, lines }) {
   return withTransaction(async (transactionQuery) => {
     const rows = await transactionQuery(
-      `INSERT INTO orders (buyer_id, shipping_address, total_price, service_fee)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO orders (buyer_id, shipping_name, shipping_phone, shipping_address, total_price, service_fee)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id`,
-      [buyerId, shippingAddress, totalPrice, serviceFee],
+      [buyerId, shipping.name, shipping.phone, shipping.address, totalPrice, serviceFee],
     );
     const orderId = rows[0].id;
 
@@ -103,7 +105,7 @@ export async function findOrdersByBuyer(buyerId) {
 
 /**
  * Ventes d'un vendeur : pour chacune de ses annonces vendues (commande payée), qui l'a achetée, quand,
- * où l'expédier et si elle a déjà été expédiée.
+ * à qui et où l'expédier (nom, téléphone, adresse) et si elle a déjà été expédiée.
  * LEFT JOIN sur users : si l'acheteur a supprimé son compte (buyer_id vide), la vente reste listée,
  * avec un pseudo vide.
  */
@@ -114,6 +116,8 @@ export async function findSalesBySeller(sellerId) {
        order_items.product_id,
        orders.buyer_id,
        users.username AS buyer_username,
+       orders.shipping_name,
+       orders.shipping_phone,
        orders.shipping_address,
        orders.paid_at,
        order_items.shipped_at

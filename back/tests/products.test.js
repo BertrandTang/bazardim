@@ -23,6 +23,23 @@ describe('POST /api/products', () => {
     });
   });
 
+  it('enregistre le cadrage vertical de la photo (centré par défaut) et refuse une valeur hors de 0 à 100', async () => {
+    const { agent } = await createLoggedInUser();
+    const centered = await agent.post('/api/products').send(buildProduct()).expect(201);
+    expect(centered.body.image_position_y).toBe(50);
+
+    const framedOnTop = await agent
+      .post('/api/products')
+      .send(buildProduct({ image_position_y: 15 }))
+      .expect(201);
+    expect(framedOnTop.body.image_position_y).toBe(15);
+
+    await agent
+      .post('/api/products')
+      .send(buildProduct({ image_position_y: 150 }))
+      .expect(400);
+  });
+
   it('calcule le titre : un titre envoyé est ignoré, le fabricant remplace l’édition absente', async () => {
     const { agent } = await createLoggedInUser();
     const withSentTitle = await agent

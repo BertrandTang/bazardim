@@ -48,7 +48,12 @@ async function findOwnOrder(request) {
  * Réponse : { order_id, checkout_url } ; le front redirige l'utilisateur vers checkout_url.
  */
 export async function createOrder(request, response) {
-  const { product_ids: productIds, shipping_address: shippingAddress } = createOrderSchema.parse(request.body);
+  const {
+    product_ids: productIds,
+    shipping_name: name,
+    shipping_phone: phone,
+    shipping_address: address,
+  } = createOrderSchema.parse(request.body);
 
   // 1. On relit chaque produit en base : titre et prix viennent de NOTRE base, pas du navigateur.
   const lines = [];
@@ -71,7 +76,7 @@ export async function createOrder(request, response) {
   const serviceFeeInCents = computeServiceFeeInCents(itemsTotalInCents);
   const orderId = await insertOrder({
     buyerId: request.user.id,
-    shippingAddress,
+    shipping: { name, phone, address },
     totalPrice: (itemsTotalInCents + serviceFeeInCents) / 100,
     serviceFee: serviceFeeInCents / 100,
     lines,

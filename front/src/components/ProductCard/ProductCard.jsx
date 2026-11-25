@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLikes } from '../../context/LikesContext.jsx';
 import { formatDate } from '../../utils/formatDate.js';
-import { formatPrice, getProductImage } from '../../utils/productHelpers.js';
+import { formatPrice, getImageObjectPosition, getProductImage } from '../../utils/productHelpers.js';
 import AddToCartButton from '../AddToCartButton/AddToCartButton.jsx';
 import SellerLink from '../SellerLink/SellerLink.jsx';
 import './ProductCard.css';
@@ -54,7 +54,12 @@ export default function ProductCard({ product, onEdit, onDelete, sale, onShip })
 
       <div className="product-image">
         <Link to={productUrl}>
-          <img src={getProductImage(product)} alt={product.title} loading="lazy" />
+          <img
+            src={getProductImage(product)}
+            alt={product.title}
+            loading="lazy"
+            style={{ objectPosition: getImageObjectPosition(product) }}
+          />
         </Link>
         {product.sold_at && <span className="product-sold-badge">Vendu</span>}
         {!isOwnerView && (
@@ -113,7 +118,7 @@ export default function ProductCard({ product, onEdit, onDelete, sale, onShip })
 
 /**
  * Encadré d'une annonce vendue, visible uniquement par le vendeur : à qui elle a été vendue,
- * où l'expédier, puis le bouton « Marquer comme expédié » (ou la date d'expédition).
+ * à qui et où l'expédier (nom, adresse, téléphone pour le transporteur), puis le bouton « Marquer comme expédié » (ou la date d'expédition).
  */
 function SaleDetails({ sale, onShip }) {
   // Les ventes sont encore en cours de chargement.
@@ -128,7 +133,10 @@ function SaleDetails({ sale, onShip }) {
         {sale.buyer_username ? <Link to={`/user/${sale.buyer_id}`}>{sale.buyer_username}</Link> : 'un compte supprimé'}
       </p>
       <p>
-        <strong>Livrer à :</strong> {sale.shipping_address}
+        <strong>Livrer à :</strong> {sale.shipping_name}, {sale.shipping_address}
+      </p>
+      <p>
+        <strong>Téléphone :</strong> {sale.shipping_phone}
       </p>
       {sale.shipped_at ? (
         <p className="product-sale-shipped">✓ Expédié le {formatDate(sale.shipped_at)}</p>

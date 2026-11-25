@@ -70,18 +70,20 @@ export default function TermsAndConditions() {
 
       <h2>6. Commande et paiement</h2>
       <p>
-        L’acheteur choisit une adresse de livraison dans le panier puis paie par carte bancaire sur la page sécurisée de
-        notre prestataire de paiement, Stripe : Bazardim ne voit ni ne conserve les données de carte. La commande est
-        confirmée dès que le paiement est accepté. Les annonces achetées sont alors marquées « Vendu » et retirées de la
-        vente. L’acheteur retrouve sa commande dans l’onglet « Mes commandes » de son profil.
+        L’acheteur indique dans le panier le nom, le téléphone et l’adresse du destinataire, puis paie par carte
+        bancaire sur la page sécurisée de notre prestataire de paiement, Stripe : Bazardim ne voit ni ne conserve les
+        données de carte. La commande est confirmée dès que le paiement est accepté. Les annonces achetées sont alors
+        marquées « Vendu » et retirées de la vente. L’acheteur retrouve sa commande dans l’onglet « Mes commandes » de
+        son profil.
       </p>
 
       <h2>7. Livraison</h2>
       <p>
-        Après le paiement, le vendeur voit l’adresse de livraison dans son profil (onglet « Mes produits »). Il s’engage
-        à expédier l’objet, soigneusement emballé, dans les 5 jours ouvrés, puis à l’indiquer sur le site avec le bouton
-        « Marquer comme expédié ». L’acheteur suit l’envoi dans l’onglet « Mes commandes » (« En préparation », puis «
-        Expédié le … »). L’acheteur et le vendeur peuvent échanger à tout moment grâce à la messagerie du site.
+        Après le paiement, le vendeur voit le nom, le téléphone et l’adresse du destinataire dans son profil (onglet «
+        Mes produits »). Il s’engage à expédier l’objet, soigneusement emballé, dans les 5 jours ouvrés, puis à
+        l’indiquer sur le site avec le bouton « Marquer comme expédié ». L’acheteur suit l’envoi dans l’onglet « Mes
+        commandes » (« En préparation », puis « Expédié le … »). L’acheteur et le vendeur peuvent échanger à tout moment
+        grâce à la messagerie du site.
       </p>
 
       <h2>8. Rétractation, réclamations et litiges</h2>

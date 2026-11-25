@@ -20,6 +20,11 @@ describe('ProductCard', () => {
     expect(screen.getByRole('link', { name: /CollectionneurDu92/ })).toHaveAttribute('href', '/user/1');
   });
 
+  it('applique le cadrage vertical choisi par le vendeur à la photo', async () => {
+    await renderWithProviders(<ProductCard product={{ ...vegeta, image_position_y: 20 }} />);
+    expect(screen.getByRole('img', { name: vegeta.title })).toHaveStyle({ objectPosition: '50% 20%' });
+  });
+
   it('envoie un visiteur vers la connexion quand il clique sur le cœur', async () => {
     const { user } = await renderWithProviders(<ProductCard product={vegeta} />);
     await user.click(screen.getByRole('button', { name: 'Ajouter aux favoris' }));
@@ -120,6 +125,23 @@ describe('ProductForm', () => {
     expect(handleSubmit.mock.calls[0][0]).not.toHaveProperty('title');
   });
 
+  it('règle le cadrage de la photo au clavier et l’envoie avec l’annonce', async () => {
+    const handleSubmit = vi.fn().mockResolvedValue();
+    const { user } = await renderWithProviders(
+      <ProductForm initialProduct={vegeta} submitLabel="Enregistrer" onSubmit={handleSubmit} onCancel={vi.fn()} />,
+    );
+    const framingSlider = screen.getByRole('slider', { name: 'Cadrage de la photo' });
+    expect(framingSlider).toHaveValue('50');
+
+    // Flèche vers le bas : la partie visible descend d'un cran ; l'aperçu suit.
+    framingSlider.focus();
+    await user.keyboard('{ArrowDown}{ArrowDown}');
+    expect(screen.getByRole('img', { name: /Aperçu/ })).toHaveStyle({ objectPosition: '50% 48%' });
+
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    expect(handleSubmit.mock.calls[0][0]).toMatchObject({ image_position_y: 48 });
+  });
+
   it('affiche l’erreur renvoyée par l’API', async () => {
     const handleSubmit = vi.fn().mockRejectedValue(new Error('Données invalides. ean_code : 8 ou 13 chiffres'));
     const { user } = await renderWithProviders(
@@ -159,10 +181,15 @@ describe('NavBar', () => {
     expect(screen.getByRole('link', { name: 'Inscription' })).toHaveAttribute('href', '/signup');
   });
 
-  it('n’affiche pas de lien vers l’administration, même à un administrateur', async () => {
-    loginAs(8);
+  it('affiche le lien « MODÉRATION » seulement aux administrateurs', async () => {
+    loginAs(1);
+    const { unmount } = await renderWithProviders(<NavBar />);
+    expect(screen.queryByRole('link', { name: 'MODÉRATION' })).not.toBeInTheDocument();
+    unmount();
+
+    loginAs(8); // administrateur
     await renderWithProviders(<NavBar />);
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'MODÉRATION' })).toHaveAttribute('href', '/admin/licences');
   });
 
   it('ouvre le menu des catégories au clavier et le ferme avec Échap', async () => {
