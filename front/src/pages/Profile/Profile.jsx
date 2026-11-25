@@ -194,7 +194,7 @@ function MyProductsSection() {
 
   /** Le vendeur indique qu'il a expédié l'article : l'acheteur le verra dans « Mes commandes ». */
   async function handleShip(sale) {
-    if (!window.confirm(`Confirmer l’expédition à ${sale.shipping_address} ?`)) {
+    if (!window.confirm(`Confirmer l’expédition à ${sale.shipping_name}, ${sale.shipping_address} ?`)) {
       return;
     }
     try {

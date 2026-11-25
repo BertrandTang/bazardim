@@ -49,7 +49,9 @@ export default function OrderSummary({ order }) {
       {order.service_fee > 0 && (
         <p className="order-summary-fee">Frais de service : {formatPrice(order.service_fee)}</p>
       )}
-      <p className="order-summary-address">Livraison : {order.shipping_address}</p>
+      <p className="order-summary-address">
+        Livraison : {order.shipping_name}, {order.shipping_address}
+      </p>
       <p className="order-summary-total">
         Total : <strong>{formatPrice(order.total_price)}</strong>
       </p>

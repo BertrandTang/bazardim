@@ -137,7 +137,7 @@ front/
 | `/` , `/figurines`, `/figurines-articulees`, `/statue`, `/licences` | `Home` : liste des annonces en vente, filtrée par catégorie, licence ou recherche (`?q=...`) | Tout le monde |
 | `/product/:id` | `Product` : fiche d'une annonce (modification et suppression pour son vendeur) | Tout le monde |
 | `/user/:id` | `UserProfile` : profil public d'un vendeur et ses annonces | Tout le monde |
-| `/cart` | `Cart` : panier, adresse de livraison, total avec frais de service | Tout le monde (connexion pour payer) |
+| `/cart` | `Cart` : panier, destinataire (nom, téléphone, adresse), total avec frais de service | Tout le monde (connexion pour payer) |
 | `/auth`, `/signup` | Connexion, inscription | Tout le monde |
 | `/vendre` | `Sell` : mettre une annonce en vente | Connecté |
 | `/profile` | `Profile` : onglets Profil, Mes produits, Mes likes, Mes commandes | Connecté |
@@ -229,7 +229,7 @@ et l'annulation des requêtes devenues inutiles).
 | **Sécurité** | Aucun mot de passe ni jeton dans le localStorage (cookie `httpOnly` illisible par le JavaScript) ; **CSP** ajoutée au build par un petit plugin dans `vite.config.js` (seuls les scripts du site et les appels vers notre API et l'API Adresse sont autorisés) ; React échappe automatiquement le texte affiché (protection XSS) |
 | **SEO** | `lang="fr"`, titre et description par page (`PageMetadata`), Open Graph, `robots.txt`, `sitemap.xml` généré par l'API, données structurées **schema.org Product** sur la fiche produit. Lighthouse SEO : 100 sur les pages publiques |
 | **Accessibilité** | Un `<h1>` par page, lien « Aller au contenu », menus utilisables au clavier, contrastes WCAG AA, libellés ARIA. Lighthouse accessibilité : 100. **Fond décoratif** (`body::before` dans `index.css`) : pastels assez clairs pour que tout texte garde au moins 4,5:1, y compris au survol ; supprimé si l'utilisateur demande plus de contraste (`prefers-contrast: more`) ou utilise un mode de couleurs forcées. **Thème MUI** (`theme.js`) : le bleu par défaut de Material UI (4:1 sur le fond pastel) est remplacé par le violet de la charte (au moins 5,6:1 partout) |
-| **Performance / éco-conception** | Pages chargées à la demande (`React.lazy`), images compressées (41 Mo → 2,3 Mo) et chargées seulement quand elles deviennent visibles (`loading="lazy"`) |
+| **Performance / éco-conception** | Pages chargées à la demande (`React.lazy`), photos envoyées limitées à 2 Mo, images chargées seulement quand elles deviennent visibles (`loading="lazy"`) ; les photos du jeu de démonstration ont été réduites à la main (41 Mo → 2,3 Mo), celles des vendeurs ne sont pas encore compressées automatiquement |
 | **Responsive** | Toutes les pages vérifiées à 320, 375 et 1280 px de large |
 
 ## Tests du front
@@ -443,21 +443,21 @@ Quand un vendeur saisit une licence, l'API la range ainsi :
 3. sinon, elle crée la licence **en attente** : l'annonce est publiée, mais la licence n'entre dans le menu
    qu'après validation par un administrateur.
 
-Sur la page **`/admin/licences`** (adresse à taper directement, voir le [README](../README.md#liens-utiles-en-développement)), l'admin peut
+Sur la page **`/admin/licences`** (lien « MODÉRATION » de la barre de navigation, visible des administrateurs), l'admin peut
 **valider**, **renommer** (l'ancien nom devient un synonyme) ou **fusionner** un doublon dans une licence existante :
 ses annonces sont déplacées et son nom devient un synonyme. Le système « apprend » : la fois suivante, c'est automatique.
 Les routes `/api/admin/...` sont protégées par `requireAuth` puis `requireAdmin` (403 pour un non-administrateur).
 
 ### Paiement (`controllers/orders.controller.js`, `utils/serviceFee.js`)
 
-1. Le front envoie `POST /api/orders` avec les **identifiants** des annonces (jamais de prix) et l'adresse.
+1. Le front envoie `POST /api/orders` avec les **identifiants** des annonces (jamais de prix) et le destinataire : nom, téléphone et adresse.
 2. L'API relit les prix en base, calcule les **frais de service** (0,70 € + 5 %, en centimes pour éviter les erreurs
    d'arrondi) et enregistre la commande « en attente ».
 3. Elle crée une **session Stripe Checkout** et renvoie son adresse : la carte est saisie **chez Stripe**,
    jamais sur nos serveurs.
 4. Après le paiement, la commande passe à « payée » et les annonces à « vendues » (dans une transaction), de deux façons :
    le **webhook** signé de Stripe, ou la vérification auprès de Stripe à l'affichage de la page de confirmation.
-5. Le vendeur voit ensuite l'acheteur et l'adresse, et indique l'expédition (`PATCH /api/orders/items/:id/shipped`).
+5. Le vendeur voit ensuite l'acheteur, ainsi que le nom, le téléphone et l'adresse du destinataire, et indique l'expédition (`PATCH /api/orders/items/:id/shipped`).
 
 ### Documentation de l'API (`docs/openapi.js`)
 
@@ -559,10 +559,10 @@ Codes de réponse à connaître : **400** données invalides (zod), **404** lice
 - La page **`/admin/licences`** (fichier `pages/AdminLicences/AdminLicences.jsx`) regroupe toutes les actions sur les licences :
   - section **« En attente de validation »** : boutons *Valider*, *Renommer*, *Fusionner* ;
   - section **« Licences validées »** : les synonymes sous forme de puces (supprimables), plus un champ pour en ajouter un.
-- **Pas de lien dans la barre de navigation** : l'admin tape l'adresse http://localhost:5173/admin/licences
-  (elle est notée dans le README, tableau « Liens utiles en développement »). Ce n'est pas une faille : cacher ou
-  montrer un lien **n'est pas une sécurité**. La vraie barrière, c'est `requireAdmin` côté API : un utilisateur qui
-  taperait `/admin/licences` verrait seulement « Réservé aux administrateurs. », et l'API lui répondrait 403.
+- **Lien « MODÉRATION » dans la barre de navigation**, affiché seulement si `currentUser.role === 'admin'`
+  (`NavBar.jsx`). Cacher ou montrer un lien **n'est pas une sécurité** : la vraie barrière, c'est `requireAdmin`
+  côté API. Un utilisateur qui taperait `/admin/licences` verrait seulement « Réservé aux administrateurs. », et
+  l'API lui répondrait 403.
 - **Modération des annonces** : sur la fiche d'une annonce d'un autre vendeur, l'admin voit un bouton
   **« Supprimer (modération) »** (`pages/Product/Product.jsx`, variable `canModerate`). Après confirmation, l'annonce
   est supprimée et l'admin revient à l'accueil. La modification des annonces des autres reste possible par l'API

@@ -44,7 +44,7 @@ Une fois `docker compose up -d` lancé et l'API et le front démarrés :
 | [http://localhost:3000/api/docs](http://localhost:3000/api/docs) | Documentation interactive de l'API (Swagger) |
 | [http://localhost:3000/api/health](http://localhost:3000/api/health) | État de l'API et de la base de données (`{ "status": "ok" }`) |
 | [http://localhost:5173/sitemap.xml](http://localhost:5173/sitemap.xml) | Plan du site pour les moteurs de recherche (généré par l'API) |
-| [http://localhost:5173/admin/licences](http://localhost:5173/admin/licences) | Administration : modération des licences (compte `admin@example.com`, pas de lien dans le site) |
+| [http://localhost:5173/admin/licences](http://localhost:5173/admin/licences) | Administration : modération des licences (compte `admin@example.com` ; lien « MODÉRATION » dans la barre de navigation) |
 
 ## Secrets
 

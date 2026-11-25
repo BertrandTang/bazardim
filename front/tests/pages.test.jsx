@@ -4,6 +4,7 @@ import {
   addFakeMessage,
   addFakePendingLicence,
   createOrder,
+  fetchOrders,
   fakeUserExists,
   fetchUnreadMessageCount,
   likeProduct,
@@ -38,6 +39,14 @@ vi.mock('../src/utils/redirect.js', () => ({ redirectTo: vi.fn() }));
 
 /** Adresse de livraison telle que l'enregistre le champ d'adresse du panier. */
 const SHIPPING_ADDRESS = { id: 'A1', label: '10 Rue de Rivoli 75004 Paris', postcode: '75004', city: 'Paris' };
+// Destinataire du colis, envoyé avec chaque commande.
+const RECIPIENT = { shipping_name: 'Marie Dupont', shipping_phone: '06 12 34 56 78' };
+
+/** Remplit le nom et le téléphone du destinataire dans le panier. */
+async function fillRecipient(user) {
+  await user.type(screen.getByLabelText(/Nom et prénom du destinataire/), RECIPIENT.shipping_name);
+  await user.type(screen.getByLabelText(/Téléphone/), RECIPIENT.shipping_phone);
+}
 
 /** Met des annonces dans le panier (localStorage), avant d'afficher la page. Ex : fillCart([1, 2]). */
 function fillCart(productIds) {
@@ -102,12 +111,13 @@ describe('Auth (connexion)', () => {
 describe('SignUp (inscription)', () => {
   async function fillForm(
     user,
-    { password = 'motdepasse', confirmPassword = password, email = 'nouveau@example.com' },
+    { password = 'motdepasse', confirmPassword = password, email = 'nouveau@example.com', acceptTerms = true },
   ) {
     await user.type(screen.getByLabelText(/Pseudo/), 'Nouveau');
     await user.type(screen.getByLabelText(/^Email/), email);
     await user.type(screen.getByLabelText(/^Mot de passe/), password);
     await user.type(screen.getByLabelText(/Confirme/), confirmPassword);
+    if (acceptTerms) await user.click(screen.getByRole('checkbox', { name: /conditions générales/ }));
     await user.click(screen.getByRole('button', { name: 'S’inscrire' }));
   }
 
@@ -121,6 +131,18 @@ describe('SignUp (inscription)', () => {
     const { user } = await renderWithProviders(<SignUp />, { route: '/signup', path: '/signup' });
     await fillForm(user, { password: 'motdepasse', confirmPassword: 'autrechose' });
     expect(screen.getByRole('alert')).toHaveTextContent('ne correspondent pas');
+  });
+
+  it('refuse l’inscription sans accepter les CGU / CGV et la politique de confidentialité', async () => {
+    const { user } = await renderWithProviders(<SignUp />, { route: '/signup', path: '/signup' });
+    expect(screen.getByRole('link', { name: /conditions générales/ })).toHaveAttribute('href', '/conditions-generales');
+    expect(screen.getByRole('link', { name: 'politique de confidentialité' })).toHaveAttribute(
+      'href',
+      '/confidentialite',
+    );
+    await fillForm(user, { acceptTerms: false });
+    expect(screen.getByRole('alert')).toHaveTextContent('Tu dois accepter les conditions générales');
+    expect(screen.getByTestId('current-location')).toHaveTextContent('/signup');
   });
 
   it('affiche le refus de l’API pour un email déjà utilisé', async () => {
@@ -172,17 +194,22 @@ describe('Cart (panier)', () => {
     );
   });
 
-  it('demande une adresse, puis crée la commande et envoie vers la page de paiement Stripe', async () => {
+  it('demande le destinataire et une adresse, puis crée la commande et envoie vers la page de paiement Stripe', async () => {
     loginAs(1);
     fillCart([2]); // produit 2 : vendu par l'utilisateur 2
     const { user, unmount } = await renderWithProviders(<Cart />);
     expect(screen.getByRole('button', { name: 'Commander et payer' })).toBeDisabled();
     unmount();
 
+    // Adresse choisie, mais destinataire pas encore renseigné : toujours impossible de commander.
     localStorage.setItem('shippingAddress', JSON.stringify(SHIPPING_ADDRESS));
     await renderWithProviders(<Cart />);
+    expect(screen.getByRole('button', { name: 'Commander et payer' })).toBeDisabled();
+    await fillRecipient(user);
     await user.click(screen.getByRole('button', { name: 'Commander et payer' }));
     expect(redirectTo).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/fausse-session-1');
+    // La commande enregistre le destinataire complet.
+    expect((await fetchOrders())[0]).toMatchObject({ ...RECIPIENT, shipping_address: SHIPPING_ADDRESS.label });
   });
 
   it('affiche le refus de l’API (achat de sa propre annonce)', async () => {
@@ -190,6 +217,7 @@ describe('Cart (panier)', () => {
     fillCart([1]); // produit 1 : vendu par l'utilisateur 1 lui-même
     localStorage.setItem('shippingAddress', JSON.stringify(SHIPPING_ADDRESS));
     const { user } = await renderWithProviders(<Cart />);
+    await fillRecipient(user);
     await user.click(screen.getByRole('button', { name: 'Commander et payer' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Vous ne pouvez pas acheter votre propre annonce');
   });
@@ -209,6 +237,7 @@ describe('OrderConfirmation (retour du paiement)', () => {
     fillCart([2]);
     const { order_id: orderId } = await createOrder({
       product_ids: [2],
+      ...RECIPIENT,
       shipping_address: SHIPPING_ADDRESS.label,
     });
     const { user } = await renderWithProviders(<OrderConfirmation />, {
@@ -405,7 +434,11 @@ describe('Profile (mon profil)', () => {
   it('une annonce vendue affiche son acheteur et ne peut plus être modifiée', async () => {
     // L'utilisateur 2 achète et paie le produit 1 (Vegeta), qui appartient à l'utilisateur 1.
     loginAs(2);
-    const { order_id: orderId } = await createOrder({ product_ids: [1], shipping_address: '1 rue de Paris' });
+    const { order_id: orderId } = await createOrder({
+      product_ids: [1],
+      ...RECIPIENT,
+      shipping_address: '1 rue de Paris',
+    });
     markFakeOrderAsPaid(orderId);
 
     loginAs(1);
@@ -417,8 +450,9 @@ describe('Profile (mon profil)', () => {
     expect(within(soldCard).getByRole('link', { name: 'FigurineParadise' })).toHaveAttribute('href', '/user/2');
     expect(within(soldCard).queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
     expect(within(soldCard).getByRole('button', { name: 'Supprimer' })).toBeInTheDocument();
-    // Le vendeur voit où expédier l'article, puis indique qu'il l'a expédié (après confirmation).
-    expect(within(soldCard).getByText('1 rue de Paris')).toBeInTheDocument();
+    // Le vendeur voit à qui et où expédier l'article, puis indique qu'il l'a expédié (après confirmation).
+    expect(within(soldCard).getByText('Marie Dupont, 1 rue de Paris')).toBeInTheDocument();
+    expect(within(soldCard).getByText('06 12 34 56 78')).toBeInTheDocument();
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     await user.click(within(soldCard).getByRole('button', { name: 'Marquer comme expédié' }));
     expect(await within(soldCard).findByText(/Expédié le/)).toBeInTheDocument();
@@ -478,7 +512,7 @@ describe('Profile (mon profil)', () => {
     await user.click(screen.getByRole('button', { name: 'Mes commandes' }));
     expect(await screen.findByText('Vous n’avez pas encore passé de commande.')).toBeInTheDocument();
 
-    await createOrder({ product_ids: [2, 3], shipping_address: SHIPPING_ADDRESS.label });
+    await createOrder({ product_ids: [2, 3], ...RECIPIENT, shipping_address: SHIPPING_ADDRESS.label });
     await user.click(screen.getByRole('button', { name: 'Mes likes' }));
     await user.click(screen.getByRole('button', { name: 'Mes commandes' }));
     expect(await screen.findByRole('heading', { name: /Commande n° 1/ })).toBeInTheDocument();

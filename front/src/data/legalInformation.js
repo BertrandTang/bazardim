@@ -20,5 +20,5 @@ export const LEGAL_INFORMATION = {
   hostAddress: '[Adresse de l’hébergeur]',
   hostPhone: '[Téléphone de l’hébergeur]',
   // Date de la dernière mise à jour des deux pages.
-  lastUpdate: '23 novembre 2026',
+  lastUpdate: '25 novembre 2026',
 };

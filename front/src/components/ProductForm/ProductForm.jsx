@@ -2,10 +2,12 @@ import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
+import Slider from '@mui/material/Slider';
 import TextField from '@mui/material/TextField';
 import ImageUploadField from '../ImageUploadField/ImageUploadField.jsx';
 import { useProducts } from '../../context/ProductsContext.jsx';
 import { CATEGORIES } from '../../data/categories.js';
+import { getImageObjectPosition } from '../../utils/productHelpers.js';
 import { buildProductTitle } from '../../utils/productTitle.js';
 import './ProductForm.css';
 
@@ -55,6 +57,8 @@ function productToFormValues(product) {
     material: product.material ?? '',
     tags: (product.tags ?? []).join(', '),
     image_url: product.image_url ?? '',
+    // Cadrage vertical de la photo (0 = haut, 100 = bas) : un nombre, pour le curseur.
+    image_position_y: product.image_position_y ?? 50,
     year_of_acquisition: product.year_of_acquisition ?? '',
     state_of_wear: product.state_of_wear ?? '',
     has_box: product.has_box ? 'yes' : 'no',
@@ -87,6 +91,7 @@ function formValuesToProduct(formValues) {
       .map((tag) => tag.trim())
       .filter(Boolean),
     image_url: formValues.image_url,
+    image_position_y: formValues.image_position_y,
     year_of_acquisition: Number(formValues.year_of_acquisition) || null,
     state_of_wear: formValues.state_of_wear.trim(),
     has_box: formValues.has_box === 'yes',
@@ -167,7 +172,29 @@ export default function ProductForm({ initialProduct = EMPTY_PRODUCT, submitLabe
         label="Photo de l’annonce *"
         imageUrl={formValues.image_url}
         onChange={(imageUrl) => setFormValues((previousValues) => ({ ...previousValues, image_url: imageUrl }))}
+        objectPosition={getImageObjectPosition(formValues)}
       />
+      {/* Cadrage : une photo en hauteur est rognée dans les cartes. Le vendeur choisit la partie visible,
+          et l'aperçu ci-dessus se met à jour en direct. Le curseur se règle aussi au clavier (flèches). */}
+      {formValues.image_url && (
+        <div className="product-form-framing">
+          <span id="product-form-framing-label">Cadrage de la photo</span>
+          <div className="product-form-framing-slider">
+            <span aria-hidden="true">Haut</span>
+            <Slider
+              value={formValues.image_position_y}
+              min={0}
+              max={100}
+              aria-labelledby="product-form-framing-label"
+              getAriaValueText={(value) => `${value} % depuis le haut`}
+              onChange={(event, value) =>
+                setFormValues((previousValues) => ({ ...previousValues, image_position_y: value }))
+              }
+            />
+            <span aria-hidden="true">Bas</span>
+          </div>
+        </div>
+      )}
       {/* Aperçu du titre, calculé à partir des champs ci-dessous et mis à jour à chaque frappe.
           aria-live="polite" : un lecteur d'écran annonce le nouveau titre quand il change. */}
       <p className="product-form-title-preview" aria-live="polite">

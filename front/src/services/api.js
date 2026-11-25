@@ -189,7 +189,7 @@ export function unlikeProduct(productId) {
 
 /**
  * Crée une commande et la page de paiement Stripe.
- * `order` : { product_ids: [3, 8], shipping_address }. Chaque annonce est une pièce unique,
+ * `order` : { product_ids: [3, 8], shipping_name, shipping_phone, shipping_address }. Chaque annonce est une pièce unique,
  * donc pas de quantité. Aucun prix n'est envoyé : le back relit les prix dans la base.
  * @returns {Promise<{order_id: number, checkout_url: string}>}
  */

@@ -18,8 +18,9 @@ const MAXIMUM_SIZE = 2 * 1024 * 1024; // 2 Mo
  * @param {string} props.imageUrl - Adresse de l'image actuelle ('' s'il n'y en a pas).
  * @param {Function} props.onChange - Appelée avec l'adresse de la nouvelle image.
  * @param {boolean} [props.isRound] - Aperçu rond (photo de profil) au lieu de rectangulaire.
+ * @param {string} [props.objectPosition] - Cadrage de l'aperçu (propriété CSS object-position), ex : "50% 20%".
  */
-export default function ImageUploadField({ label, imageUrl, onChange, isRound = false }) {
+export default function ImageUploadField({ label, imageUrl, onChange, isRound = false, objectPosition }) {
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -65,7 +66,7 @@ export default function ImageUploadField({ label, imageUrl, onChange, isRound = 
 
       <div className={isRound ? 'image-upload-preview round' : 'image-upload-preview'}>
         {imageUrl ? (
-          <img src={imageUrl} alt={`Aperçu : ${label}`} />
+          <img src={imageUrl} alt={`Aperçu : ${label}`} style={objectPosition ? { objectPosition } : undefined} />
         ) : (
           <span className="image-upload-empty">Aucune image</span>
         )}

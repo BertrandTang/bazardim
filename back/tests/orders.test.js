@@ -14,7 +14,12 @@ vi.mock('../src/config/stripe.js', () => ({
 
 useEmptyDatabase();
 
-const SHIPPING_ADDRESS = '10 Rue de Rivoli 75004 Paris';
+// Destinataire du colis envoyé avec chaque commande.
+const SHIPPING = {
+  shipping_name: 'Marie Dupont',
+  shipping_phone: '06 12 34 56 78',
+  shipping_address: '10 Rue de Rivoli 75004 Paris',
+};
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -43,7 +48,7 @@ async function createSellerAndBuyer() {
 function placeOrder({ buyer, firstProduct, secondProduct }) {
   return buyer.agent.post('/api/orders').send({
     product_ids: [firstProduct.id, secondProduct.id],
-    shipping_address: SHIPPING_ADDRESS,
+    ...SHIPPING,
   });
 }
 
@@ -73,7 +78,7 @@ describe('Commandes et paiement Stripe', () => {
       status: 'pending',
       total_price: 58.98, // 55,50 € d'articles + 3,48 € de frais
       service_fee: 3.48,
-      shipping_address: SHIPPING_ADDRESS,
+      ...SHIPPING,
     });
     expect(order.body.items).toEqual([
       { product_id: context.firstProduct.id, product_title: 'Figurine – A (Gear 5 Ver.)', price: 20, shipped_at: null },
@@ -91,7 +96,7 @@ describe('Commandes et paiement Stripe', () => {
     const { buyer, firstProduct } = await createSellerAndBuyer();
     const response = await buyer.agent
       .post('/api/orders')
-      .send({ product_ids: [firstProduct.id], price: 0.01, service_fee: 0, shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: [firstProduct.id], price: 0.01, service_fee: 0, ...SHIPPING })
       .expect(201);
     const order = await buyer.agent.get(`/api/orders/${response.body.order_id}`);
     // 20 € d'articles + frais calculés par le serveur (0,70 € + 5 % de 20 € = 1,70 €).
@@ -103,22 +108,50 @@ describe('Commandes et paiement Stripe', () => {
     const { seller, buyer, firstProduct } = await createSellerAndBuyer();
     const oneProduct = [firstProduct.id];
 
-    await buyer.agent.post('/api/orders').send({ product_ids: [], shipping_address: SHIPPING_ADDRESS }).expect(400);
-    await buyer.agent.post('/api/orders').send({ product_ids: oneProduct, shipping_address: '' }).expect(400);
+    await buyer.agent
+      .post('/api/orders')
+      .send({ product_ids: [], ...SHIPPING })
+      .expect(400);
+    await buyer.agent
+      .post('/api/orders')
+      .send({ product_ids: oneProduct, ...SHIPPING, shipping_address: '' })
+      .expect(400);
     // La même annonce deux fois : refusé (pièce unique).
     await buyer.agent
       .post('/api/orders')
-      .send({ product_ids: [firstProduct.id, firstProduct.id], shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: [firstProduct.id, firstProduct.id], ...SHIPPING })
       .expect(400);
     await buyer.agent
       .post('/api/orders')
-      .send({ product_ids: [9999], shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: [9999], ...SHIPPING })
       .expect(404);
     await seller.agent
       .post('/api/orders')
-      .send({ product_ids: oneProduct, shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: oneProduct, ...SHIPPING })
       .expect(400);
     expect(stripe.checkout.sessions.create).not.toHaveBeenCalled();
+  });
+
+  it('exige le nom du destinataire et un numéro de téléphone français valide', async () => {
+    const { buyer, firstProduct, secondProduct } = await createSellerAndBuyer();
+    const send = (shipping, productId = firstProduct.id) =>
+      buyer.agent.post('/api/orders').send({ product_ids: [productId], ...SHIPPING, ...shipping });
+
+    const withoutName = await send({ shipping_name: ' ' }).expect(400);
+    expect(withoutName.body.details[0]).toMatchObject({ field: 'shipping_name' });
+    for (const invalidPhone of ['', '12345', '06 12 34 56', 'zéro six douze']) {
+      const response = await send({ shipping_phone: invalidPhone }).expect(400);
+      expect(response.body.details[0]).toMatchObject({ field: 'shipping_phone' });
+    }
+    // Formats acceptés : chiffres groupés ou non, préfixe international +33.
+    await send({ shipping_phone: '0612345678' }).expect(201);
+    // Seconde commande : une autre session Stripe (l'identifiant de session est unique en base).
+    stripe.checkout.sessions.create.mockResolvedValueOnce({
+      id: 'cs_test_456',
+      url: 'https://checkout.stripe.com/c/pay/cs_test_456',
+    });
+    await send({ shipping_phone: '+33 6 12 34 56 78' }, secondProduct.id).expect(201);
+    expect(stripe.checkout.sessions.create).toHaveBeenCalledTimes(2);
   });
 
   it('refuse un visiteur non connecté (401)', async () => {
@@ -167,7 +200,7 @@ describe('Commandes et paiement Stripe', () => {
     const otherBuyer = await createLoggedInUser();
     const response = await otherBuyer.agent
       .post('/api/orders')
-      .send({ product_ids: [context.firstProduct.id], shipping_address: SHIPPING_ADDRESS })
+      .send({ product_ids: [context.firstProduct.id], ...SHIPPING })
       .expect(409);
     expect(response.body.error).toContain('vient d’être vendu');
   });
@@ -218,7 +251,7 @@ describe('Commandes et paiement Stripe', () => {
     const sale = (await context.seller.agent.get('/api/orders/sales')).body.find(
       (candidate) => candidate.product_id === context.firstProduct.id,
     );
-    expect(sale).toMatchObject({ shipping_address: SHIPPING_ADDRESS, shipped_at: null });
+    expect(sale).toMatchObject({ ...SHIPPING, shipped_at: null });
 
     // Ni l'acheteur ni un inconnu ne peuvent marquer l'article comme expédié (404 : rien n'est révélé).
     await context.buyer.agent.patch(`/api/orders/items/${sale.order_item_id}/shipped`).expect(404);

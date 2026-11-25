@@ -130,6 +130,14 @@ export default function NavBar() {
 
         <Link to="/comment-ca-marche">COMMENT ÇA MARCHE ?</Link>
 
+        {/* Lien réservé aux administrateurs : la page des licences à valider.
+            Le cacher n'est pas une sécurité : l'API vérifie aussi le rôle (requireAdmin). */}
+        {currentUser?.role === 'admin' && (
+          <Link to="/admin/licences" className="navbar-moderation">
+            MODÉRATION
+          </Link>
+        )}
+
         <Link to="/vendre" className="navbar-sell-button">
           VENDRE
         </Link>

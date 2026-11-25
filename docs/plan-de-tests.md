@@ -47,6 +47,7 @@ a aussi été vérifié une fois dans un vrai navigateur, avec l'API et le front
 | Connexion | Bons identifiants | Redirection vers le profil | Intégration | `pages.test.jsx` |
 | Connexion | Page privée sans être connecté | Redirection vers `/auth` | Composant | `components.test.jsx` |
 | Inscription | Mot de passe < 8 caractères / différent / email déjà pris (refus de l'API) | Message d'erreur adapté | Intégration | `pages.test.jsx` |
+| Inscription | Case CGU / CGV et politique de confidentialité non cochée | Inscription refusée, message d'erreur, liens vers les deux pages | Intégration | `pages.test.jsx` |
 | Inscription | Formulaire valide | Compte créé, redirection vers le profil | Intégration | `pages.test.jsx` |
 | Fiche produit | Ouvrir `/product/1` | Caractéristiques + données structurées schema.org | Intégration | `pages.test.jsx` |
 | Fiche produit | Identifiant inconnu | « Produit introuvable » | Intégration | `pages.test.jsx` |

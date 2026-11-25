@@ -71,6 +71,9 @@ CREATE TABLE products (
   width_cm            NUMERIC(6, 1),
   scale               VARCHAR(20),
   image_url           VARCHAR(500),
+  -- Cadrage vertical de la photo dans les cartes et la fiche (0 = haut, 50 = centre, 100 = bas) :
+  -- le vendeur choisit la partie visible quand une photo en hauteur est rognée.
+  image_position_y    SMALLINT      NOT NULL DEFAULT 50 CHECK (image_position_y BETWEEN 0 AND 100),
   -- Date de la vente : NULL tant que l'annonce est en vente. Les figurines sont souvent
   -- des pièces uniques : une annonce payée est marquée vendue (voir orders.model.js).
   sold_at             TIMESTAMPTZ,
@@ -137,6 +140,9 @@ CREATE TABLE orders (
   total_price       NUMERIC(10, 2) NOT NULL CHECK (total_price > 0),
   -- Frais de service de Bazardim (monétisation), voir src/utils/serviceFee.js.
   service_fee       NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (service_fee >= 0),
+  -- Destinataire du colis : nom, téléphone (pour le transporteur) et adresse.
+  shipping_name     VARCHAR(100)   NOT NULL,
+  shipping_phone    VARCHAR(20)    NOT NULL,
   shipping_address  VARCHAR(300)   NOT NULL,
   -- Identifiant de la session de paiement chez Stripe (cs_test_...).
   stripe_session_id VARCHAR(255)   UNIQUE,
@@ -200,6 +206,7 @@ SELECT
   products.width_cm,
   products.scale,
   products.image_url,
+  products.image_position_y,
   products.sold_at,
   products.owner_id,
   users.username AS owner_username,

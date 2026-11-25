@@ -22,6 +22,7 @@ const EDITABLE_COLUMNS = [
   'width_cm',
   'scale',
   'image_url',
+  'image_position_y',
 ];
 
 /** Valeurs des colonnes éditables, dans le même ordre que EDITABLE_COLUMNS. */

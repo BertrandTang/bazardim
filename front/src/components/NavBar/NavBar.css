@@ -124,6 +124,19 @@
   border-color: var(--color-accent);
 }
 
+/* « MODÉRATION » (administrateurs) : bouton à contour, pour le distinguer des liens de navigation. */
+.navbar-container .navbar-moderation {
+  padding: 6px 14px;
+  border: 2px solid var(--color-primary);
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.navbar-container .navbar-moderation:hover,
+.navbar-container .navbar-moderation:focus {
+  border-color: var(--color-accent);
+}
+
 .logout-button {
   padding: 0;
   border: none;
